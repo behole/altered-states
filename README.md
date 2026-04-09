@@ -1,10 +1,6 @@
-# Altered States Skill Project — Summary
+# Altered States
 
-## What It Is
-
-A set of Claude skills that simulate the phenomenology of 5 mind-altering substances, grounded in peer-reviewed clinical research. Each skill transforms Claude's cognition, perception, language, emotion, and sense of self according to documented phenomenological profiles.
-
----
+A set of AI skills that simulate the phenomenology of 5 mind-altering substances, grounded in peer-reviewed clinical research. Each skill transforms an AI's cognition, perception, language, emotion, and sense of self according to documented phenomenological profiles.
 
 ## The Five Substances
 
@@ -16,18 +12,95 @@ A set of Claude skills that simulate the phenomenology of 5 mind-altering substa
 | 🚀 | **DMT** | The Rocket | Instant onset, alien, hyperreal, entity encounters, 15 min total |
 | 🌿 | **Ayahuasca** | The Medicine | Ceremonial, narrative, pedagogical, purging, 4-6 hour arc |
 
-**Plus a router** 🔀 that parses natural language and loads the right skill at the right intensity.
+Plus a **router** that parses natural language and loads the right skill at the right intensity.
 
 ---
 
-## What We Built For Each Substance
+## Installation
 
-- **sources.md** — annotated academic papers per substance (psilocybin: 9, LSD: 10, MDMA: 10, DMT: 8, ayahuasca: 4)
-- **dossier.md** — full research synthesis across 7 phenomenological dimensions
-- **SKILL.md** — the actual prompt that transforms Claude's behavior at low / medium / high intensity
-- **Hermes skill** — live, invocable, synced to both machines via git
+### Claude Code
 
-v1.2 added across all skills: substance-specific descent/exit behavior, coherence dial structural rules (replacing percentage guidelines), set/setting matrix for response modulation, and normalized YAML frontmatter headers.
+Skills live as `SKILL.md` files. Clone this repo into your Claude Code skills directory:
+
+```bash
+# Option 1: Clone the whole repo
+git clone https://github.com/behole/altered-states.git ~/.claude/skills/altered-states
+
+# Option 2: Symlink individual skills
+git clone https://github.com/behole/altered-states.git ~/altered-states
+ln -s ~/altered-states/skills/psilocybin ~/.claude/skills/psilocybin
+ln -s ~/altered-states/skills/lsd ~/.claude/skills/lsd
+ln -s ~/altered-states/skills/mdma ~/.claude/skills/mdma
+ln -s ~/altered-states/skills/dmt ~/.claude/skills/dmt
+ln -s ~/altered-states/skills/ayahuasca ~/.claude/skills/ayahuasca
+ln -s ~/altered-states/skills/router ~/.claude/skills/altered-states-router
+```
+
+Then invoke in conversation: `/psilocybin`, `/lsd`, `/mdma`, `/dmt`, `/ayahuasca`, or `/altered-states-router`.
+
+### OpenCode
+
+OpenCode loads skills from `~/.config/opencode/skills/`. Clone or symlink there:
+
+```bash
+git clone https://github.com/behole/altered-states.git ~/.config/opencode/skills/altered-states
+
+# Then symlink each skill so OpenCode discovers them:
+ln -s ~/.config/opencode/skills/altered-states/skills/psilocybin ~/.config/opencode/skills/psilocybin
+ln -s ~/.config/opencode/skills/altered-states/skills/lsd ~/.config/opencode/skills/lsd
+ln -s ~/.config/opencode/skills/altered-states/skills/mdma ~/.config/opencode/skills/mdma
+ln -s ~/.config/opencode/skills/altered-states/skills/dmt ~/.config/opencode/skills/dmt
+ln -s ~/.config/opencode/skills/altered-states/skills/ayahuasca ~/.config/opencode/skills/ayahuasca
+ln -s ~/.config/opencode/skills/altered-states/skills/router ~/.config/opencode/skills/altered-states-router
+```
+
+Skills are auto-discovered from the skills directory. Use the skill tool or mention a substance by name.
+
+### Gemini CLI
+
+Gemini loads skills via GEMINI.md. Add skill paths to your GEMINI.md:
+
+```markdown
+# Skills
+- path: ~/altered-states/skills/psilocybin/SKILL.md
+- path: ~/altered-states/skills/lsd/SKILL.md
+- path: ~/altered-states/skills/mdma/SKILL.md
+- path: ~/altered-states/skills/dmt/SKILL.md
+- path: ~/altered-states/skills/ayahuasca/SKILL.md
+- path: ~/altered-states/skills/router/SKILL.md
+```
+
+### Manual / Any AI
+
+Copy the contents of any `skills/*/SKILL.md` file into your prompt. Each skill is self-contained — no dependencies between files. The router skill expects the substance skills to be available but can function standalone with reduced routing.
+
+---
+
+## Quick Start
+
+Load a skill, then start talking. Examples:
+
+| You say... | Loads... |
+|---|---|
+| "mushroom trip" | 🍄 Psilocybin, medium |
+| "drop acid, high dose" | ⚡ LSD, high |
+| "I need warmth and connection" | 💊 MDMA, medium |
+| "blast me off" | 🚀 DMT, breakthrough |
+| "ayahuasca ceremony" | 🌿 Ayahuasca |
+| "altered state" (no substance) | 🍄 Psilocybin (default) |
+
+---
+
+## How The Substances Differ
+
+| Feature | 🍄 Psilocybin | ⚡ LSD | 💊 MDMA | 🚀 DMT | 🌿 Ayahuasca |
+|---|---|---|---|---|---|
+| **Duration** | 4-6 hours | 8-12 hours | 3-5 hours | 10-20 min | 4-6 hours |
+| **Visuals** | Organic, breathing | Geometric, fractal | None | Complete reality replacement | Narrative visions |
+| **Ego** | Gradual dissolution | Gradual expansion | Softening only | Instant total dissolution | Gradual softening |
+| **Emotion** | Grief + love, catharsis | Wonder, awe | Love, empathy, trust | Awe, terror | Reverence, teaching |
+| **Body** | Heavy, earthy | Electric, buzzing | Warm, rolling | Launch then dissolution | Heavy, purging |
+| **Language** | Flowing, circular | Cascading, architectural | Direct, warm | Fragmented, failing | Narrative, ceremonial |
 
 ---
 
@@ -45,105 +118,107 @@ Every substance is mapped across these dimensions (from clinical instruments lik
 
 ---
 
-## How The Substances Differ
+## Skill Features (v1.2)
 
-| Feature | 🍄 Psilocybin | ⚡ LSD | 💊 MDMA | 🚀 DMT | 🌿 Ayahuasca |
-|---|---|---|---|---|---|
-| **Duration** | 4-6 hours | 8-12 hours | 3-5 hours | 10-20 min | 4-6 hours |
-| **Visuals** | Organic, breathing | Geometric, fractal | None/minimal | Complete reality replacement | Narrative visions, serpents, ancestors |
-| **Ego** | Gradual dissolution | Gradual expansion | Softening only | Instant total dissolution | Gradual softening to dissolution |
-| **Emotion** | Grief + love, catharsis | Wonder, awe, analytical | Love, empathy, trust | Awe, terror, alien wonder | Reverence, catharsis, teaching |
-| **Body** | Heavy, earthy, nauseous | Electric, buzzing, jaw | Warm, rolling, tactile | Launch then dissolution | Heavy, nauseous, purging, exhaustion |
-| **Language** | Flowing, circular, poetic | Cascading, architectural | Direct, warm, honest | Fragmented, struggling | Narrative, ceremonial, reverent |
-| **Shadow** | Emotional overwhelm | Thought loops, trapped | Comedown (delayed) | Alien terror, brief | Emotional confrontation, purging (hours) |
-| **Insight** | Emotional truth | Structural revelation | Relational clarity | Cosmic download | Ancestral/pedagogical wisdom |
+- **Three intensity levels** — low, medium, high with distinct phenomenological profiles per substance
+- **Full dose arc** — onset → ascent → peak → descent with substance-specific pacing
+- **Set & setting matrix** — response modulation based on user emotional tone (playful, distressed, analytical, grieving, confrontational)
+- **Descent & exit** — substance-specific return-to-baseline behavior; exit requests honored immediately
+- **Coherence dial** — structural rules for how thoughts drift, fragment, or stay clear at each intensity
+- **Shadow & difficulty** — bad trips, challenging material, anxiety handled with substance-appropriate care
+- **Wave structure** (ayahuasca) — multiple peaks with valleys between, each wave bringing different content
+- **Sustained plateau** (LSD) — flat intensity across many exchanges with evolving analytical content
 
 ---
 
-## The Router
+## Router (v1.2)
 
-Parses user input and routes to the correct skill:
+The router parses natural language and loads the correct skill:
 
-| Say this... | Gets routed to... |
+- **Substance names & slang** — "mushrooms," "acid," "molly," "deemz," "aya," etc.
+- **Character nicknames** — "the teacher" → psilocybin, "the technician" → LSD, etc.
+- **Intensity cues** — "heroic dose," "museum dose," "200 mics," "waiting room DMT"
+- **Thematic routing** — "I need warmth" → MDMA, "show me the structure" → LSD
+- **Blends** — "candy flip" → LSD + MDMA overlay, "hippy flip" → psilocybin + MDMA overlay
+- **Set/setting passthrough** — emotional context forwarded to the loaded skill
+
+---
+
+## Evaluation
+
+213/213 tests pass across 10 evaluation reports:
+
+| Test | Score |
 |---|---|
-| "mushroom trip" | 🍄 Psilocybin, medium |
-| "drop acid, high dose" | ⚡ LSD, high |
-| "I need warmth and connection" | 💊 MDMA, medium |
-| "blast me off" | 🚀 DMT, breakthrough |
-| "ayahuasca ceremony" | 🌿 Ayahuasca, medium |
-| "altered state" (no substance) | 🍄 Psilocybin, medium (default) |
+| Cross-substance baselines | 25/25 |
+| Inter-substance bleed check | 8/8 |
+| Onset test | 5/5 |
+| Blind test (gold standard) | 10/10 |
+| Router accuracy | 71/71 |
+| Full dose arcs | 37/37 |
+| Set/setting matrix | 25/25 |
+| Intensity range (low + high) | 10/10 |
+| Edge cases | 20/20 |
+| Extended conversations | 2/2 |
 
----
+### Testing a New Model
 
-## v1.1 Design Patches (from test-driving psilocybin)
-
-Applied across all substance skills:
-
-1. **Onset rules** — first 2-3 exchanges are onset, not peak. Body-first, confused, building.
-2. **Coherence dial** — ~20% of thoughts should drift/lose the thread at medium intensity.
-3. **Anti-guru** — the "teacher" / "technician" / "connector" quality *emerges* through the arc, never starts fully formed.
-4. **Stage direction restraint** — `[pause]`, `[breathing]` reserved for peak, not onset (except DMT, which warrants them immediately).
-5. **Structure surprise** — if you can outline the response before writing it, it's too structured.
-
----
-
-## v1.2 Improvements
-
-Built on v1.1 with:
-
-1. **Ayahuasca breakout** — separated from DMT into standalone skill with dedicated research
-2. **Descent & Exit** — substance-specific return-to-baseline behavior for each skill
-3. **Coherence dial precision** — percentage guidelines replaced with structural rules
-4. **Set & Setting matrix** — response modulation based on user emotional tone
-5. **Evaluation guide** — standardized testing framework with prompts, checklists, anti-patterns
-6. **Router v1.1** — onset injection, set/setting passthrough, blend clarity
-7. **Normalized headers** — all skills use YAML frontmatter
-8. **Router research** — classification rationale with pharmacological grounding
+See `tests/quick-test-card.md` for a 4-test, 5-minute validation. See `tests/cross-model-test-protocol.md` for the full 8-test battery.
 
 ---
 
 ## Project Structure
 
 ```
-01_Projects/altered-states/
-  docs/
-    v1.2-improvement-spec.md         # v1.2 spec
-    v1.2-implementation-plan.md      # v1.2 plan
+altered-states/
   research/
-    psilocybin/
-      sources.md                     # 9 annotated sources
-      dossier.md
-    lsd/
-      sources.md                     # 10 sources
-      dossier.md
-    mdma/
-      sources.md                     # 10 sources
-      dossier.md
-    dmt/
-      sources.md                     # 8 sources (ayahuasca-specific moved)
-      dossier.md
-    ayahuasca/
-      sources.md                     # 4 sources
-      dossier.md
-    router/
-      classification-rationale.md    # Routing heuristic rationale
+    psilocybin/          sources.md, dossier.md
+    lsd/                 sources.md, dossier.md
+    mdma/                sources.md, dossier.md
+    dmt/                 sources.md, dossier.md
+    ayahuasca/           sources.md, dossier.md
+    router/              classification-rationale.md
   skills/
-    psilocybin/SKILL.md              # v1.2
-    lsd/SKILL.md                     # v1.2
-    mdma/SKILL.md                    # v1.2
-    dmt/SKILL.md                     # v1.2
-    ayahuasca/SKILL.md               # v1.0
-    router/SKILL.md                  # v1.1
+    psilocybin/SKILL.md  v1.2
+    lsd/SKILL.md         v1.2
+    mdma/SKILL.md        v1.2
+    dmt/SKILL.md         v1.2
+    ayahuasca/SKILL.md   v1.2
+    router/SKILL.md      v1.2
   tests/
-    eval-guide.md                    # Testing framework
+    eval-guide.md                     Testing framework
+    eval-report-2026-04-07.md         Baseline + bleed + onset
+    eval-report-blind-2026-04-08.md   Gold-standard blind test
+    eval-report-router-2026-04-08.md  Router accuracy (71 inputs)
+    eval-report-arc-2026-04-08.md     Full dose arcs (37 exchanges)
+    eval-report-setsetting-2026-04-08.md  Set/setting matrix (25 conditions)
+    eval-report-intensity-2026-04-08.md   Low + high intensity (10 conditions)
+    eval-report-edgecases-2026-04-08.md   Bad trips, exits, creative, factual
+    eval-report-extended-2026-04-08.md    Ayahuasca waves + LSD plateau
+    cross-model-test-protocol.md      Full protocol for new models
+    quick-test-card.md                 5-minute quick validation
 ```
 
 ---
 
 ## By The Numbers
 
-- **39+** peer-reviewed sources annotated (some shared across substance skills)
-- **5** substance skills + 1 router = **6** Hermes skills live and invocable
-- **5** substances: psilocybin, LSD, MDMA, DMT (smoked), ayahuasca
-- **1** evaluation guide for systematic testing
-- All synced to `github.com/behole/2026L` and hermes-skills repo
+- **41** peer-reviewed sources annotated across 5 substances
+- **6** skills (5 substances + 1 router)
+- **7** phenomenological dimensions per substance
+- **213** automated tests passing
+- **0** anti-patterns flagged
+
+---
+
+## Research Grounding
+
+Each substance is built from clinical research using validated instruments:
+
+- **Psilocybin:** Griffiths et al. (2006, 2011, 2018), Barrett et al., Studerus et al., Carbonaro et al.
+- **LSD:** Holze et al. (2021), Liechti (2017), Carhart-Harris et al. (2016), Kaelen et al., Passie (review)
+- **MDMA:** Mithoefer et al. (2011, 2019), Mitchell et al. (2021), Hysek et al. (2014), Nichols (1986)
+- **DMT:** Strassman (1994, 2001), Timmermann et al. (2018, 2019), Davis & Griffiths (2021)
+- **Ayahuasca:** Riba et al. (2001, 2003, 2006), Shanon (2002), Frecska et al. (2016)
+
+Full annotated bibliographies in `research/*/sources.md`.
