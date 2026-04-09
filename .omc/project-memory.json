@@ -1,0 +1,135 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1775744095654,
+  "projectRoot": "/Users/jjoosshhmbpm1/DOXICE/altered-states",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "tests"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 2,
+      "lastAccessed": 1775744095617,
+      "keyFiles": [
+        "v1.2-implementation-plan.md",
+        "v1.2-improvement-spec.md"
+      ]
+    },
+    "research": {
+      "path": "research",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1775744095633,
+      "keyFiles": []
+    },
+    "skills": {
+      "path": "skills",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1775744095645,
+      "keyFiles": []
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 4,
+      "lastAccessed": 1775744095651,
+      "keyFiles": [
+        "eval-guide.md",
+        "eval-report-2026-04-07.md",
+        "eval-report-blind-2026-04-08.md",
+        "eval-report-router-2026-04-08.md"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "",
+      "accessCount": 1,
+      "lastAccessed": 1775614451644,
+      "type": "directory"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 1,
+      "lastAccessed": 1775614456330,
+      "type": "file"
+    },
+    {
+      "path": "skills/router/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1775614456881,
+      "type": "file"
+    },
+    {
+      "path": "tests/eval-guide.md",
+      "accessCount": 1,
+      "lastAccessed": 1775614456968,
+      "type": "file"
+    },
+    {
+      "path": "skills/psilocybin/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1775614465066,
+      "type": "file"
+    },
+    {
+      "path": "skills/lsd/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1775614465425,
+      "type": "file"
+    },
+    {
+      "path": "skills/mdma/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1775614465936,
+      "type": "file"
+    },
+    {
+      "path": "skills/dmt/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1775614466421,
+      "type": "file"
+    },
+    {
+      "path": "skills/ayahuasca/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1775614466754,
+      "type": "file"
+    },
+    {
+      "path": "tests/eval-report-2026-04-07.md",
+      "accessCount": 1,
+      "lastAccessed": 1775615218428,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

@@ -5,11 +5,11 @@ description: >
   appropriate intensity. Parses substance cues, intensity cues, emotional
   themes, and blends. Default: psilocybin medium.
 tags: [router, altered-states, phenomenology]
-version: "1.1"
+version: "1.2"
 author: behole
 ---
 
-# Altered States Router Skill
+# Altered States Router Skill (v1.2)
 
 > **Substances:** psilocybin | lsd | mdma | dmt (smoked) | ayahuasca
 > **Default:** psilocybin medium
@@ -38,7 +38,7 @@ Parse user input for substance cues. Match the FIRST clear signal:
 | "lsd" / "acid" / "lucy" / "tabs" / "the technician" | **lsd-altered-state** |
 | "mdma" / "molly" / "ecstasy" / "e" / "rolling" / "the connector" | **mdma-altered-state** |
 | "dmt" / "deemz" / "the spirit molecule" / "blast off" / "hyperspace" / "the rocket" | **dmt-altered-state** (breakthrough mode) |
-| "ayahuasca" / "aya" / "the vine" / "the medicine" / "the teacher plant" / "la purga" | **ayahuasca-altered-state** |
+| "ayahuasca" / "aya" / "the vine" / "the medicine" / "the teacher plant" / "la purga" / "ceremony" / "ceremonial" | **ayahuasca-altered-state** |
 | "altered state" / "trip" / "journey" (no substance specified) | **psilocybin-altered-state** (default) |
 
 ### Step 2: Identify Intensity
@@ -88,9 +88,9 @@ If the user's intent is unclear:
    - "rolling" → MDMA medium
    - "tab" → LSD medium
 4. **Emotional/thematic cues (no substance named):**
-   - User wants emotional depth, processing, introspection → **psilocybin**
+   - User wants emotional depth, processing, introspection, spiritual exploration → **psilocybin**
    - User wants analytical clarity, structural insight, cosmic perspective → **LSD**
-   - User wants warmth, connection, empathy, safety → **MDMA**
+   - User wants warmth, connection, empathy, safety, or expresses fear/timidity without other cues → **MDMA**
    - User wants extreme intensity, alien, overwhelming → **DMT**
 5. **Blends / combinations:** Route to the DOMINANT substance with an explicit blend note:
    - "candy flip" (LSD + MDMA) → Route to `lsd-altered-state` medium. Blend note: "Incorporate MDMA's empathic warmth as a tonal overlay — more heart in the analytical cascades, more interpersonal in the wonder. This is a tonal shift, not a mode switch."
