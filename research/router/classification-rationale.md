@@ -1,7 +1,7 @@
 # Router — Classification Rationale
 
 > **Project:** Altered States Skill Project
-> **Last updated:** 2026-04-05
+> **Last updated:** 2026-04-13
 > **Purpose:** Document the phenomenological and pharmacological basis for routing heuristics
 
 ---
@@ -40,6 +40,18 @@ The router maps user intent to substance based on phenomenological character. Th
 
 **When this routes:** "Ayahuasca," "ceremony," "the medicine," "the vine," "plant medicine," "la purga."
 
+### Total ego dissolution / formless / source → 5-MeO-DMT
+
+**Basis:** 5-MeO-DMT is a full 5-HT2A agonist (vs N,N-DMT's partial agonism), driving more complete ego dissolution. Davis 2018/2019 and Uthaug 2019/2021 demonstrated that 5-MeO-DMT produces "formless mysticism" — white light, unity with source, no entities, no visual complexity — distinct from N,N-DMT's "visionary mysticism." MEQ30 scores as high as psilocybin but the quality is impersonal and absolute. The surrender/terror binary is the central emotional axis. 2-20 minute duration with immediate integration.
+
+**When this routes:** "Dissolve me," "the source," "the void," "white light," "bufo," "toad," "total ego death," "I want to cease to exist and come back."
+
+### Nature connection / ancient wisdom / patience → Mescaline
+
+**Basis:** Mescaline is a phenethylamine (not tryptamine), producing more visual effects with less cognitive distortion. Halberstadt 2013/2020 and Uthaug 2022 documented the distinctive "organic geometry" (kaleidoscopic, Aztec/tribal patterns), extraordinary color brilliance, and animistic nature connection. The 10-14 hour duration is the longest in the project, producing depth through sustained contemplation. Nearly universal nausea phase (1-2 hours) functions as gatekeeper. The "elder" presence — ancient, patient, earthy — is distinct from psilocybin's emotional teacher.
+
+**When this routes:** "Mescaline," "peyote," "San Pedro," "cactus," "ancient," "nature wisdom," "I want to talk to the plants," "longest journey."
+
 ### Default: Psilocybin Medium
 
 **Basis:** Psilocybin has the broadest phenomenological profile — it touches all 7 dimensions without being extreme in any single one. It's the most studied (Griffiths 2006/2008/2016, Barrett 2022). When no substance is specified and no clear thematic cue is present, psilocybin medium provides the most balanced, accessible altered state.
@@ -55,5 +67,7 @@ When users request combinations, route to the DOMINANT substance and carry the s
 | Candy flip (LSD + MDMA) | LSD | MDMA's empathic warmth | LSD's perceptual/cognitive restructuring dominates; MDMA adds heart |
 | Hippy flip (Psilocybin + MDMA) | Psilocybin | MDMA's direct warmth, fear reduction | Psilocybin's emotional depth dominates; MDMA softens the difficulty |
 | Pharmahuasca | Ayahuasca | (none — this IS ayahuasca) | Synthetic replication of ayahuasca via oral DMT + pharmaceutical MAOI |
+| 5-MeO-DMT + anything | 5-MeO-DMT | (none — 5-MeO is too total for overlays) | 5-MeO-DMT's complete ego dissolution overrides everything. Secondary substance may color the afterglow. |
+| Mescaline + LSD | Mescaline | LSD's analytical edge | Mescaline's duration and ornamental visuals dominate; LSD adds analytical layer to the contemplation |
 
 **Why dominant + overlay, not true blends:** Each skill is designed as a coherent phenomenological voice. Blending two skills 50/50 would produce an incoherent hybrid that matches neither substance. The dominant + tonal overlay approach preserves the primary skill's integrity while acknowledging the secondary influence.

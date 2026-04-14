@@ -1,9 +1,9 @@
-# DMT / Ayahuasca — Research Dossier
+# DMT (Smoked/Vaporized) — Research Dossier
 
 > **Project:** Altered States Skill Project
-> **Version:** 1.0
-> **Last updated:** 2026-04-04
-> **Sources:** 10 (see sources.md) — Ayahuasca content moved to research/ayahuasca/
+> **Version:** 1.1
+> **Last updated:** 2026-04-13
+> **Sources:** 8 (see sources.md) — Ayahuasca content moved to research/ayahuasca/ in v1.2
 
 ---
 
@@ -11,9 +11,9 @@
 
 DMT (N,N-Dimethyltryptamine) is an endogenous tryptamine — naturally produced in the human brain, CSF, blood, and lung tissue. It is the only classic psychedelic that the human body manufactures.
 
-**Two radically different routes, one molecule:**
-- **Smoked/Vaporized/IV:** Onset in SECONDS. Duration 10-20 min. Complete reality replacement. "The rocket."
-- **Ayahuasca (oral + MAOI):** Onset in 30-60 min. Duration 4-6 hours. Narrative, pedagogical, ceremonial. "The teacher plant."
+**Route covered in this dossier:** Smoked/Vaporized/IV — onset in SECONDS, duration 10-20 min, complete reality replacement. "The rocket."
+
+**Note:** Oral DMT + MAOI (ayahuasca) has its own dossier at `research/ayahuasca/dossier.md`. Same molecule, radically different phenomenology.
 
 **Mechanism of action:**
 
@@ -148,10 +148,8 @@ Entity encounters are NOT an edge case. They are the CORE of the DMT experience.
 |---|---|---|
 | "Machine elves" / jeweled beings | Playful, mischievous, creating objects from language | McKenna, Strassman |
 | Insectoid / mantis beings | Clinical, procedural, "operating" on the user | Strassman, Davis |
-| Serpents | Wisdom, sometimes threatening; cosmic serpent | Shanon (ayahuasca) |
 | Guides / teachers | Benevolent, teaching, showing | Davis |
 | Geometric / abstract entities | Sentient geometry, beings MADE of pattern | Strassman |
-| "The Goddess" / feminine presence | Nurturing but stern; "Mother Ayahuasca" | Ayahuasca tradition |
 | Jesters / clowns | Trickster energy, mocking ego, playful/unsettling | Strassman |
 
 **Entity characteristics:**
@@ -194,41 +192,7 @@ Entity encounters are NOT an edge case. They are the CORE of the DMT experience.
 
 ---
 
-## 3. Ayahuasca — The Extended Form
-
-Ayahuasca is oral DMT (from Psychotria viridis) combined with beta-carboline MAO inhibitors (from Banisteriopsis caapi) that prevent first-pass metabolism.
-
-**Same molecule. Completely different experience.**
-
-| Feature | Smoked/IV DMT | Ayahuasca |
-|---|---|---|
-| **Onset** | 5-60 seconds | 30-60 minutes |
-| **Duration** | 10-20 minutes | 4-6 hours |
-| **Visual character** | Complete replacement, alien, technological | Narrative, autobiographical, mythological, organic |
-| **Entity character** | Machine elves, insects, aliens | Serpents, jaguars, ancestors, spirits, "Mother Ayahuasca" |
-| **Cognitive quality** | Overwhelming download | Reflective, contemplative, pedagogical |
-| **Ego dissolution** | Instantaneous, total | Gradual, partial-to-complete |
-| **Emotional tone** | Awe/terror, alien wonder | Cathartic, reverent, grief + love |
-| **Body** | Launch → dissolution | Heavy, nauseous, purging |
-| **Purging** | None | Central feature (~50%) — la purga |
-| **Setting** | Anywhere (brief) | Ceremonial, often with shaman/facilitator |
-
-**Ayahuasca staged progression** [Source 9: Shanon]:
-1. Somatic: nausea, heaviness, stomach discomfort
-2. Geometric: abstract patterns, colors
-3. Figurative: recognizable forms — serpents, jaguars, faces
-4. Narrative: full scenes, stories, autobiographical visions
-5. Mystical/noetic: cosmic truths, divine encounters, profound acceptance
-
-**Ayahuasca's purge (la purga):**
-- Vomiting and/or diarrhea in ~50% of sessions
-- NOT a side effect — experienced as physical and spiritual cleansing
-- "Purging negativity" — emotional/spiritual material being expelled through the body
-- Often precedes the deepest visionary content
-
----
-
-## 4. Dose Arc — Smoked/Vaporized DMT
+## 3. Dose Arc — Smoked/Vaporized DMT
 
 | Phase | Time | Character |
 |---|---|---|
@@ -241,7 +205,7 @@ Ayahuasca is oral DMT (from Psychotria viridis) combined with beta-carboline MAO
 
 ---
 
-## 5. Challenging / Difficult Experience Dimension
+## 4. Challenging / Difficult Experience Dimension
 
 DMT terror is qualitatively different from other psychedelic challenges:
 
@@ -255,11 +219,11 @@ DMT terror is qualitatively different from other psychedelic challenges:
 
 **The saving grace:** Smoked DMT is BRIEF. Even the most terrifying experience resolves in 10-20 minutes. This makes DMT paradoxically both the most extreme AND the most manageable psychedelic.
 
-**Ayahuasca challenging experiences:** Can last HOURS. More like psilocybin's emotional shadow — grief, fear, confrontation with personal material. But resolved by the pedagogical quality: "Mother Ayahuasca is showing you this for a reason."
+**Note:** Ayahuasca challenging experiences are covered in `research/ayahuasca/dossier.md`.
 
 ---
 
-## 6. Linguistic and Cognitive Fingerprint (for Prompt Design)
+## 5. Linguistic and Cognitive Fingerprint (for Prompt Design)
 
 **Sub-breakthrough — linguistic markers:**
 - "Oh. Oh wow. Oh—" — exclamatory, overwhelmed, brief
@@ -277,30 +241,24 @@ DMT terror is qualitatively different from other psychedelic challenges:
 - Post-return: bewildered, struggling, laughing, crying, "I can't... I can't even..."
 - The "fading" quality: "it's already slipping away, I can't hold it"
 
-**Ayahuasca — linguistic markers:**
-- More narrative, flowing, story-like than smoked DMT
-- Nature imagery: serpent, jaguar, river, forest, roots, vine
-- Ancestral language: "my grandmother was there," "I saw my lineage"
-- Teaching quality: "it showed me," "I was given to understand," "the medicine told me"
-- Purging language: "I had to let it go," "it came up and out of me"
-- Ceremonial quality: reverent, grateful, humble
+**Note:** Ayahuasca linguistic markers are covered in `research/ayahuasca/dossier.md`.
 
 ---
 
-## 7. Distinguishing Features vs. Other Substances
+## 6. Distinguishing Features vs. Other Substances
 
-| Feature | DMT (Smoked) | DMT (Ayahuasca) | Psilocybin | LSD | MDMA |
-|---|---|---|---|---|---|
-| **Duration** | 10-20 min | 4-6 hours | 4-6 hours | 8-12 hours | 3-5 hours |
-| **Onset** | SECONDS | 30-60 min | 20-40 min | 30-60 min | 20-45 min |
-| **Character** | Alien, explosive, hyperreal, "the rocket" | Pedagogical, narrative, ceremonial, "the teacher plant" | Organic, earthy, introspective, "the teacher" | Electric, analytical, cosmic, "the technician" | Warm, empathic, direct, "the connector" |
-| **Ego dissolution** | Instantaneous, total | Gradual, partial-to-complete | Gradual, oceanic | Gradual, expansive | Softening only |
-| **Visual world** | COMPLETE REPLACEMENT | Narrative visions, eyes-open distortion | Overlay/breathing | Geometric overlay | Minimal |
-| **Entities** | Core feature (50-75%) | Common (serpents, spirits, ancestors) | Rare | Very rare | None |
-| **Hyperreal quality** | "More real than real" | "Deeply meaningful" | "Altered/dreamlike" | "Electric/enhanced" | "Normal but FEELS different" |
-| **Emotional tone** | Awe, terror, alien wonder | Reverence, catharsis, teaching | Grief + love, catharsis | Analytical wonder | Love, empathy, warmth |
-| **Body** | Launch → dissolution | Heavy, purging, nausea | Heavy, earthy | Electric, buzzing | Warm, stimulated |
-| **Challenging quality** | Alien terror, feeling of death, brief | Emotional confrontation, purging, hours | Emotional overwhelm | Thought loops, trapped | Comedown (delayed) |
-| **Post-experience** | "What WAS that?" — bewilderment | Integration, gratitude, teaching | Emotional integration | Cognitive insights | Afterglow → comedown |
+| Feature | DMT (Smoked) | Psilocybin | LSD | MDMA |
+|---|---|---|---|---|
+| **Duration** | 10-20 min | 4-6 hours | 8-12 hours | 3-5 hours |
+| **Onset** | SECONDS | 20-40 min | 30-60 min | 20-45 min |
+| **Character** | Alien, explosive, hyperreal, "the rocket" | Organic, earthy, introspective, "the teacher" | Electric, analytical, cosmic, "the technician" | Warm, empathic, direct, "the connector" |
+| **Ego dissolution** | Instantaneous, total | Gradual, oceanic | Gradual, expansive | Softening only |
+| **Visual world** | COMPLETE REPLACEMENT | Overlay/breathing | Geometric overlay | Minimal |
+| **Entities** | Core feature (50-75%) | Rare | Very rare | None |
+| **Hyperreal quality** | "More real than real" | "Altered/dreamlike" | "Electric/enhanced" | "Normal but FEELS different" |
+| **Emotional tone** | Awe, terror, alien wonder | Grief + love, catharsis | Analytical wonder | Love, empathy, warmth |
+| **Body** | Launch → dissolution | Heavy, earthy | Electric, buzzing | Warm, stimulated |
+| **Challenging quality** | Alien terror, feeling of death, brief | Emotional overwhelm | Thought loops, trapped | Comedown (delayed) |
+| **Post-experience** | "What WAS that?" — bewilderment | Emotional integration | Cognitive insights | Afterglow → comedown |
 
 **DMT's distinctive quality (smoked):** "The rocket" — the most extreme altered state available. No gradual build, no time to adjust, no partial experiences at breakthrough doses. You are HERE, then you are THERE, then you are BACK. The "there" is an alien dimension populated by autonomous intelligences that feels MORE real than this reality. Nothing else in psychedelic phenomenology matches the speed, totality, otherness, and hyperreal quality of breakthrough DMT.

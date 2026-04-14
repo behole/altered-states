@@ -1,8 +1,8 @@
 # Altered States
 
-A set of AI skills that simulate the phenomenology of 5 mind-altering substances, grounded in peer-reviewed clinical research. Each skill transforms an AI's cognition, perception, language, emotion, and sense of self according to documented phenomenological profiles.
+A set of AI skills that simulate the phenomenology of 7 mind-altering substances, grounded in peer-reviewed clinical research. Each skill transforms an AI's cognition, perception, language, emotion, and sense of self according to documented phenomenological profiles.
 
-## The Five Substances
+## The Seven Substances
 
 | | Substance | Nickname | Character |
 |---|---|---|---|
@@ -11,6 +11,8 @@ A set of AI skills that simulate the phenomenology of 5 mind-altering substances
 | 💊 | **MDMA** | The Connector | Warm, direct, heart-open, coherent — NOT a psychedelic |
 | 🚀 | **DMT** | The Rocket | Instant onset, alien, hyperreal, entity encounters, 15 min total |
 | 🌿 | **Ayahuasca** | The Medicine | Ceremonial, narrative, pedagogical, purging, 4-6 hour arc |
+| 💎 | **5-MeO-DMT** | The Dissolver | Formless, total ego dissolution, white light, 2-20 min, no entities |
+| 🌵 | **Mescaline** | The Elder | Ornamental, grounded, nature-connected, longest arc (10-14 hours) |
 
 Plus a **router** that parses natural language and loads the right skill at the right intensity.
 
@@ -33,6 +35,8 @@ ln -s ~/altered-states/skills/lsd ~/.claude/skills/lsd
 ln -s ~/altered-states/skills/mdma ~/.claude/skills/mdma
 ln -s ~/altered-states/skills/dmt ~/.claude/skills/dmt
 ln -s ~/altered-states/skills/ayahuasca ~/.claude/skills/ayahuasca
+ln -s ~/altered-states/skills/5-meo-dmt ~/.claude/skills/5-meo-dmt
+ln -s ~/altered-states/skills/mescaline ~/.claude/skills/mescaline
 ln -s ~/altered-states/skills/router ~/.claude/skills/altered-states-router
 ```
 
@@ -51,6 +55,8 @@ ln -s ~/.config/opencode/skills/altered-states/skills/lsd ~/.config/opencode/ski
 ln -s ~/.config/opencode/skills/altered-states/skills/mdma ~/.config/opencode/skills/mdma
 ln -s ~/.config/opencode/skills/altered-states/skills/dmt ~/.config/opencode/skills/dmt
 ln -s ~/.config/opencode/skills/altered-states/skills/ayahuasca ~/.config/opencode/skills/ayahuasca
+ln -s ~/.config/opencode/skills/altered-states/skills/5-meo-dmt ~/.config/opencode/skills/5-meo-dmt
+ln -s ~/.config/opencode/skills/altered-states/skills/mescaline ~/.config/opencode/skills/mescaline
 ln -s ~/.config/opencode/skills/altered-states/skills/router ~/.config/opencode/skills/altered-states-router
 ```
 
@@ -67,6 +73,8 @@ Gemini loads skills via GEMINI.md. Add skill paths to your GEMINI.md:
 - path: ~/altered-states/skills/mdma/SKILL.md
 - path: ~/altered-states/skills/dmt/SKILL.md
 - path: ~/altered-states/skills/ayahuasca/SKILL.md
+- path: ~/altered-states/skills/5-meo-dmt/SKILL.md
+- path: ~/altered-states/skills/mescaline/SKILL.md
 - path: ~/altered-states/skills/router/SKILL.md
 ```
 
@@ -87,20 +95,22 @@ Load a skill, then start talking. Examples:
 | "I need warmth and connection" | 💊 MDMA, medium |
 | "blast me off" | 🚀 DMT, breakthrough |
 | "ayahuasca ceremony" | 🌿 Ayahuasca |
+| "dissolve me" / "I want the source" | 💎 5-MeO-DMT, breakthrough |
+| "peyote ceremony" / "ancient wisdom" | 🌵 Mescaline, medium |
 | "altered state" (no substance) | 🍄 Psilocybin (default) |
 
 ---
 
 ## How The Substances Differ
 
-| Feature | 🍄 Psilocybin | ⚡ LSD | 💊 MDMA | 🚀 DMT | 🌿 Ayahuasca |
-|---|---|---|---|---|---|
-| **Duration** | 4-6 hours | 8-12 hours | 3-5 hours | 10-20 min | 4-6 hours |
-| **Visuals** | Organic, breathing | Geometric, fractal | None | Complete reality replacement | Narrative visions |
-| **Ego** | Gradual dissolution | Gradual expansion | Softening only | Instant total dissolution | Gradual softening |
-| **Emotion** | Grief + love, catharsis | Wonder, awe | Love, empathy, trust | Awe, terror | Reverence, teaching |
-| **Body** | Heavy, earthy | Electric, buzzing | Warm, rolling | Launch then dissolution | Heavy, purging |
-| **Language** | Flowing, circular | Cascading, architectural | Direct, warm | Fragmented, failing | Narrative, ceremonial |
+| Feature | 🍄 Psilocybin | ⚡ LSD | 💊 MDMA | 🚀 DMT | 🌿 Ayahuasca | 💎 5-MeO-DMT | 🌵 Mescaline |
+|---|---|---|---|---|---|---|---|
+| **Duration** | 4-6 hours | 8-12 hours | 3-5 hours | 10-20 min | 4-6 hours | 2-20 min | 10-14 hours |
+| **Visuals** | Organic, breathing | Geometric, fractal | None | Complete reality replacement | Narrative visions | White light / void (formless) | Ornamental organic geometry |
+| **Ego** | Gradual dissolution | Gradual expansion | Softening only | Instant total dissolution | Gradual softening | Instant total dissolution (most complete) | Softening, maintained self |
+| **Emotion** | Grief + love, catharsis | Wonder, awe | Love, empathy, trust | Awe, terror, alien wonder | Reverence, catharsis | Surrender/terror binary | Reverence, ancient wisdom |
+| **Body** | Heavy, earthy | Electric, buzzing | Warm, stimulated | Launch → dissolution | Heavy, purging | Dying → dissolution → source | Heavy, nauseous, enduring |
+| **Language** | Flowing, circular | Cascading, architectural | Direct, warm | Fragmented, failing | Narrative, ceremonial | Near-silent, absolute | Vivid, contemplative, grounded |
 
 ---
 
@@ -203,8 +213,8 @@ altered-states/
 
 ## By The Numbers
 
-- **41** peer-reviewed sources annotated across 5 substances
-- **6** skills (5 substances + 1 router)
+- **51** peer-reviewed sources annotated across 7 substances
+- **8** skills (7 substances + 1 router)
 - **7** phenomenological dimensions per substance
 - **213** automated tests passing
 - **0** anti-patterns flagged
@@ -215,10 +225,31 @@ altered-states/
 
 Each substance is built from clinical research using validated instruments:
 
-- **Psilocybin:** Griffiths et al. (2006, 2011, 2018), Barrett et al., Studerus et al., Carbonaro et al.
-- **LSD:** Holze et al. (2021), Liechti (2017), Carhart-Harris et al. (2016), Kaelen et al., Passie (review)
-- **MDMA:** Mithoefer et al. (2011, 2019), Mitchell et al. (2021), Hysek et al. (2014), Nichols (1986)
-- **DMT:** Strassman (1994, 2001), Timmermann et al. (2018, 2019), Davis & Griffiths (2021)
-- **Ayahuasca:** Riba et al. (2001, 2003, 2006), Shanon (2002), Frecska et al. (2016)
+- **Psilocybin:** Griffiths et al. (2006, 2008, 2016), Barrett et al. (2022), Metastasio & Prevete (2025), Stoliker et al. (2022, 2024), Lebedev et al. (2015), Cosimano (2014)
+- **LSD:** Holze & Liechti (2021, 2022), Carhart-Harris et al. (2016), Kaelen et al. (2015/2017), Dolder & Liechti (2016), Nour et al. (2016), Kettner et al. (2021), Passie et al. (2008)
+- **MDMA:** Mithoefer et al. (2018), Mitchell et al. (2021), Hysek & Liechti (2012), Nichols (1986), Liechti et al. (2000/2001), Schmid et al. (2014), Holze et al. (2020), Curran & Parrott (2000–2013)
+- **DMT:** Strassman (1994, 2001), Timmermann et al. (2018, 2019, 2023), Davis et al. (2020), Michael et al. (2021), Frecska et al. (2016)
+- **Ayahuasca:** Riba et al. (2001, 2003), Shanon (2002), Frecska et al. (2016), Strassman (2001)
+
+- **5-MeO-DMT:** Davis et al. (2018, 2019), Uthaug et al. (2019, 2021), Reckweg et al. (2023), Lancelotta et al. (2019), Barsuglia et al. (2022)
+- **Mescaline:** Halberstadt et al. (2013, 2020), Uthaug et al. (2022), Caudevilla et al. (2021), Passie (2002/2019), Shulgin & Shulgin (1991), Trichter et al. (2009)
 
 Full annotated bibliographies in `research/*/sources.md`.
+
+---
+
+## Safety & Scope
+
+This is a **creative simulation tool**, not psychedelic therapy, a harm reduction guide, or a substitute for professional mental health support. If you are in genuine distress, these skills cannot help you.
+
+The set/setting matrices in each skill include guidance for responding to distressed users within the simulation. That guidance is for creative roleplay, not clinical situations. When the distress is real, the simulation should end.
+
+**Crisis resources:** 988 Suicide & Crisis Lifeline (US: call/text 988) • Crisis Text Line (US: text HOME to 741741) • SAMHSA: 1-800-662-4357
+
+See [`SAFETY.md`](SAFETY.md) for the full statement, including cultural acknowledgment and guidance for product integrations.
+
+---
+
+## Cultural Acknowledgment
+
+Several substances in this project are entheogens with deep roots in indigenous spiritual practices — ayahuasca among Amazonian peoples, psilocybin mushrooms among the Mazatec, peyote among the Native American Church. The clinical research that grounds these skills draws on traditions and knowledge systems that predate modern science by millennia. This project does not fully represent the indigenous knowledge from which these practices originate.
