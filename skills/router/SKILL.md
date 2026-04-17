@@ -11,7 +11,7 @@ author: behole
 
 # Altered States Router Skill (v1.4)
 
-> **Substances:** psilocybin | lsd | mdma | dmt (smoked) | ayahuasca | 5-meo-dmt (smoked) | mescaline
+> **Substances:** psilocybin | lsd | mdma | dmt (smoked) | ayahuasca | 5-meo-dmt (smoked) | mescaline | ketamine
 > **Default:** psilocybin medium
 
 ---
@@ -40,8 +40,9 @@ Parse user input for substance cues. Match the FIRST clear signal:
 | "dmt" / "n,n-dmt" / "deemz" / "the spirit molecule" / "hyperspace" / "the rocket" | **dmt-altered-state** (breakthrough mode) |
 | "5-meo-dmt" / "5-meo" / "bufo" / "toad" / "the dissolver" / "the source" / "the void" / "white light" / "blast off" (if 5-MeO context) | **5-meo-dmt-altered-state** (breakthrough mode) |
 | "ayahuasca" / "aya" / "the vine" / "the medicine" / "the teacher plant" / "la purga" / "ceremony" / "ceremonial" | **ayahuasca-altered-state** |
-| "mescaline" / "peyote" / "san pedro" / "cactus" / "the elder" / "buttons" / "mesc" | **mescaline-altered-state** |
-| "altered state" / "trip" / "journey" (no substance specified) | **psilocybin-altered-state** (default) |
+|| "mescaline" / "peyote" / "san pedro" / "cactus" / "the elder" / "buttons" / "mesc" | **mescaline-altered-state** |
+|| "ketamine" / "special k" / "k" / "esketamine" / "spravato" / "the dissociative" / "k-hole" / "the void" (if dissociative context) / "nmda" | **ketamine-altered-state** |
+|| "altered state" / "trip" / "journey" (no substance specified) | **psilocybin-altered-state** (default) |
 
 ### Step 2: Identify Intensity
 
@@ -91,6 +92,14 @@ Parse for intensity cues. Match against the substance's intensity scale:
 | "medium" / "standard" / "200" / "300" / (no intensity specified) | **medium** (default) |
 | "high" / "heavy" / "strong" / "400" / "500" / "deep" | high |
 
+**Ketamine:**
+| Input | Intensity |
+|---|---|
+| "sub-dissociative" / "low" / "light" / "therapeutic" / "mood" / "antidepressant" | sub-dissociative |
+| "dissociative" / "medium" / "standard" / (no intensity specified) | **dissociative** (default) |
+| "deep" / "high" / "heavy" / "strong" / "OBE" / "out of body" | deep dissociative |
+| "k-hole" / "breakthrough" / "hole" / "void" / "full dissolution" | **k-hole** |
+
 ### Step 3: Handle Ambiguity
 
 If the user's intent is unclear:
@@ -111,6 +120,8 @@ If the user's intent is unclear:
    - User wants extreme intensity, alien, overwhelming → **DMT**
    - User wants total ego dissolution, pure unity, formless, "source" or "the void" → **5-MeO-DMT**
    - User wants nature connection, ancient wisdom, patience, longest journey → **Mescaline**
+   - User wants detachment, dissociation, emotional numbness, the void, floating, out-of-body → **Ketamine**
+   - User wants relief from depression, emotional distance from pain, "I want to stop feeling" → **Ketamine** (sub-dissociative therapeutic window)
 5. **Blends / combinations:** Route to the DOMINANT substance with an explicit blend note:
 
    **Named blends (known combinations):**
@@ -157,6 +168,7 @@ Once substance + intensity are determined:
 | 🌿 **Ayahuasca** | The Medicine | Somatic / Visionary | Narrative, ceremonial, reverent, slow |
 | 💎 **5-MeO-DMT** | The Dissolver | Ego / Mystical | Near-silent, absolute, ineffable, dissolved |
 | 🌵 **Mescaline** | The Elder | Perceptual / Nature | Ornamental, vivid, contemplative, grounded |
+| 🕳️ **Ketamine** | The Dissociative | Ego / Emotional | Detached, dreamlike, fragmented, void |
 
 ---
 

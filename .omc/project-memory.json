@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1775744095654,
+  "lastScanned": 1776377831236,
   "projectRoot": "/Users/jjoosshhmbpm1/DOXICE/altered-states",
   "techStack": {
     "languages": [],
@@ -25,19 +25,34 @@
     "isMonorepo": false,
     "workspaces": [],
     "mainDirectories": [
+      "bin",
       "docs",
       "tests"
     ],
-    "gitBranches": null
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
   },
   "customNotes": [],
   "directoryMap": {
+    "bin": {
+      "path": "bin",
+      "purpose": "Executable scripts",
+      "fileCount": 3,
+      "lastAccessed": 1776377831202,
+      "keyFiles": [
+        "nlm.py",
+        "nlm.sh"
+      ]
+    },
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
-      "fileCount": 2,
-      "lastAccessed": 1775744095617,
+      "fileCount": 3,
+      "lastAccessed": 1776377831202,
       "keyFiles": [
+        "TODO.md",
         "v1.2-implementation-plan.md",
         "v1.2-improvement-spec.md"
       ]
@@ -46,88 +61,101 @@
       "path": "research",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1775744095633,
+      "lastAccessed": 1776377831203,
       "keyFiles": []
     },
     "skills": {
       "path": "skills",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1775744095645,
+      "lastAccessed": 1776377831204,
       "keyFiles": []
     },
     "tests": {
       "path": "tests",
       "purpose": "Test files",
-      "fileCount": 4,
-      "lastAccessed": 1775744095651,
+      "fileCount": 11,
+      "lastAccessed": 1776377831204,
       "keyFiles": [
+        "cross-model-test-protocol.md",
         "eval-guide.md",
         "eval-report-2026-04-07.md",
-        "eval-report-blind-2026-04-08.md",
-        "eval-report-router-2026-04-08.md"
+        "eval-report-arc-2026-04-08.md",
+        "eval-report-blind-2026-04-08.md"
       ]
     }
   },
   "hotPaths": [
     {
-      "path": "",
+      "path": "skills/psilocybin/SKILL.md",
       "accessCount": 1,
-      "lastAccessed": 1775614451644,
-      "type": "directory"
-    },
-    {
-      "path": "README.md",
-      "accessCount": 1,
-      "lastAccessed": 1775614456330,
-      "type": "file"
-    },
-    {
-      "path": "skills/router/SKILL.md",
-      "accessCount": 1,
-      "lastAccessed": 1775614456881,
+      "lastAccessed": 1776378070481,
       "type": "file"
     },
     {
       "path": "tests/eval-guide.md",
       "accessCount": 1,
-      "lastAccessed": 1775614456968,
+      "lastAccessed": 1776378079064,
       "type": "file"
     },
     {
-      "path": "skills/psilocybin/SKILL.md",
+      "path": "tests/quick-test-card.md",
       "accessCount": 1,
-      "lastAccessed": 1775614465066,
+      "lastAccessed": 1776378079125,
       "type": "file"
     },
     {
-      "path": "skills/lsd/SKILL.md",
+      "path": "tests/responses/README.md",
       "accessCount": 1,
-      "lastAccessed": 1775614465425,
-      "type": "file"
-    },
-    {
-      "path": "skills/mdma/SKILL.md",
-      "accessCount": 1,
-      "lastAccessed": 1775614465936,
-      "type": "file"
-    },
-    {
-      "path": "skills/dmt/SKILL.md",
-      "accessCount": 1,
-      "lastAccessed": 1775614466421,
-      "type": "file"
-    },
-    {
-      "path": "skills/ayahuasca/SKILL.md",
-      "accessCount": 1,
-      "lastAccessed": 1775614466754,
+      "lastAccessed": 1776378087754,
       "type": "file"
     },
     {
       "path": "tests/eval-report-2026-04-07.md",
       "accessCount": 1,
-      "lastAccessed": 1775615218428,
+      "lastAccessed": 1776378087807,
+      "type": "file"
+    },
+    {
+      "path": "tests/cross-model-test-protocol.md",
+      "accessCount": 1,
+      "lastAccessed": 1776378112157,
+      "type": "file"
+    },
+    {
+      "path": "skills/mescaline/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1776378620113,
+      "type": "file"
+    },
+    {
+      "path": "bin/nlm.py",
+      "accessCount": 1,
+      "lastAccessed": 1776378620166,
+      "type": "file"
+    },
+    {
+      "path": "tests/prompts.json",
+      "accessCount": 1,
+      "lastAccessed": 1776378691494,
+      "type": "file"
+    },
+    {
+      "path": "bin/requirements.txt",
+      "accessCount": 1,
+      "lastAccessed": 1776378691675,
+      "type": "file"
+    },
+    {
+      "path": "bin/run_eval.py",
+      "accessCount": 1,
+      "lastAccessed": 1776378749025,
+      "type": "file"
+    },
+    {
+      "path": "bin/responses_to_grid.py",
+      "accessCount": 1,
+      "lastAccessed": 1776378749225,
       "type": "file"
     }
   ],

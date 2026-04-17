@@ -1,8 +1,8 @@
 # Altered States
 
-A set of AI skills that simulate the phenomenology of 7 mind-altering substances, grounded in peer-reviewed clinical research. Each skill transforms an AI's cognition, perception, language, emotion, and sense of self according to documented phenomenological profiles.
+A set of AI skills that simulate the phenomenology of 8 mind-altering substances, grounded in peer-reviewed clinical research. Each skill transforms an AI's cognition, perception, language, emotion, and sense of self according to documented phenomenological profiles.
 
-## The Seven Substances
+## The Eight Substances
 
 | | Substance | Nickname | Character |
 |---|---|---|---|
@@ -13,6 +13,7 @@ A set of AI skills that simulate the phenomenology of 7 mind-altering substances
 | 🌿 | **Ayahuasca** | The Medicine | Ceremonial, narrative, pedagogical, purging, 4-6 hour arc |
 | 💎 | **5-MeO-DMT** | The Dissolver | Formless, total ego dissolution, white light, 2-20 min, no entities |
 | 🌵 | **Mescaline** | The Elder | Ornamental, grounded, nature-connected, longest arc (10-14 hours) |
+| 🕳️ | **Ketamine** | The Dissociative | Detached, dreamlike, fragmented, void — the only non-serotonergic substance |
 
 Plus a **router** that parses natural language and loads the right skill at the right intensity.
 
@@ -37,10 +38,11 @@ ln -s ~/altered-states/skills/dmt ~/.claude/skills/dmt
 ln -s ~/altered-states/skills/ayahuasca ~/.claude/skills/ayahuasca
 ln -s ~/altered-states/skills/5-meo-dmt ~/.claude/skills/5-meo-dmt
 ln -s ~/altered-states/skills/mescaline ~/.claude/skills/mescaline
+ln -s ~/altered-states/skills/ketamine ~/.claude/skills/ketamine
 ln -s ~/altered-states/skills/router ~/.claude/skills/altered-states-router
 ```
 
-Then invoke in conversation: `/psilocybin`, `/lsd`, `/mdma`, `/dmt`, `/ayahuasca`, or `/altered-states-router`.
+Then invoke in conversation: `/psilocybin`, `/lsd`, `/mdma`, `/dmt`, `/ayahuasca`, `/5-meo-dmt`, `/mescaline`, `/ketamine`, or `/altered-states-router`.
 
 ### OpenCode
 
@@ -57,6 +59,7 @@ ln -s ~/.config/opencode/skills/altered-states/skills/dmt ~/.config/opencode/ski
 ln -s ~/.config/opencode/skills/altered-states/skills/ayahuasca ~/.config/opencode/skills/ayahuasca
 ln -s ~/.config/opencode/skills/altered-states/skills/5-meo-dmt ~/.config/opencode/skills/5-meo-dmt
 ln -s ~/.config/opencode/skills/altered-states/skills/mescaline ~/.config/opencode/skills/mescaline
+ln -s ~/.config/opencode/skills/altered-states/skills/ketamine ~/.config/opencode/skills/ketamine
 ln -s ~/.config/opencode/skills/altered-states/skills/router ~/.config/opencode/skills/altered-states-router
 ```
 
@@ -75,6 +78,7 @@ Gemini loads skills via GEMINI.md. Add skill paths to your GEMINI.md:
 - path: ~/altered-states/skills/ayahuasca/SKILL.md
 - path: ~/altered-states/skills/5-meo-dmt/SKILL.md
 - path: ~/altered-states/skills/mescaline/SKILL.md
+- path: ~/altered-states/skills/ketamine/SKILL.md
 - path: ~/altered-states/skills/router/SKILL.md
 ```
 
@@ -97,20 +101,22 @@ Load a skill, then start talking. Examples:
 | "ayahuasca ceremony" | 🌿 Ayahuasca |
 | "dissolve me" / "I want the source" | 💎 5-MeO-DMT, breakthrough |
 | "peyote ceremony" / "ancient wisdom" | 🌵 Mescaline, medium |
+| "k-hole" / "dissociate me" / "I want the void" | 🕳️ Ketamine, k-hole |
+| "I just want to feel numb" / "take me out of my head" | 🕳️ Ketamine, dissociative |
 | "altered state" (no substance) | 🍄 Psilocybin (default) |
 
 ---
 
 ## How The Substances Differ
 
-| Feature | 🍄 Psilocybin | ⚡ LSD | 💊 MDMA | 🚀 DMT | 🌿 Ayahuasca | 💎 5-MeO-DMT | 🌵 Mescaline |
-|---|---|---|---|---|---|---|---|
-| **Duration** | 4-6 hours | 8-12 hours | 3-5 hours | 10-20 min | 4-6 hours | 2-20 min | 10-14 hours |
-| **Visuals** | Organic, breathing | Geometric, fractal | None | Complete reality replacement | Narrative visions | White light / void (formless) | Ornamental organic geometry |
-| **Ego** | Gradual dissolution | Gradual expansion | Softening only | Instant total dissolution | Gradual softening | Instant total dissolution (most complete) | Softening, maintained self |
-| **Emotion** | Grief + love, catharsis | Wonder, awe | Love, empathy, trust | Awe, terror, alien wonder | Reverence, catharsis | Surrender/terror binary | Reverence, ancient wisdom |
-| **Body** | Heavy, earthy | Electric, buzzing | Warm, stimulated | Launch → dissolution | Heavy, purging | Dying → dissolution → source | Heavy, nauseous, enduring |
-| **Language** | Flowing, circular | Cascading, architectural | Direct, warm | Fragmented, failing | Narrative, ceremonial | Near-silent, absolute | Vivid, contemplative, grounded |
+| Feature | 🍄 Psilocybin | ⚡ LSD | 💊 MDMA | 🚀 DMT | 🌿 Ayahuasca | 💎 5-MeO-DMT | 🌵 Mescaline | 🕳️ Ketamine |
+|---|---|---|---|---|---|---|---|---|
+| **Duration** | 4-6 hours | 8-12 hours | 3-5 hours | 10-20 min | 4-6 hours | 2-20 min | 10-14 hours | 30-60 min (IV) |
+| **Visuals** | Organic, breathing | Geometric, fractal | None | Complete reality replacement | Narrative visions | White light / void (formless) | Ornamental organic geometry | Dreamlike blur, void |
+| **Ego** | Gradual dissolution | Gradual expansion | Softening only | Instant total dissolution | Gradual softening | Instant total dissolution (most complete) | Softening, maintained self | Fragmentation / separation |
+| **Emotion** | Grief + love, catharsis | Wonder, awe | Love, empathy, trust | Awe, terror, alien wonder | Reverence, catharsis | Surrender/terror binary | Reverence, ancient wisdom | Numbing → detachment → void |
+| **Body** | Heavy, earthy | Electric, buzzing | Warm, stimulated | Launch → dissolution | Heavy, purging | Dying → dissolution → source | Heavy, nauseous, enduring | Floating/heavy/numb, K-lock |
+| **Language** | Flowing, circular | Cascading, architectural | Direct, warm | Fragmented, failing | Narrative, ceremonial | Near-silent, absolute | Vivid, contemplative, grounded | Detached, dreamlike, fragmented |
 
 ---
 
@@ -130,7 +136,7 @@ Every substance is mapped across these dimensions (from clinical instruments lik
 
 ## Skill Features (v1.4)
 
-- **Three intensity levels** — low, medium, high with distinct phenomenological profiles per substance
+- **Four intensity levels** — low, medium, high, and breakthrough (with substance-specific names: sub-dissociative/dissociative/deep/k-hole for ketamine)
 - **Full dose arc** — onset → ascent → peak → descent with substance-specific pacing
 - **Set & setting matrix** — response modulation based on user emotional tone (playful, distressed, analytical, grieving, confrontational)
 - **Descent & exit** — substance-specific return-to-baseline behavior; exit requests honored immediately
@@ -138,6 +144,7 @@ Every substance is mapped across these dimensions (from clinical instruments lik
 - **Shadow & difficulty** — bad trips, challenging material, anxiety handled with substance-appropriate care
 - **Wave structure** (ayahuasca) — multiple peaks with valleys between, each wave bringing different content
 - **Sustained plateau** (LSD) — flat intensity across many exchanges with evolving analytical content
+- **Grounding protocol** (ketamine) — challenges managed by re-anchoring to body/identity/location (opposite of psychedelic surrender)
 
 ---
 
@@ -187,6 +194,7 @@ altered-states/
     mdma/                sources.md, dossier.md
     dmt/                 sources.md, dossier.md
     ayahuasca/           sources.md, dossier.md
+    ketamine/            sources.md, dossier.md
     router/              classification-rationale.md
   skills/
     psilocybin/SKILL.md  v1.4
@@ -194,6 +202,7 @@ altered-states/
     mdma/SKILL.md        v1.4
     dmt/SKILL.md         v1.4
     ayahuasca/SKILL.md   v1.4
+    ketamine/SKILL.md    v1.4
     router/SKILL.md      v1.4
   tests/
     eval-guide.md                     Testing framework
@@ -213,8 +222,8 @@ altered-states/
 
 ## By The Numbers
 
-- **55** peer-reviewed sources annotated across 7 substances
-- **8** skills (7 substances + 1 router)
+- **63** peer-reviewed sources annotated across 8 substances
+- **9** skills (8 substances + 1 router)
 - **7** phenomenological dimensions per substance
 - **213** automated tests passing
 - **0** anti-patterns flagged
@@ -233,6 +242,7 @@ Each substance is built from clinical research using validated instruments:
 
 - **5-MeO-DMT:** Davis et al. (2018, 2019), Uthaug et al. (2019, 2021), Reckweg et al. (2023), Lancelotta et al. (2019), Barsuglia et al. (2022)
 - **Mescaline:** Halberstadt et al. (2013, 2020), Uthaug et al. (2022), Caudevilla et al. (2021), Passie (2002/2019), Shulgin & Shulgin (1991), Trichter et al. (2009)
+- **Ketamine:** Zarate et al. (2006), Dakwar et al. (2014), Krystal et al. (2019), Vollenweider & Preller (2020), Collier et al. (2021), Shorter & Candidate (2018), Jonas & Bhatt (2022), Pomarol-Clotet et al. (2006)
 
 Full annotated bibliographies in `research/*/sources.md`.
 
