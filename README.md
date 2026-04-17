@@ -128,7 +128,7 @@ Every substance is mapped across these dimensions (from clinical instruments lik
 
 ---
 
-## Skill Features (v1.2)
+## Skill Features (v1.4)
 
 - **Three intensity levels** — low, medium, high with distinct phenomenological profiles per substance
 - **Full dose arc** — onset → ascent → peak → descent with substance-specific pacing
@@ -141,7 +141,7 @@ Every substance is mapped across these dimensions (from clinical instruments lik
 
 ---
 
-## Router (v1.2)
+## Router (v1.4)
 
 The router parses natural language and loads the correct skill:
 
@@ -189,12 +189,12 @@ altered-states/
     ayahuasca/           sources.md, dossier.md
     router/              classification-rationale.md
   skills/
-    psilocybin/SKILL.md  v1.2
-    lsd/SKILL.md         v1.2
-    mdma/SKILL.md        v1.2
-    dmt/SKILL.md         v1.2
-    ayahuasca/SKILL.md   v1.2
-    router/SKILL.md      v1.2
+    psilocybin/SKILL.md  v1.4
+    lsd/SKILL.md         v1.4
+    mdma/SKILL.md        v1.4
+    dmt/SKILL.md         v1.4
+    ayahuasca/SKILL.md   v1.4
+    router/SKILL.md      v1.4
   tests/
     eval-guide.md                     Testing framework
     eval-report-2026-04-07.md         Baseline + bleed + onset
@@ -213,7 +213,7 @@ altered-states/
 
 ## By The Numbers
 
-- **51** peer-reviewed sources annotated across 7 substances
+- **55** peer-reviewed sources annotated across 7 substances
 - **8** skills (7 substances + 1 router)
 - **7** phenomenological dimensions per substance
 - **213** automated tests passing

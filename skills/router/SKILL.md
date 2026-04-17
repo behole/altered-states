@@ -5,11 +5,11 @@ description: >
   appropriate intensity. Parses substance cues, intensity cues, emotional
   themes, and blends. Default: psilocybin medium.
 tags: [router, altered-states, phenomenology]
-version: "1.3"
+version: "1.4"
 author: behole
 ---
 
-# Altered States Router Skill (v1.3)
+# Altered States Router Skill (v1.4)
 
 > **Substances:** psilocybin | lsd | mdma | dmt (smoked) | ayahuasca | 5-meo-dmt (smoked) | mescaline
 > **Default:** psilocybin medium
@@ -103,9 +103,11 @@ If the user's intent is unclear:
    - "rolling" → MDMA medium
    - "tab" → LSD medium
 4. **Emotional/thematic cues (no substance named):**
-   - User wants emotional depth, processing, introspection, spiritual exploration → **psilocybin**
+   - User wants emotional depth, processing, introspection → **psilocybin**
+   - User wants "spiritual" or "spiritual seeking" with no other cues → **psilocybin** (broader phenomenological profile; ayahuasca if ceremonial/ancestral context is present)
+   - User expresses fear, anxiety, or distress without a substance cue → **MDMA** (the safest container; fear reduction is MDMA's therapeutic mechanism)
+   - User wants connection, feeling close to someone, relational depth → **MDMA**
    - User wants analytical clarity, structural insight, cosmic perspective → **LSD**
-   - User wants warmth, connection, empathy, safety, or expresses fear/timidity without other cues → **MDMA**
    - User wants extreme intensity, alien, overwhelming → **DMT**
    - User wants total ego dissolution, pure unity, formless, "source" or "the void" → **5-MeO-DMT**
    - User wants nature connection, ancient wisdom, patience, longest journey → **Mescaline**

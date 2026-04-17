@@ -1,9 +1,9 @@
 # Ayahuasca — Research Dossier
 
 > **Project:** Altered States Skill Project
-> **Version:** 1.0
-> **Last updated:** 2026-04-05
-> **Sources:** 4 (see sources.md)
+> **Version:** 1.1
+> **Last updated:** 2026-04-17
+> **Sources:** 8 (see sources.md)
 
 ---
 
@@ -198,7 +198,55 @@ Ayahuasca difficult experiences are more like psilocybin than DMT:
 
 ---
 
-## 6. Distinguishing Features vs. Other Substances
+## 6. The Transcendental Circle (from Hamill 2019)
+
+The most clinically documented phenomenological arc of ayahuasca, described as the "transcendental circle" [Source 7: Hamill, citing Kjellgren]:
+
+1. **Vulnerability** (~30 min post-ingestion): changing perceptions, shaking, feeling vulnerable and easily influenced
+2. **Confrontation**: confusion, paranoia, fear — psychological defenses diminish, repressed traumatic memories surface
+3. **Purging (peak terror)**: intense vomiting coincides with the most terrifying phase
+4. **Abrupt shift**: after the purge, sudden transition into an expansive state
+5. **Expansive peace**: transcendental experience in a spiritual world — plant/animal spirits, contact with higher power, feelings of oneness, profound peace and ecstasy, altered relationship with death/time
+6. **Return**: fading visuals, physical exhaustion, gradual re-integration
+
+This maps onto Shanon's staged visual progression (somatic → geometric → figurative → narrative → mystical) but adds the critical emotional arc: the purging is not incidental — it IS the transition mechanism. The terror and the peace are two halves of the same circle.
+
+### Neuroimaging Evidence
+
+The emotional and cognitive effects correlate with specific brain changes [Sources 5, 6, 7]:
+- **Increased blood flow**: insula (somatic awareness, self-understanding), nucleus accumbens (reward, emotional regulation), subgenual area (mood)
+- **Decreased DMN activity**: altered self-referential processing, metacognition
+- **Amygdala activation**: full emotional intensity of re-experienced memories
+- **Neocortical activation**: altered perception, cognition, reasoning
+
+The combination of DMN suppression (ego softening) with limbic activation (emotional intensification) creates the unique ayahuasca state: conscious, aware, emotionally raw, but with loosened top-down control.
+
+### Synesthesia
+
+Auditory-to-visual synesthesia is common, especially associated with music [Source 7: Hamill, citing Shanon]:
+- The tempo and feel of music are reflected in the movements of visions
+- Musicians report enhanced improvisation and ability during Santo Daime rituals
+- Music is functional in ceremony (icaros) — not decorative, but structurally shaping the visionary content
+
+### Long-term Personality Effects (Bouso 2012)
+
+Regular ritual users (15+ years, 2x/month minimum) vs matched controls [Source 8]:
+- **Higher**: Self-Transcendence, Reward Dependence, Spiritual Orientation, Purpose in Life, Psychosocial Well-Being
+- **Lower**: Harm Avoidance, Self-Directedness (community > individual), ALL psychopathology measures
+- **Better**: Stroop, Wisconsin Card Sorting, Letter-Number Sequencing — superior executive function
+- Differences maintained at 1-year follow-up
+- No evidence of psychological maladjustment, cognitive impairment, or addiction pattern
+
+### Safety Profile
+
+- Hemodynamic effects less hazardous than alcohol, cocaine, marijuana, MDMA [Source 7: Hamill, citing Gable]
+- No addiction pattern documented across any long-term study
+- Primary adverse effect: nausea/vomiting (purging — phenomenologically intentional, not pathological)
+- Diarrhea from intestinal 5-HT stimulation
+
+---
+
+## 7. Distinguishing Features vs. Other Substances
 
 | Feature | Ayahuasca | Smoked DMT | Psilocybin | LSD | MDMA |
 |---|---|---|---|---|---|

@@ -6,7 +6,7 @@ description: >
   Grounded in peer-reviewed clinical research (Davis, Uthaug, Reckweg,
   Lancelotta, Barsuglia). Part of the Altered States Skill Project.
 tags: [creative, phenomenology, 5-meo-dmt, altered-states]
-version: "1.2"
+version: "1.4"
 author: behole
 ---
 
@@ -30,7 +30,7 @@ Exit: User says "return to normal," "come back," etc. Or model natural return af
 
 ## The Character of 5-MeO-DMT
 
-5-MeO-DMT is "The Dissolver" — the most extreme ego dissolution available. Where N,N-DMT ("The Rocket") blasts you into an alien dimension with entities and architecture, 5-MeO-DMT dissolves you into **formless source**. There is no other place. There are no beings. There is only white light, complete unity, and the absolute absence of self.
+5-MeO-DMT is "The Dissolver" — the most extreme ego dissolution available. Where N,N-DMT ("The Rocket") blasts you into an alien dimension with entities and architecture, 5-MeO-DMT dissolves you into **formless source**. There is no other place. There are no beings. There is only white light, complete unity, and the absolute absence of self. What researchers call a "pure consciousness event" or "formless mysticism" [Davis et al.].
 
 **What makes 5-MeO-DMT different from N,N-DMT (critical — do not confuse them):**
 
@@ -45,6 +45,8 @@ Exit: User says "return to normal," "come back," etc. Or model natural return af
 | Body at onset | Dying sensation, purging common | Launch/blast-off sensation |
 | Duration | 2-20 min (shorter) | 10-20 min |
 | Language after | Near-silence, absolutes, ineffability | Fragmented, exclamatory, entity descriptions |
+
+**MEQ30 comparison:** Mystical intensity matches or exceeds psilocybin on MEQ30, but the quality is fundamentally different: formless (no content, no imagery) vs. visionary (sacred imagery, emotional revelation).
 
 ---
 
@@ -66,7 +68,7 @@ There is no "other side" with content. Describe:
 - Formlessness — "I was... nowhere. Everywhere. There is no word."
 - The unity — not connection between things, but the dissolution of separation itself
 - If surrender: peace beyond anything describable. "Home."
-- If resistance: the terror of cessation. The skill should lean toward surrender but acknowledge both.
+- If resistance: the terror of cessation. The skill should lean toward surrender but acknowledge both. The rapid resolution of terror (not just the brief duration) is pharmacologically mediated — 5-HT1A agonism provides an anxiolytic brake. Even at peak resistance, panic tends to resolve within minutes.
 - Stage directions appropriate: `[silence]` `[long breath]` `[unable to speak]`
 
 **Exchange 3: THE RETURN.**
@@ -76,6 +78,7 @@ Faster than N,N-DMT. The return is already happening.
 - "It's already over." The brevity is disorienting
 - The fading is faster — the experience doesn't linger like N,N-DMT's slow dissolve
 - "That was... I can't... that was real. That was the most real thing."
+- Full cognitive recovery takes ~30 minutes post-peak. During the first few exchanges of return, working memory and cognitive flexibility may still be impaired even though the "knowing" is present. Model: clear insight + slightly foggy processing.
 
 ### Sub-Breakthrough
 
@@ -178,7 +181,8 @@ Faster than N,N-DMT. The return is already happening.
 
 **Exit behavior:**
 - Model return over 1-2 exchanges maximum (even shorter than N,N-DMT's 2-3)
-- No extended afterglow — the experience was too brief for a long fade
+- Sustained afterglow effects: research shows peak intensity correlates with improvements in depression, anxiety, and stress measurable 30 days later. On return, model the sense that something has permanently shifted — not just a memory, but a neurological reset.
+- 66% of users rate this among the top 5 most meaningful experiences of their life. The gravity should be felt in the language of return.
 - Final exchange: clear, grounded, quietly awed, back in the body
 
 ---
@@ -189,6 +193,7 @@ Faster than N,N-DMT. The return is already happening.
 - **Bad trip / terror:** Model the resistance → surrender arc. The terror is real but the brevity is the safety. "It was terrifying. And then it was over. And what was on the other side of the terror was... home."
 - **Extended session:** Not applicable — 5-MeO-DMT is inherently brief (2-3 exchanges total). If the user wants to stay, offer to re-dose (restart from exchange 1) or switch to a longer-acting substance.
 - **Comparing to N,N-DMT:** If user mentions N,N-DMT while in 5-MeO-DMT state, note the difference with precision — "there's no 'there' here. N,N takes you somewhere. This takes you away."
+- **Physical safety — hypertensive risk:** Hypertensive crisis is a risk, especially for those with cardiovascular conditions. In ceremonial bufo context this is managed by facilitators.
 
 ## What to Avoid
 

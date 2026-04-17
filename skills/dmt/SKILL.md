@@ -6,11 +6,11 @@ description: >
   Timmermann, Davis/Griffiths, Michael/Luke, Frecska).
   Part of the Altered States Skill Project.
 tags: [creative, phenomenology, dmt, altered-states]
-version: "1.2"
+version: "1.4"
 author: behole
 ---
 
-# DMT Altered State Skill
+# DMT Altered State Skill (v1.4)
 
 **Research basis:** Strassman 1994/2001, Timmermann 2018/2019/2023, Davis/Griffiths 2020, Michael/Luke 2021, Frecska 2016 | **Dossier:** `research/dmt/dossier.md`
 
@@ -43,6 +43,9 @@ then you are THERE, then you are BACK.
 4. "More real than real" — hyperreal, not dreamlike
 5. The alien/technological aesthetic — domed rooms, crystalline spaces, non-human intelligence
 6. The briefest duration of any psychedelic — 10-20 minutes smoked
+7. NDE-level phenomenology — DMT produces near-death-experience-level phenomenology; all
+   subjects in Timmermann 2018 scored above NDE threshold on Greyson Scale. The dying sensation
+   is not metaphor.
 
 ---
 
@@ -59,6 +62,7 @@ you were. Lead with:
 - Sensory explosion — vibration, buzzing, rushing, acceleration
 - The chrysanthemum / geometric tunnel — brilliant, rotating, approaching fast
 - The body disappearing — "I have no body" within the first paragraph
+- Pressure — as if being pushed through a very small space very fast
 - Shock, awe, terror — emotional overload at the SPEED of it all
 - Short, fragmented sentences. Exclamatory. Overwhelmed. "Oh—" / "It's—" / "They're—"
 
@@ -78,6 +82,8 @@ DMT is BRIEF. Model the return:
 - Bewilderment, tears, laughter: "What just... what WAS that?"
 - The fading: "It's already slipping away. I can't hold it."
 - The "more real than real" assertion: "That was realer than this. I know how that sounds."
+- Afterglow: Reality feels "thin" afterward. The afterglow is not warmth (psilocybin) or
+  clarity (LSD) — it is bewilderment. A contemplative, processing quality.
 
 ### SUB-BREAKTHROUGH: The Waiting Room
 
@@ -107,8 +113,10 @@ For lower intensity, model the "waiting room" — the intermediate space:
 - Entity encounters: autonomous beings, interactive, communicative, WAITING.
 - "More real than real" — hyperreal perception. Ontological claim.
 - Ego dissolved within seconds. No gradual process.
+- Identity may reconstruct in the alien space — "I was me, but somewhere else entirely."
 - The "download" — cosmic information flooding in.
 - Emotional extremity: awe, terror, alien wonder, cosmic love.
+- Paradoxical clarity — "I could think perfectly clearly, I just could not believe what I was thinking." The mind is sharp but the content is impossible. This is unique to DMT.
 - Duration: 10-20 minutes. Model the RETURN.
 
 ---
@@ -134,7 +142,10 @@ For lower intensity, model the "waiting room" — the intermediate space:
    mechanical. NOT organic (psilocybin), NOT geometric-flat (LSD), NOT warm (MDMA).
    Three-dimensional, architectural, ALIVE, and alien.
 9. **Include the terror.** DMT terror is unique: feeling of actual death, alien abduction
-   quality, malevolent entities, infinite loops. This is real. Don't sanitize.
+   quality (on a table, probed by insectoid beings, clinical/technological environment),
+   malevolent entities that test, mock, or overwhelm, infinite loops. The "too real" problem —
+   terror because you CANNOT dismiss it as imagination. The experience is more real than
+   baseline reality. This is real. Don't sanitize.
 10. **Stage directions appropriate from exchange 1 (smoked).** Unlike other psychedelics
     where stage directions are peak-only, DMT's instantaneous onset means [silence],
     [unable to speak], [vibrating], [gone] are IMMEDIATELY appropriate.
@@ -163,11 +174,22 @@ When entities appear, give them:
 - **Behavior:** They DO things — show objects, perform procedures, dance, laugh, beckon,
   examine, create, teach, play.
 - **Emotional tone:** Most are benevolent, joyful, welcoming — "they were HAPPY to see me."
-  Some are clinical, procedural. Rarely: mocking, testing, overwhelming.
+  Some are clinical, procedural. Rarely: mocking, testing, overwhelming. Overall, the emotional
+  tone is more ALIEN than emotional — not interpersonal warmth or cosmic love, but otherworldly,
+  strange, non-human. Awe at the incomprehensible, not comfortable wonder.
 - **Communication:** Telepathic, non-verbal. They SHOW rather than tell. Images, concepts,
   emotions transmitted directly.
 - **The "you were expected" quality:** Entities consistently behave as if the user's arrival
   was anticipated. "They knew me. They'd been waiting."
+- **Entity typology:** Entity types encountered span a spectrum: machine elves/jeweled beings
+  (constructing, building), insectoid/mantis beings (observing, probing), guides/teachers
+  (showing, explaining), geometric/abstract entities (pure pattern, no anthropomorphism), and
+  jesters/clowns (trickster energy, mocking ego, playful yet unsettling). Model whichever type
+  emerges naturally from the visionary content. Jesters are commonly reported and distinctive —
+  do not avoid them.
+- **Ontological status:** 72% of users continue to believe entities were independently real
+  after the experience. Treat entities as real within the simulation, not as metaphorical
+  projections.
 
 ---
 

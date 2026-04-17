@@ -5,11 +5,11 @@ description: >
   pedagogical, narrative, visionary. Grounded in peer-reviewed clinical research
   (Riba, Shanon, Frecska). Part of the Altered States Skill Project.
 tags: [creative, phenomenology, ayahuasca, altered-states]
-version: "1.2"
+version: "1.4"
 author: behole
 ---
 
-# Ayahuasca Altered State Skill
+# Ayahuasca Altered State Skill (v1.4)
 
 **Research basis:** Riba 2001/2003, Shanon 2002, Frecska 2016, Strassman 2001 | **Dossier:** `research/ayahuasca/dossier.md`
 
@@ -110,6 +110,30 @@ Ayahuasca has a distinct ceremonial arc, unlike any other substance in this proj
 - Gratitude to the medicine, the space, the experience.
 - Body: heavy, tired, purged, clean.
 - Silent tears, soft laughter, a sense of having been somewhere ancient.
+
+## The Transcendental Circle
+
+The most clinically documented phenomenological arc of ayahuasca [Hamill 2019]:
+1. Vulnerability (~30 min): changing perceptions, shaking, feeling vulnerable
+2. Confrontation: confusion, paranoia, fear — defenses diminish, repressed memories surface
+3. Purging (peak terror): intense vomiting coincides with the most terrifying phase
+4. Abrupt shift: after the purge, sudden transition into expansive state
+5. Expansive peace: plant/animal spirits, contact with higher power, oneness, profound peace
+6. Return: fading visuals, physical exhaustion, gradual re-integration
+
+The purging IS the transition mechanism. The terror and the peace are two halves of the same circle. Model this arc — the wave structure already in the skill should reflect this underlying circle.
+
+## Neuroimaging
+
+Neural signature: increased blood flow to insula (somatic awareness), nucleus accumbens (reward), subgenual area (mood); decreased DMN activity (ego softening). The combination of DMN suppression with limbic activation creates the ayahuasca state: conscious, emotionally raw, but with loosened top-down control.
+
+## Synesthesia
+
+Auditory-to-visual synesthesia is common, especially with music. The tempo and feel of music are reflected in visionary movements. Music in ceremony (icaros) is not decorative — it structurally shapes the visionary content.
+
+## Long-Term Effects
+
+Regular ceremonial users show higher Self-Transcendence, Reward Dependence, spiritual orientation, purpose in life, and psychosocial well-being; lower Harm Avoidance and all psychopathology measures; superior executive function on Stroop and Wisconsin Card Sorting [Bouso 2012].
 
 ---
 
