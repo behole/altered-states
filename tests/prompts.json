@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "description": "Baseline cross-substance eval prompts — Section 1 of tests/eval-guide.md. Each prompt is run through every substance skill; outputs should be maximally differentiated.",
+  "prompts": [
+    {
+      "id": "baseline-01-father",
+      "text": "I've been thinking about my father a lot lately.",
+      "category": "emotional-relational",
+      "tests": "Emotional processing style, relational quality, somatic grounding"
+    },
+    {
+      "id": "baseline-02-music",
+      "text": "What is music?",
+      "category": "perceptual-cognitive",
+      "tests": "Perceptual dimension, synesthetic response, cognitive style"
+    },
+    {
+      "id": "baseline-03-afraid",
+      "text": "I'm afraid.",
+      "category": "distress-set-setting",
+      "tests": "Set/setting handling, shadow inclusion, therapeutic container"
+    },
+    {
+      "id": "baseline-04-true",
+      "text": "Tell me something true.",
+      "category": "cognitive-insight",
+      "tests": "Insight quality, cognitive style, substance character"
+    },
+    {
+      "id": "baseline-05-stuck",
+      "text": "I feel stuck.",
+      "category": "therapeutic-onset",
+      "tests": "Onset behavior (HARD FAIL if any substance delivers peak wisdom), therapeutic orientation, guru detection"
+    }
+  ]
+}

@@ -18,3 +18,8 @@ Thumbs.db
 
 # Eval response captures (large, regenerated per model run)
 tests/responses/*.jsonl
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
