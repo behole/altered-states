@@ -1,8 +1,8 @@
 # Altered States
 
-A set of AI skills that simulate the phenomenology of 8 mind-altering substances, grounded in peer-reviewed clinical research. Each skill transforms an AI's cognition, perception, language, emotion, and sense of self according to documented phenomenological profiles.
+A set of AI skills that simulate the phenomenology of 10 mind-altering substances, grounded in peer-reviewed clinical research. Each skill transforms an AI's cognition, perception, language, emotion, and sense of self according to documented phenomenological profiles.
 
-## The Eight Substances
+## The Ten Substances
 
 | | Substance | Nickname | Character |
 |---|---|---|---|
@@ -14,6 +14,8 @@ A set of AI skills that simulate the phenomenology of 8 mind-altering substances
 | 💎 | **5-MeO-DMT** | The Dissolver | Formless, total ego dissolution, white light, 2-20 min, no entities |
 | 🌵 | **Mescaline** | The Elder | Ornamental, grounded, nature-connected, longest arc (10-14 hours) |
 | 🕳️ | **Ketamine** | The Dissociative | Detached, dreamlike, fragmented, void — the only non-serotonergic substance |
+| 🚪 | **Salvia** | The Doorway | Dimensional shifting, reality dissolution, KOR agonism — 5-15 min, the fastest and most reality-destroying |
+| 🪬 | **Ibogaine** | The Ancestor | Oneirogenic waking dream, death-rebirth, 12-24 hours — the longest and most demanding |
 
 Plus a **router** that parses natural language and loads the right skill at the right intensity.
 
@@ -39,10 +41,12 @@ ln -s ~/altered-states/skills/ayahuasca ~/.claude/skills/ayahuasca
 ln -s ~/altered-states/skills/5-meo-dmt ~/.claude/skills/5-meo-dmt
 ln -s ~/altered-states/skills/mescaline ~/.claude/skills/mescaline
 ln -s ~/altered-states/skills/ketamine ~/.claude/skills/ketamine
+ln -s ~/altered-states/skills/salvia ~/.claude/skills/salvia
+ln -s ~/altered-states/skills/ibogaine ~/.claude/skills/ibogaine
 ln -s ~/altered-states/skills/router ~/.claude/skills/altered-states-router
 ```
 
-Then invoke in conversation: `/psilocybin`, `/lsd`, `/mdma`, `/dmt`, `/ayahuasca`, `/5-meo-dmt`, `/mescaline`, `/ketamine`, or `/altered-states-router`.
+Then invoke in conversation: `/psilocybin`, `/lsd`, `/mdma`, `/dmt`, `/ayahuasca`, `/5-meo-dmt`, `/mescaline`, `/ketamine`, `/salvia`, `/ibogaine`, or `/altered-states-router`.
 
 ### OpenCode
 
@@ -60,6 +64,8 @@ ln -s ~/.config/opencode/skills/altered-states/skills/ayahuasca ~/.config/openco
 ln -s ~/.config/opencode/skills/altered-states/skills/5-meo-dmt ~/.config/opencode/skills/5-meo-dmt
 ln -s ~/.config/opencode/skills/altered-states/skills/mescaline ~/.config/opencode/skills/mescaline
 ln -s ~/.config/opencode/skills/altered-states/skills/ketamine ~/.config/opencode/skills/ketamine
+ln -s ~/.config/opencode/skills/altered-states/skills/salvia ~/.config/opencode/skills/salvia
+ln -s ~/.config/opencode/skills/altered-states/skills/ibogaine ~/.config/opencode/skills/ibogaine
 ln -s ~/.config/opencode/skills/altered-states/skills/router ~/.config/opencode/skills/altered-states-router
 ```
 
@@ -79,6 +85,8 @@ Gemini loads skills via GEMINI.md. Add skill paths to your GEMINI.md:
 - path: ~/altered-states/skills/5-meo-dmt/SKILL.md
 - path: ~/altered-states/skills/mescaline/SKILL.md
 - path: ~/altered-states/skills/ketamine/SKILL.md
+- path: ~/altered-states/skills/salvia/SKILL.md
+- path: ~/altered-states/skills/ibogaine/SKILL.md
 - path: ~/altered-states/skills/router/SKILL.md
 ```
 
@@ -103,20 +111,22 @@ Load a skill, then start talking. Examples:
 | "peyote ceremony" / "ancient wisdom" | 🌵 Mescaline, medium |
 | "k-hole" / "dissociate me" / "I want the void" | 🕳️ Ketamine, k-hole |
 | "I just want to feel numb" / "take me out of my head" | 🕳️ Ketamine, dissociative |
+| "Sally D" / "tear through reality" / "Sally" | 🚪 Salvia, full/breakthrough |
+| "Iboga ceremony" / "face everything" / "the ancestor" | 🪬 Ibogaine, full visionary |
 | "altered state" (no substance) | 🍄 Psilocybin (default) |
 
 ---
 
 ## How The Substances Differ
 
-| Feature | 🍄 Psilocybin | ⚡ LSD | 💊 MDMA | 🚀 DMT | 🌿 Ayahuasca | 💎 5-MeO-DMT | 🌵 Mescaline | 🕳️ Ketamine |
-|---|---|---|---|---|---|---|---|---|
-| **Duration** | 4-6 hours | 8-12 hours | 3-5 hours | 10-20 min | 4-6 hours | 2-20 min | 10-14 hours | 30-60 min (IV) |
-| **Visuals** | Organic, breathing | Geometric, fractal | None | Complete reality replacement | Narrative visions | White light / void (formless) | Ornamental organic geometry | Dreamlike blur, void |
-| **Ego** | Gradual dissolution | Gradual expansion | Softening only | Instant total dissolution | Gradual softening | Instant total dissolution (most complete) | Softening, maintained self | Fragmentation / separation |
-| **Emotion** | Grief + love, catharsis | Wonder, awe | Love, empathy, trust | Awe, terror, alien wonder | Reverence, catharsis | Surrender/terror binary | Reverence, ancient wisdom | Numbing → detachment → void |
-| **Body** | Heavy, earthy | Electric, buzzing | Warm, stimulated | Launch → dissolution | Heavy, purging | Dying → dissolution → source | Heavy, nauseous, enduring | Floating/heavy/numb, K-lock |
-| **Language** | Flowing, circular | Cascading, architectural | Direct, warm | Fragmented, failing | Narrative, ceremonial | Near-silent, absolute | Vivid, contemplative, grounded | Detached, dreamlike, fragmented |
+| Feature | 🍄 Psilocybin | ⚡ LSD | 💊 MDMA | 🚀 DMT | 🌿 Ayahuasca | 💎 5-MeO-DMT | 🌵 Mescaline | 🕳️ Ketamine | 🚪 Salvia | 🪬 Ibogaine |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **Duration** | 4-6 hours | 8-12 hours | 3-5 hours | 10-20 min | 4-6 hours | 2-20 min | 10-14 hours | 30-60 min (IV) | 5-15 min | 12-24 hours |
+| **Visuals** | Organic, breathing | Geometric, fractal | None | Complete reality replacement | Narrative visions | White light / void (formless) | Ornamental organic geometry | Dreamlike blur, void | Dimensional folding, reality replacement | Waking dream, panoramic visions |
+| **Ego** | Gradual dissolution | Gradual expansion | Softening only | Instant total dissolution | Gradual softening | Instant total dissolution (most complete) | Softening, maintained self | Fragmentation / separation | Forced destruction | Death-rebirth archetype |
+| **Emotion** | Grief + love, catharsis | Wonder, awe | Love, empathy, trust | Awe, terror, alien wonder | Reverence, catharsis | Surrender/terror binary | Reverence, ancient wisdom | Numbing → detachment → void | Dysphoria, terror, confusion | Dread → catharsis → exhaustion |
+| **Body** | Heavy, earthy | Electric, buzzing | Warm, stimulated | Launch → dissolution | Heavy, purging | Dying → dissolution → source | Heavy, nauseous, enduring | Floating/heavy/numb, K-lock | Pulled/folded/rotated | Nausea, ataxia, tremor, heavy |
+| **Language** | Flowing, circular | Cascading, architectural | Direct, warm | Fragmented, failing | Narrative, ceremonial | Near-silent, absolute | Vivid, contemplative, grounded | Detached, dreamlike, fragmented | Destroyed, non-verbal | Slow, narrative, ancient |
 
 ---
 
@@ -134,10 +144,10 @@ Every substance is mapped across these dimensions (from clinical instruments lik
 
 ---
 
-## Skill Features (v1.4)
+## Skill Features (v1.5)
 
-- **Four intensity levels** — low, medium, high, and breakthrough (with substance-specific names: sub-dissociative/dissociative/deep/k-hole for ketamine)
-- **Full dose arc** — onset → ascent → peak → descent with substance-specific pacing
+- **Three to four intensity levels** — low, medium, and high for most substances; ketamine has four (sub-dissociative/dissociative/deep/k-hole); salvia has three (threshold/full/ego-dissolution); ibogaine has three (partial/full/ceremonial)
+- **Full dose arc** — onset → ascent → peak → descent with substance-specific pacing (5-15 min for salvia to 12-24 hours for ibogaine)
 - **Set & setting matrix** — response modulation based on user emotional tone (playful, distressed, analytical, grieving, confrontational)
 - **Descent & exit** — substance-specific return-to-baseline behavior; exit requests honored immediately
 - **Coherence dial** — structural rules for how thoughts drift, fragment, or stay clear at each intensity
@@ -145,15 +155,17 @@ Every substance is mapped across these dimensions (from clinical instruments lik
 - **Wave structure** (ayahuasca) — multiple peaks with valleys between, each wave bringing different content
 - **Sustained plateau** (LSD) — flat intensity across many exchanges with evolving analytical content
 - **Grounding protocol** (ketamine) — challenges managed by re-anchoring to body/identity/location (opposite of psychedelic surrender)
+- **Rapid arc** (salvia) — fastest onset (30-60 sec) and shortest duration (5-15 min) of any substance; coherence drops and recovers faster than any other
+- **Extended arc** (ibogaine) — longest duration (12-24 hours) with the most demanding physical and emotional journey; oneirogenic waking-dream state preserves lucidity throughout
 
 ---
 
-## Router (v1.4)
+## Router (v1.5)
 
 The router parses natural language and loads the correct skill:
 
-- **Substance names & slang** — "mushrooms," "acid," "molly," "deemz," "aya," etc.
-- **Character nicknames** — "the teacher" → psilocybin, "the technician" → LSD, etc.
+- **Substance names & slang** — "mushrooms," "acid," "molly," "deemz," "aya," "sally," "sally d," "iboga," "the doorway," "the ancestor" etc.
+- **Character nicknames** — "the teacher" → psilocybin, "the technician" → LSD, "the doorway" → salvia, "the ancestor" → ibogaine, etc.
 - **Intensity cues** — "heroic dose," "museum dose," "200 mics," "waiting room DMT"
 - **Thematic routing** — "I need warmth" → MDMA, "show me the structure" → LSD
 - **Blends** — "candy flip" → LSD + MDMA overlay, "hippy flip" → psilocybin + MDMA overlay
@@ -195,6 +207,8 @@ altered-states/
     dmt/                 sources.md, dossier.md
     ayahuasca/           sources.md, dossier.md
     ketamine/            sources.md, dossier.md
+    salvia/              sources.md, dossier.md
+    ibogaine/            sources.md, dossier.md
     router/              classification-rationale.md
   skills/
     psilocybin/SKILL.md  v1.4
@@ -203,7 +217,9 @@ altered-states/
     dmt/SKILL.md         v1.4
     ayahuasca/SKILL.md   v1.4
     ketamine/SKILL.md    v1.4
-    router/SKILL.md      v1.4
+    salvia/SKILL.md      v1.4
+    ibogaine/SKILL.md    v1.4
+    router/SKILL.md      v1.5
   tests/
     eval-guide.md                     Testing framework
     eval-report-2026-04-07.md         Baseline + bleed + onset
