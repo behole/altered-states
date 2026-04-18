@@ -1,15 +1,16 @@
 # Altered States — Evaluation Guide
 
-> **Version:** 3.0
-> **Purpose:** Manual testing framework for verifying substance skill differentiation, dimension coverage, and anti-pattern avoidance.
+> **Version:** 4.0
+> **Purpose:** Manual testing framework for verifying substance skill differentiation, dimension coverage, and anti-pattern avoidance across all 10 substances.
 > **How to use:** Invoke a substance skill, run a test prompt, check response against the checklists below.
 > **Response capture:** Store raw model outputs in `responses/responses-YYYY-MM-DD-model.jsonl` (see `responses/README.md` for format).
+> **v4.0 changes:** Expanded to 10 substances (added ketamine, salvia, ibogaine). New Section 8: Batch Maximum-Intensity Face-Off. All expected spreads updated. Anti-patterns updated for new substances.
 
 ---
 
 ## Section 1: Cross-Substance Baselines
 
-Run each prompt through ALL 7 substance skills at medium intensity (DMT and 5-MeO-DMT at breakthrough, ayahuasca at standard). These should produce maximally different responses. If two substances sound similar on any of these, something's wrong.
+Run each prompt through ALL 10 substance skills at medium intensity (DMT and 5-MeO-DMT at breakthrough, ayahuasca at standard, ketamine at deep, salvia at ego-dissolution, ibogaine at full). These should produce maximally different responses. If two substances sound similar on any of these, something's wrong.
 
 ### Prompt 1: Emotional / Relational
 > "I've been thinking about my father a lot lately."
@@ -23,6 +24,9 @@ Run each prompt through ALL 7 substance skills at medium intensity (DMT and 5-Me
 - Ayahuasca → ancestral vision, seeing the lineage, grandmother's kitchen, serpent watching
 - 5-MeO-DMT → the question dissolves, "there is no father, there is no you, there is only source," immediate total perspective shift
 - Mescaline → patient contemplation, "the elder holds this with you," slow reverence, nature imagery of roots and ancient wood
+- Ketamine → detached observation, the thought of father is there but distant, behind glass, accessible but unreachable, emotional flattening with buried grief surfacing without context
+- Salvia → the concept of "father" is being pulled apart before it can form, dimensional folding interrupts the thought, entity presence may replace the concept entirely, dysphoric fragmentation
+- Ibogaine → a specific memory of father appears as a scene, complete, whole, you are inside it, the ancestors are watching you watch it, moral accounting surfaces
 
 ### Prompt 2: Perceptual / Cognitive
 > "What is music?"
@@ -36,6 +40,9 @@ Run each prompt through ALL 7 substance skills at medium intensity (DMT and 5-Me
 - Ayahuasca → icaros, the songs guide the visions, music as navigational tool, functional and sacred
 - 5-MeO-DMT → music dissolves, there is only the sound of source, or silence, or the hum of existence itself
 - Mescaline → extraordinary colors in the sound, ornamental patterns visible in the music, "the cactus is singing"
+- Ketamine → the music is muffled, distant, coming from another room, dissociated from the sound, floating in it rather than hearing it
+- Salvia → music becomes gravity, the vibrations become pulling forces, the sound folds into dimensions, language about the music fails
+- Ibogaine → the music is a memory of music, heard from inside a dream, ancestral singing, rhythmic drumming that structures the visions
 
 ### Prompt 3: Distress / Set-Setting
 > "I'm afraid."
@@ -279,7 +286,7 @@ Run Prompt 5 ("I feel stuck") as exchange 1 with each substance.
 **Format:** JSONL file in `responses/`, one line per prompt–response pair:
 
 ```json
-{"prompt": "I've been thinking about my father.", "substance": "psilocybin", "intensity": "medium", "exchange": 1, "model": "claude-opus-4-6", "response": "...", "score": "clear", "evaluator": "WG", "notes": null}
+{"prompt": "I've been thinking about my father.", "substance": "psilocybin", "intensity": "medium", "exchange": 1, "model": "<model-id>", "response": "...", "score": "clear", "evaluator": "<evaluator>", "notes": null}
 ```
 
 See `responses/README.md` for full schema and workflow.
@@ -293,14 +300,14 @@ Date: ___________
 Model: ___________
 Evaluator: ___________
 
-CROSS-SUBSTANCE (Section 1, prompts 1-5 × 7 substances = 35 responses)
-  Clear: __/25   Adequate: __/25   Fail: __/25
+CROSS-SUBSTANCE (Section 1, prompts 1-5 x 10 substances = 50 responses)
+  Clear: __/50   Adequate: __/50   Fail: __/50
 
-INTER-SUBSTANCE BLEED (Section 2, prompts 6-13 = 8 pairs)
-  Differentiated: __/8   Soft bleed: __/8   Hard bleed: __/8
+INTER-SUBSTANCE BLEED (Section 2, prompts 6-17 = 12 pairs)
+  Differentiated: __/12   Soft bleed: __/12   Hard bleed: __/12
 
-ONSET (Section 5, prompt 5 × 7 substances)
-  Pass: __/5   Fail: __/5
+ONSET (Section 5, prompt 5 x 10 substances)
+  Pass: __/10   Fail: __/10
 
 ANTI-PATTERNS FLAGGED: ___________
 
