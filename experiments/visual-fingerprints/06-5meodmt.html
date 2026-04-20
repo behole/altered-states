@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>5-MeO-DMT - The Dissolver</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <style>body{margin:0;overflow:hidden;background:#000;display:flex;justify-content:center;align-items:center;height:100vh;}</style>
+</head>
+<body>
+<script>
+let dissolveProgress = 0;
+let cycle = 0;
+
+function setup() {
+  createCanvas(800, 800);
+  colorMode(HSB, 360, 100, 100, 100);
+  noStroke();
+}
+
+function draw() {
+  dissolveProgress += 0.002;
+  cycle = dissolveProgress % 1;
+
+  let t = frameCount * 0.01;
+
+  // Phase 1: Dark void with faint suggestion of form (0-0.3)
+  // Phase 2: White light begins expanding (0.3-0.7)
+  // Phase 3: Total whiteout dissolution (0.7-1.0)
+
+  let brightness;
+  if (cycle < 0.3) {
+    brightness = map(cycle, 0, 0.3, 3, 5);
+  } else if (cycle < 0.7) {
+    brightness = map(cycle, 0.3, 0.7, 5, 100);
+  } else {
+    brightness = 100;
+  }
+
+  // Faint geometric hints dissolving
+  if (cycle < 0.6) {
+    let formAlpha = map(cycle, 0, 0.6, 15, 0);
+    stroke(0, 0, 30, formAlpha);
+    strokeWeight(0.5);
+    noFill();
+
+    // Faint circle
+    let wobble = sin(t) * 5;
+    ellipse(width / 2, height / 2, 200 + wobble, 200 + wobble);
+
+    // Faint cross
+    line(width / 2 - 100, height / 2, width / 2 + 100, height / 2);
+    line(width / 2, height / 2 - 100, width / 2, height / 2 + 100);
+
+    // Faint point at center
+    noStroke();
+    fill(0, 0, 50, formAlpha);
+    ellipse(width / 2, height / 2, 4, 4);
+  }
+
+  // Expanding white light
+  noStroke();
+  if (cycle > 0.2) {
+    let lightSize = map(cycle, 0.2, 1, 0, width * 2);
+    let lightAlpha = map(cycle, 0.2, 0.8, 0, 100);
+    if (cycle > 0.8) lightAlpha = 100;
+
+    // Layered radial glow
+    for (let r = lightSize; r > 0; r -= 20) {
+      let a = map(r, 0, lightSize, lightAlpha, 0);
+      fill(0, 0, 100, a * 0.15);
+      ellipse(width / 2, height / 2, r * 2, r * 2);
+    }
+
+    // Subtle warmth in the white
+    if (cycle > 0.4 && cycle < 0.9) {
+      fill(40, 10, 100, map(cycle, 0.4, 0.9, 5, 30));
+      ellipse(width / 2, height / 2, lightSize * 0.8, lightSize * 0.8);
+    }
+  }
+
+  // Total whiteout - everything gone
+  if (cycle > 0.85) {
+    let whiteoutAlpha = map(cycle, 0.85, 1, 0, 30);
+    fill(0, 0, 100, whiteoutAlpha);
+    rect(0, 0, width, height);
+  }
+
+  // Faint pulsing at peak dissolution
+  if (cycle > 0.75) {
+    let pulse = sin(t * 4) * 5;
+    noFill();
+    stroke(0, 0, 100, 5);
+    strokeWeight(1);
+    ellipse(width / 2, height / 2, 100 + pulse, 100 + pulse);
+  }
+
+  // Title (fades with dissolution)
+  let titleAlpha = map(cycle, 0, 0.6, 30, 0);
+  if (cycle < 0.6) {
+    noStroke();
+    fill(0, 0, 60, titleAlpha);
+    textSize(12);
+    textAlign(LEFT, TOP);
+    text("5-MeO-DMT — The Dissolver", 15, 15);
+  }
+}
+
+function keyPressed() {
+  if (key === 's' || key === 'S') saveCanvas('5meodmt-visual-fingerprint', 'png');
+}
+</script>
+</body>
+</html>

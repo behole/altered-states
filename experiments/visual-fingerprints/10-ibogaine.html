@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ibogaine - The Ancestor</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <style>body{margin:0;overflow:hidden;background:#080604;display:flex;justify-content:center;align-items:center;height:100vh;}</style>
+</head>
+<body>
+<script>
+let symbols = [];
+let maskPhase = 0;
+let scrollOffset = 0;
+let ancestralGold = 0;
+
+function setup() {
+  createCanvas(800, 800);
+  colorMode(HSB, 360, 100, 100, 100);
+
+  // Ancient symbols
+  for (let i = 0; i < 20; i++) {
+    symbols.push({
+      x: random(100, 700),
+      y: random(100, 700),
+      type: floor(random(6)),
+      size: random(20, 60),
+      hue: random() < 0.3 ? 45 : random(0, 30),
+      alpha: random(15, 40),
+      drift: random(0.1, 0.3),
+      angle: random(TWO_PI)
+    });
+  }
+
+  // Life review "frames" - scrolling horizontal bands
+  for (let i = 0; i < 8; i++) {
+    symbols.push({
+      x: random(width),
+      y: random(height),
+      type: 6, // life review band
+      size: random(30, 80),
+      hue: 30,
+      alpha: random(5, 15),
+      drift: random(0.2, 0.5),
+      angle: 0,
+      bandWidth: random(200, 500),
+      bandHeight: random(2, 8)
+    });
+  }
+}
+
+function draw() {
+  // Heavy dark background
+  noStroke();
+  fill(30, 50, 3, 20);
+  rect(0, 0, width, height);
+
+  let t = frameCount * 0.002;
+  scrollOffset += 0.3;
+  maskPhase += 0.005;
+
+  // Ancestral gold flash
+  if (random() < 0.005) ancestralGold = 40;
+  if (ancestralGold > 0) {
+    fill(45, 80, 70, ancestralGold * 0.2);
+    ellipse(width / 2, height / 2, ancestralGold * 5, ancestralGold * 5);
+    ancestralGold -= 0.5;
+  }
+
+  // Life review - scrolling imagery bands
+  for (let i = 0; i < 3; i++) {
+    let bandY = ((scrollOffset * (0.5 + i * 0.2) + i * 250) % (height + 100)) - 50;
+    noStroke();
+    fill(25, 30, 15, 8);
+    rect(0, bandY, width, 4);
+
+    // Subtle texture in bands
+    for (let x = 0; x < width; x += 40) {
+      let noiseVal = noise(x * 0.01, i * 0.5, t);
+      fill(30, 20, 25, noiseVal * 15);
+      rect(x, bandY, 30, 3);
+    }
+  }
+
+  // Draw ancient symbols
+  for (let sym of symbols) {
+    sym.y -= sym.drift * 0.3;
+    sym.angle += 0.002;
+
+    if (sym.y < -50) {
+      sym.y = height + 50;
+      sym.x = random(100, 700);
+    }
+
+    push();
+    translate(sym.x, sym.y);
+    rotate(sym.angle);
+
+    let alpha = sym.alpha + sin(t * 2 + sym.x * 0.01) * 5;
+    noFill();
+    strokeWeight(1.5);
+
+    switch (sym.type) {
+      case 0: // Eye symbol
+        stroke(sym.hue, 50, 50, alpha);
+        ellipse(0, 0, sym.size, sym.size * 0.5);
+        ellipse(0, 0, sym.size * 0.3, sym.size * 0.3);
+        break;
+
+      case 1: // Cross/ankh
+        stroke(sym.hue, 60, 55, alpha);
+        line(-sym.size / 2, 0, sym.size / 2, 0);
+        line(0, -sym.size / 2, 0, sym.size / 2);
+        ellipse(0, -sym.size / 2, sym.size * 0.3, sym.size * 0.3);
+        break;
+
+      case 2: // Spiral
+        stroke(sym.hue, 40, 45, alpha);
+        beginShape();
+        for (let a = 0; a < TWO_PI * 3; a += 0.1) {
+          let r = a * sym.size / (TWO_PI * 6);
+          vertex(cos(a) * r, sin(a) * r);
+        }
+        endShape();
+        break;
+
+      case 3: // Diamond
+        stroke(sym.hue, 55, 50, alpha);
+        beginShape();
+        vertex(0, -sym.size / 2);
+        vertex(sym.size / 3, 0);
+        vertex(0, sym.size / 2);
+        vertex(-sym.size / 3, 0);
+        endShape(CLOSE);
+        break;
+
+      case 4: // Zigzag (lightning/serpent)
+        stroke(sym.hue, 45, 50, alpha);
+        beginShape();
+        for (let z = -sym.size / 2; z <= sym.size / 2; z += 8) {
+          vertex(z, (z % 16 === 0 ? -8 : 8));
+        }
+        endShape();
+        break;
+
+      case 5: // Concentric circles (ancestral)
+        for (let r = 5; r < sym.size / 2; r += 6) {
+          stroke(sym.hue, 40, 45, alpha * (1 - r / (sym.size / 2)));
+          ellipse(0, 0, r * 2, r * 2);
+        }
+        break;
+
+      case 6: // Life review band
+        stroke(sym.hue, 20, 25, sym.alpha);
+        rectMode(CENTER);
+        rect(0, 0, sym.bandWidth || 300, sym.bandHeight || 4);
+        rectMode(CORNER);
+        break;
+    }
+
+    pop();
+  }
+
+  // Central morphing mask/face
+  push();
+  translate(width / 2, height / 2);
+  noFill();
+  let faceAlpha = 25 + sin(t * 1.5) * 10;
+
+  // Outer face shape morphs
+  stroke(40, 50, 50, faceAlpha);
+  strokeWeight(1.5);
+  beginShape();
+  for (let a = 0; a <= TWO_PI; a += 0.05) {
+    let baseR = 80;
+    let morph = sin(a * 2 + t * 2) * 10 + sin(a * 3 - t * 1.5) * 8;
+    let r = baseR + morph;
+    vertex(cos(a) * r, sin(a) * r);
+  }
+  endShape(CLOSE);
+
+  // Eyes (two dark voids)
+  noStroke();
+  fill(0, 0, 0, 60);
+  let eyeShift = sin(t) * 3;
+  ellipse(-25 + eyeShift, -10, 18, 12);
+  ellipse(25 + eyeShift, -10, 18, 12);
+
+  // Eye glow
+  fill(45, 70, 60, 15 + sin(t * 3) * 10);
+  ellipse(-25 + eyeShift, -10, 10, 6);
+  ellipse(25 + eyeShift, -10, 10, 6);
+
+  // Mouth
+  stroke(40, 40, 40, faceAlpha * 0.8);
+  strokeWeight(1);
+  noFill();
+  beginShape();
+  for (let x = -20; x <= 20; x += 2) {
+    let y = sin(x * 0.1 + t * 1.5) * 3 + 20;
+    vertex(x, y);
+  }
+  endShape();
+
+  // Third eye / ancestral symbol on forehead
+  stroke(45, 70, 70, faceAlpha);
+  strokeWeight(1);
+  noFill();
+  ellipse(0, -35, 12, 12);
+  point(0, -35);
+
+  pop();
+
+  // Dreamlike transition fog
+  noStroke();
+  for (let i = 0; i < 3; i++) {
+    let fogX = (noise(t + i * 100) * width * 1.5) - width * 0.25;
+    let fogY = (noise(t + i * 200) * height * 1.5) - height * 0.25;
+    fill(25, 30, 8, 5);
+    ellipse(fogX, fogY, 300, 200);
+  }
+
+  // Heavy vignette
+  noStroke();
+  for (let r = 500; r > 200; r -= 5) {
+    let a = map(r, 200, 500, 0, 8);
+    fill(30, 50, 3, a);
+    ellipse(width / 2, height / 2, r * 2, r * 2);
+  }
+
+  // Title
+  noStroke();
+  fill(40, 40, 55, 30);
+  textSize(12);
+  textAlign(LEFT, TOP);
+  text("IBOGAINE — The Ancestor", 15, 15);
+}
+
+function keyPressed() {
+  if (key === 's' || key === 'S') saveCanvas('ibogaine-visual-fingerprint', 'png');
+}
+</script>
+</body>
+</html>

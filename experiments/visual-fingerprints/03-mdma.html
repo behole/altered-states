@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MDMA - The Connector</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <style>body{margin:0;overflow:hidden;background:#1a0a10;display:flex;justify-content:center;align-items:center;height:100vh;}</style>
+</head>
+<body>
+<script>
+let particles = [];
+let numParticles = 80;
+
+function setup() {
+  createCanvas(800, 800);
+  colorMode(HSB, 360, 100, 100, 100);
+  for (let i = 0; i < numParticles; i++) {
+    particles.push({
+      x: random(width),
+      y: random(height),
+      vx: random(-0.5, 0.5),
+      vy: random(-0.5, 0.5),
+      size: random(3, 7),
+      warmth: random(0.5, 1)
+    });
+  }
+}
+
+function draw() {
+  // Soft fade background
+  noStroke();
+  fill(340, 30, 6, 8);
+  rect(0, 0, width, height);
+
+  let t = frameCount * 0.01;
+
+  // Central warm glow
+  let glowSize = 250 + sin(t * 1.2) * 50;
+  for (let r = glowSize; r > 0; r -= 5) {
+    let a = map(r, 0, glowSize, 12, 0);
+    fill(30, 50, 100, a);
+    ellipse(width / 2, height / 2, r * 2, r * 2);
+  }
+
+  // Expanding concentric circles (warmth radiating outward)
+  noFill();
+  for (let i = 0; i < 5; i++) {
+    let phase = (t * 0.5 + i * 0.8) % 4;
+    let radius = phase * 150;
+    let alpha = map(phase, 0, 4, 40, 0);
+    stroke(30, 40, 95, alpha);
+    strokeWeight(2);
+    ellipse(width / 2, height / 2, radius * 2, radius * 2);
+  }
+
+  // Update and draw particles
+  for (let p of particles) {
+    // Gentle drift toward center with some freedom
+    let dx = width / 2 - p.x;
+    let dy = height / 2 - p.y;
+    let d = sqrt(dx * dx + dy * dy);
+    let attraction = 0.001;
+    p.vx += dx * attraction;
+    p.vy += dy * attraction;
+    // Dampen
+    p.vx *= 0.99;
+    p.vy *= 0.99;
+    p.x += p.vx;
+    p.y += p.vy;
+
+    // Soft bounce
+    if (p.x < 50 || p.x > width - 50) p.vx *= -0.8;
+    if (p.y < 50 || p.y > height - 50) p.vy *= -0.8;
+  }
+
+  // Draw connections between nearby particles
+  strokeWeight(1);
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      let d = dist(particles[i].x, particles[i].y, particles[j].x, particles[j].y);
+      if (d < 120) {
+        let alpha = map(d, 0, 120, 30, 0);
+        // Pink-gold gradient connections
+        let hue = lerp(340, 40, d / 120);
+        stroke(hue, 50, 90, alpha);
+        line(particles[i].x, particles[i].y, particles[j].x, particles[j].y);
+      }
+    }
+  }
+
+  // Draw particles as warm glowing orbs
+  noStroke();
+  for (let p of particles) {
+    // Outer glow
+    let glowR = p.size * 6;
+    for (let r = glowR; r > 0; r -= 3) {
+      let a = map(r, 0, glowR, 20 * p.warmth, 0);
+      let h = lerp(340, 40, r / glowR);
+      fill(h, 40, 95, a);
+      ellipse(p.x, p.y, r * 2, r * 2);
+    }
+    // Core
+    fill(35, 30, 100, 80);
+    ellipse(p.x, p.y, p.size, p.size);
+  }
+
+  // Soft warm overlay
+  noStroke();
+  let overlayAlpha = 3 + sin(t * 2) * 2;
+  fill(340, 20, 95, overlayAlpha);
+  rect(0, 0, width, height);
+
+  // Title
+  fill(40, 30, 100, 40);
+  textSize(12);
+  textAlign(LEFT, TOP);
+  text("MDMA — The Connector", 15, 15);
+}
+
+function keyPressed() {
+  if (key === 's' || key === 'S') saveCanvas('mdma-visual-fingerprint', 'png');
+}
+</script>
+</body>
+</html>

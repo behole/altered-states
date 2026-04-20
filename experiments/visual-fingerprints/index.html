@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Visual Fingerprints — Altered States</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --bg: #0a0808;
+      --fg: #e8e3d8;
+      --muted: #8a8278;
+      --line: #1f1c18;
+      --accent: #d4b896;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+      font-feature-settings: "ss01", "kern";
+      -webkit-font-smoothing: antialiased;
+    }
+    header {
+      padding: 48px 32px 24px;
+      border-bottom: 1px solid var(--line);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      margin: 0 0 8px;
+    }
+    header p {
+      color: var(--muted);
+      margin: 0;
+      max-width: 640px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 24px;
+    }
+    .card {
+      background: #050403;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: var(--accent); }
+    .card-header {
+      padding: 16px 20px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .glyph { font-size: 18px; }
+    .substance {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+    .nickname {
+      color: var(--muted);
+      font-size: 12px;
+      font-style: italic;
+    }
+    .frame-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #000;
+    }
+    iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+    .card-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .card-footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .card-footer a:hover { text-decoration: underline; }
+    footer {
+      padding: 32px;
+      border-top: 1px solid var(--line);
+      max-width: 1400px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Visual Fingerprints</h1>
+    <p>Each substance rendered as live p5.js — a non-figurative portrait of its phenomenology. Backgrounds, motion, and color are drawn from the same clinical research that built the skills.</p>
+  </header>
+
+  <main>
+    <article class="card">
+      <div class="card-header">
+        <span><span class="glyph">🍄</span> <span class="substance">Psilocybin</span></span>
+        <span class="nickname">The Teacher</span>
+      </div>
+      <div class="frame-wrap"><iframe src="01-psilocybin.html" loading="lazy" title="Psilocybin fingerprint"></iframe></div>
+      <div class="card-footer"><span>organic · breathing · mycelial</span><a href="01-psilocybin.html" target="_blank">open ↗</a></div>
+    </article>
+
+    <article class="card">
+      <div class="card-header">
+        <span><span class="glyph">⚡</span> <span class="substance">LSD</span></span>
+        <span class="nickname">The Technician</span>
+      </div>
+      <div class="frame-wrap"><iframe src="02-lsd.html" loading="lazy" title="LSD fingerprint"></iframe></div>
+      <div class="card-footer"><span>geometric · cascading · architectural</span><a href="02-lsd.html" target="_blank">open ↗</a></div>
+    </article>
+
+    <article class="card">
+      <div class="card-header">
+        <span><span class="glyph">💊</span> <span class="substance">MDMA</span></span>
+        <span class="nickname">The Connector</span>
+      </div>
+      <div class="frame-wrap"><iframe src="03-mdma.html" loading="lazy" title="MDMA fingerprint"></iframe></div>
+      <div class="card-footer"><span>warm · coherent · heart-open</span><a href="03-mdma.html" target="_blank">open ↗</a></div>
+    </article>
+
+    <article class="card">
+      <div class="card-header">
+        <span><span class="glyph">🚀</span> <span class="substance">DMT</span></span>
+        <span class="nickname">The Rocket</span>
+      </div>
+      <div class="frame-wrap"><iframe src="04-dmt.html" loading="lazy" title="DMT fingerprint"></iframe></div>
+      <div class="card-footer"><span>instant · alien · hyperreal</span><a href="04-dmt.html" target="_blank">open ↗</a></div>
+    </article>
+
+    <article class="card">
+      <div class="card-header">
+        <span><span class="glyph">🌿</span> <span class="substance">Ayahuasca</span></span>
+        <span class="nickname">The Medicine</span>
+      </div>
+      <div class="frame-wrap"><iframe src="05-ayahuasca.html" loading="lazy" title="Ayahuasca fingerprint"></iframe></div>
+      <div class="card-footer"><span>ceremonial · narrative · purging</span><a href="05-ayahuasca.html" target="_blank">open ↗</a></div>
+    </article>
+
+    <article class="card">
+      <div class="card-header">
+        <span><span class="glyph">💎</span> <span class="substance">5-MeO-DMT</span></span>
+        <span class="nickname">The Dissolver</span>
+      </div>
+      <div class="frame-wrap"><iframe src="06-5meodmt.html" loading="lazy" title="5-MeO-DMT fingerprint"></iframe></div>
+      <div class="card-footer"><span>formless · white light · void</span><a href="06-5meodmt.html" target="_blank">open ↗</a></div>
+    </article>
+
+    <article class="card">
+      <div class="card-header">
+        <span><span class="glyph">🌵</span> <span class="substance">Mescaline</span></span>
+        <span class="nickname">The Elder</span>
+      </div>
+      <div class="frame-wrap"><iframe src="07-mescaline.html" loading="lazy" title="Mescaline fingerprint"></iframe></div>
+      <div class="card-footer"><span>ornamental · grounded · patient</span><a href="07-mescaline.html" target="_blank">open ↗</a></div>
+    </article>
+
+    <article class="card">
+      <div class="card-header">
+        <span><span class="glyph">🕳️</span> <span class="substance">Ketamine</span></span>
+        <span class="nickname">The Dissociative</span>
+      </div>
+      <div class="frame-wrap"><iframe src="08-ketamine.html" loading="lazy" title="Ketamine fingerprint"></iframe></div>
+      <div class="card-footer"><span>detached · dreamlike · void</span><a href="08-ketamine.html" target="_blank">open ↗</a></div>
+    </article>
+
+    <article class="card">
+      <div class="card-header">
+        <span><span class="glyph">🚪</span> <span class="substance">Salvia</span></span>
+        <span class="nickname">The Doorway</span>
+      </div>
+      <div class="frame-wrap"><iframe src="09-salvia.html" loading="lazy" title="Salvia fingerprint"></iframe></div>
+      <div class="card-footer"><span>folding · dysphoric · annihilating</span><a href="09-salvia.html" target="_blank">open ↗</a></div>
+    </article>
+
+    <article class="card">
+      <div class="card-header">
+        <span><span class="glyph">🪬</span> <span class="substance">Ibogaine</span></span>
+        <span class="nickname">The Ancestor</span>
+      </div>
+      <div class="frame-wrap"><iframe src="10-ibogaine.html" loading="lazy" title="Ibogaine fingerprint"></iframe></div>
+      <div class="card-footer"><span>oneiric · ancestral · death-rebirth</span><a href="10-ibogaine.html" target="_blank">open ↗</a></div>
+    </article>
+  </main>
+
+  <footer>
+    Part of <a href="../../README.md">altered-states</a>. Open <code>index.html</code> directly in a browser — no server required. Each fingerprint is a self-contained p5.js sketch.
+  </footer>
+</body>
+</html>

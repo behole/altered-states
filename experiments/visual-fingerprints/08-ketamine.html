@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ketamine - The Dissociative</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <style>body{margin:0;overflow:hidden;background:#050810;display:flex;justify-content:center;align-items:center;height:100vh;}</style>
+</head>
+<body>
+<script>
+let floaters = [];
+let echoes = [];
+let layers = [];
+
+function setup() {
+  createCanvas(800, 800);
+  colorMode(HSB, 360, 100, 100, 100);
+
+  // Detached floating particles
+  for (let i = 0; i < 60; i++) {
+    floaters.push({
+      x: random(width),
+      y: random(height),
+      z: random(-500, 500),
+      size: random(1, 4),
+      vx: random(-0.2, 0.2),
+      vy: random(-0.3, -0.05),
+      alpha: random(20, 60),
+      hue: random(200, 230)
+    });
+  }
+
+  // Void layers (parallax planes)
+  for (let i = 0; i < 5; i++) {
+    layers.push({
+      y: 200 + i * 100,
+      alpha: map(i, 0, 4, 15, 3),
+      offset: 0,
+      speed: 0.1 + i * 0.05
+    });
+  }
+}
+
+function draw() {
+  // Cold void background
+  noStroke();
+  fill(220, 40, 4, 12);
+  rect(0, 0, width, height);
+
+  let t = frameCount * 0.005;
+
+  // Void depth layers
+  for (let i = 0; i < layers.length; i++) {
+    let layer = layers[i];
+    layer.offset += layer.speed;
+
+    // Horizontal echo lines
+    stroke(210, 30, 30, layer.alpha);
+    strokeWeight(0.5);
+    let baseY = layer.y + sin(t + i) * 20;
+
+    for (let x = 0; x < width; x += 3) {
+      let noiseVal = noise(x * 0.005 + layer.offset * 0.01, i * 0.5, t * 0.5);
+      let y = baseY + (noiseVal - 0.5) * 30;
+      point(x, y);
+    }
+
+    // Echo artifact (ghosted duplicate)
+    if (random() < 0.1) {
+      echoes.push({
+        x: random(width),
+        y: baseY + random(-10, 10),
+        w: random(20, 80),
+        h: random(1, 3),
+        alpha: layer.alpha * 2,
+        life: 60
+      });
+    }
+  }
+
+  // Draw echoes
+  for (let i = echoes.length - 1; i >= 0; i--) {
+    let e = echoes[i];
+    e.life--;
+    e.alpha *= 0.97;
+    if (e.life <= 0) {
+      echoes.splice(i, 1);
+      continue;
+    }
+    noStroke();
+    fill(210, 20, 50, e.alpha);
+    rect(e.x, e.y, e.w, e.h);
+  }
+
+  // Floating particles with depth
+  for (let f of floaters) {
+    f.x += f.vx + sin(t * 2 + f.y * 0.01) * 0.1;
+    f.y += f.vy;
+    f.z += sin(t + f.x * 0.01) * 0.5;
+
+    // Wrap
+    if (f.y < -20) { f.y = height + 20; f.x = random(width); }
+    if (f.x < -20) f.x = width + 20;
+    if (f.x > width + 20) f.x = -20;
+
+    // Perspective size based on z
+    let perspective = map(f.z, -500, 500, 0.3, 2);
+    let drawAlpha = f.alpha * perspective;
+
+    // Ghost trail
+    noStroke();
+    fill(f.hue, 30, 60, drawAlpha * 0.2);
+    ellipse(f.x - f.vx * 10, f.y - f.vy * 10, f.size * perspective * 3, f.size * perspective * 3);
+
+    // Particle
+    fill(f.hue, 25, 75, drawAlpha);
+    ellipse(f.x, f.y, f.size * perspective * 2, f.size * perspective * 2);
+
+    // Core
+    fill(f.hue, 10, 95, drawAlpha * 0.8);
+    ellipse(f.x, f.y, f.size * perspective, f.size * perspective);
+  }
+
+  // K-hole: occasional tunnel sensation
+  let tunnelAlpha = 3 + sin(t * 1.5) * 2;
+  noFill();
+  for (let r = 50; r < 350; r += 40) {
+    stroke(210, 30, 40, tunnelAlpha * map(r, 50, 350, 3, 1));
+    strokeWeight(0.5);
+    ellipse(width / 2, height / 2, r * 2, r * 2);
+  }
+
+  // Cold blue vignette
+  noStroke();
+  for (let r = 500; r > 300; r -= 5) {
+    let a = map(r, 300, 500, 0, 3);
+    fill(220, 40, 8, a);
+    ellipse(width / 2, height / 2, r * 2, r * 2);
+  }
+
+  // Separation effect - horizontal tear line
+  if (random() < 0.01) {
+    let tearY = random(height);
+    stroke(210, 20, 40, 15);
+    strokeWeight(1);
+    line(0, tearY, width, tearY);
+    // Offset copy
+    stroke(210, 20, 30, 8);
+    line(0, tearY + 3, width, tearY + 3);
+  }
+
+  // Title
+  noStroke();
+  fill(210, 30, 60, 30);
+  textSize(12);
+  textAlign(LEFT, TOP);
+  text("KETAMINE — The Dissociative", 15, 15);
+}
+
+function keyPressed() {
+  if (key === 's' || key === 'S') saveCanvas('ketamine-visual-fingerprint', 'png');
+}
+</script>
+</body>
+</html>

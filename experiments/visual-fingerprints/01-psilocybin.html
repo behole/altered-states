@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Psilocybin - The Teacher</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <style>body{margin:0;overflow:hidden;background:#1a1208;display:flex;justify-content:center;align-items:center;height:100vh;}</style>
+</head>
+<body>
+<script>
+let mycelium = [];
+let pulses = [];
+let spores = [];
+
+function setup() {
+  createCanvas(800, 800);
+  colorMode(HSB, 360, 100, 100, 100);
+  // Seed mycelium network nodes
+  for (let i = 0; i < 60; i++) {
+    mycelium.push({
+      x: random(width),
+      y: random(height),
+      vx: 0, vy: 0,
+      connections: [],
+      hue: random(20, 50),
+      size: random(2, 5)
+    });
+  }
+  // Build connections (nearest neighbors)
+  for (let i = 0; i < mycelium.length; i++) {
+    let sorted = mycelium.slice().sort((a, b) =>
+      dist(mycelium[i].x, mycelium[i].y, a.x, a.y) -
+      dist(mycelium[i].x, mycelium[i].y, b.x, b.y)
+    );
+    for (let j = 1; j < min(4, sorted.length); j++) {
+      mycelium[i].connections.push(sorted[j]);
+    }
+  }
+  // Spores
+  for (let i = 0; i < 40; i++) {
+    spores.push({
+      x: random(width), y: random(height),
+      size: random(1, 3),
+      speed: random(0.2, 0.8),
+      angle: random(TWO_PI),
+      hue: random(0, 360)
+    });
+  }
+}
+
+function draw() {
+  // Dark earth background with fade
+  noStroke();
+  fill(25, 60, 8, 15);
+  rect(0, 0, width, height);
+
+  let t = frameCount * 0.005;
+
+  // Breathing background pulse
+  let breathSize = 300 + sin(t * 2) * 120;
+  let breathAlpha = 15 + sin(t * 2) * 10;
+  for (let r = breathSize; r > 0; r -= 30) {
+    let h = map(r, 0, breathSize, 40, 20);
+    fill(h, 40, 20, breathAlpha * (r / breathSize));
+    ellipse(width / 2, height / 2, r * 2, r * 2);
+  }
+
+  // Occasionally spawn vivid color bursts
+  if (random() < 0.005) {
+    pulses.push({
+      x: random(width), y: random(height),
+      r: 0, maxR: random(100, 300),
+      hue: random([0, 280, 180, 50]),
+      alpha: 80
+    });
+  }
+
+  // Draw and update pulses
+  for (let i = pulses.length - 1; i >= 0; i--) {
+    let p = pulses[i];
+    p.r += 2;
+    p.alpha -= 0.8;
+    noFill();
+    stroke(p.hue, 80, 90, max(0, p.alpha));
+    strokeWeight(2);
+    ellipse(p.x, p.y, p.r * 2, p.r * 2);
+    if (p.alpha <= 0) pulses.splice(i, 1);
+  }
+
+  // Mycelium network - nodes drift organically
+  for (let node of mycelium) {
+    let nx = noise(node.x * 0.005, node.y * 0.005, t) * 2 - 1;
+    let ny = noise(node.x * 0.005 + 100, node.y * 0.005, t) * 2 - 1;
+    node.vx = nx * 0.5;
+    node.vy = ny * 0.5;
+    node.x += node.vx;
+    node.y += node.vy;
+    // Wrap
+    if (node.x < 0) node.x = width;
+    if (node.x > width) node.x = 0;
+    if (node.y < 0) node.y = height;
+    if (node.y > height) node.y = 0;
+  }
+
+  // Draw connections
+  strokeWeight(1);
+  for (let node of mycelium) {
+    for (let conn of node.connections) {
+      let d = dist(node.x, node.y, conn.x, conn.y);
+      if (d < 200) {
+        let a = map(d, 0, 200, 40, 0);
+        stroke(35, 50, 50, a);
+        line(node.x, node.y, conn.x, conn.y);
+        // Sub-branches
+        let mx = (node.x + conn.x) / 2 + sin(t * 3 + node.x) * 15;
+        let my = (node.y + conn.y) / 2 + cos(t * 3 + node.y) * 15;
+        stroke(35, 40, 40, a * 0.5);
+        line(mx, my, mx + random(-20, 20), my + random(-20, 20));
+      }
+    }
+  }
+
+  // Draw nodes as pulsing circles
+  noStroke();
+  for (let node of mycelium) {
+    let pulse = sin(t * 3 + node.x * 0.01) * 0.5 + 1;
+    let s = node.size * pulse;
+    fill(node.hue, 60, 60, 70);
+    ellipse(node.x, node.y, s * 2, s * 2);
+    fill(node.hue, 40, 80, 40);
+    ellipse(node.x, node.y, s * 4, s * 4);
+  }
+
+  // Floating spores
+  for (let sp of spores) {
+    sp.angle += 0.02;
+    sp.x += cos(sp.angle) * sp.speed;
+    sp.y += sin(sp.angle * 1.3) * sp.speed;
+    if (sp.x < 0) sp.x = width;
+    if (sp.x > width) sp.x = 0;
+    if (sp.y < 0) sp.y = height;
+    if (sp.y > height) sp.y = 0;
+    let glow = sin(t * 5 + sp.x) * 20 + 40;
+    fill(sp.hue, 50, 80, glow);
+    ellipse(sp.x, sp.y, sp.size * 2, sp.size * 2);
+  }
+
+  // Center breathing circle
+  let centerPulse = sin(t * 1.5) * 30 + 80;
+  noFill();
+  for (let i = 0; i < 3; i++) {
+    stroke(40 + i * 10, 60, 60, 20 - i * 5);
+    strokeWeight(1.5);
+    ellipse(width / 2, height / 2, centerPulse + i * 40, centerPulse + i * 40);
+  }
+
+  // Title
+  noStroke();
+  fill(40, 30, 90, 50);
+  textSize(12);
+  textAlign(LEFT, TOP);
+  text("PSILOCYBIN — The Teacher", 15, 15);
+}
+
+function keyPressed() {
+  if (key === 's' || key === 'S') saveCanvas('psilocybin-visual-fingerprint', 'png');
+}
+</script>
+</body>
+</html>

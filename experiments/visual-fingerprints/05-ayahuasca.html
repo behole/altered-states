@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ayahuasca - The Medicine</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <style>body{margin:0;overflow:hidden;background:#060d06;display:flex;justify-content:center;align-items:center;height:100vh;}</style>
+</head>
+<body>
+<script>
+let vines = [];
+let serpents = [];
+let visionFlash = 0;
+let visionHue = 0;
+
+function setup() {
+  createCanvas(800, 800);
+  colorMode(HSB, 360, 100, 100, 100);
+
+  // Create vine systems
+  for (let i = 0; i < 8; i++) {
+    let vine = {
+      points: [],
+      x: random(100, 700),
+      y: random(200, 800),
+      angle: random(-PI, -PI / 2),
+      hue: random(80, 150),
+      thickness: random(2, 5),
+      speed: random(0.3, 0.8),
+      life: 1
+    };
+    // Pre-grow some
+    for (let j = 0; j < 200; j++) {
+      growVine(vine);
+    }
+    vines.push(vine);
+  }
+
+  // Create serpents
+  for (let i = 0; i < 3; i++) {
+    serpents.push({
+      segments: [],
+      x: random(100, 700),
+      y: random(300, 700),
+      angle: random(TWO_PI),
+      hue: random(60, 120),
+      speed: random(0.5, 1.2),
+      turnRate: random(0.01, 0.03)
+    });
+  }
+}
+
+function growVine(vine) {
+  vine.angle += random(-0.2, 0.2);
+  vine.x += cos(vine.angle) * vine.speed;
+  vine.y += sin(vine.angle) * vine.speed;
+  vine.points.push({ x: vine.x, y: vine.y });
+  if (vine.points.length > 300) vine.points.shift();
+}
+
+function draw() {
+  // Deep dark green background, slow fade
+  noStroke();
+  fill(130, 70, 4, 10);
+  rect(0, 0, width, height);
+
+  let t = frameCount * 0.003;
+
+  // Ceremonial slow breathing background
+  let breathAlpha = 5 + sin(t * 0.8) * 3;
+  fill(130, 40, 10, breathAlpha);
+  ellipse(width / 2, height / 2, 600, 600);
+
+  // Grow and draw vines
+  for (let vine of vines) {
+    growVine(vine);
+    if (vine.points.length < 2) continue;
+
+    // Draw vine with leaves
+    noFill();
+    for (let i = 1; i < vine.points.length; i++) {
+      let progress = i / vine.points.length;
+      let alpha = progress * 60;
+      stroke(vine.hue, 50, 35, alpha);
+      strokeWeight(vine.thickness * progress);
+      line(vine.points[i - 1].x, vine.points[i - 1].y,
+           vine.points[i].x, vine.points[i].y);
+
+      // Leaves along vine
+      if (i % 12 === 0 && progress > 0.3) {
+        push();
+        translate(vine.points[i].x, vine.points[i].y);
+        let leafAngle = atan2(
+          vine.points[i].y - vine.points[i - 1].y,
+          vine.points[i].x - vine.points[i - 1].x
+        ) + (i % 24 === 0 ? PI / 3 : -PI / 3);
+        rotate(leafAngle);
+        noStroke();
+        fill(vine.hue, 60, 30, alpha * 0.8);
+        ellipse(8, 0, 12, 5);
+        pop();
+      }
+    }
+
+    // Vine tip glow
+    if (vine.points.length > 0) {
+      let tip = vine.points[vine.points.length - 1];
+      noStroke();
+      fill(vine.hue, 70, 50, 30);
+      ellipse(tip.x, tip.y, 8, 8);
+    }
+  }
+
+  // Serpents
+  for (let serpent of serpents) {
+    // Smooth turning via noise
+    serpent.angle += (noise(serpent.x * 0.005, serpent.y * 0.005, t) - 0.5) * 0.1;
+    serpent.x += cos(serpent.angle) * serpent.speed;
+    serpent.y += sin(serpent.angle) * serpent.speed;
+
+    // Wrap around
+    if (serpent.x < -50) serpent.x = width + 50;
+    if (serpent.x > width + 50) serpent.x = -50;
+    if (serpent.y < -50) serpent.y = height + 50;
+    if (serpent.y > height + 50) serpent.y = -50;
+
+    serpent.segments.push({ x: serpent.x, y: serpent.y });
+    if (serpent.segments.length > 60) serpent.segments.shift();
+
+    // Draw serpent body
+    noFill();
+    for (let i = 1; i < serpent.segments.length; i++) {
+      let progress = i / serpent.segments.length;
+      let alpha = progress * 70;
+      let thick = sin(progress * PI) * 6 + 1;
+      stroke(serpent.hue, 60, 45, alpha);
+      strokeWeight(thick);
+      line(
+        serpent.segments[i - 1].x, serpent.segments[i - 1].y,
+        serpent.segments[i].x, serpent.segments[i].y
+      );
+    }
+
+    // Serpent head (diamond shape)
+    if (serpent.segments.length > 1) {
+      let head = serpent.segments[serpent.segments.length - 1];
+      push();
+      translate(head.x, head.y);
+      rotate(serpent.angle);
+      noStroke();
+      fill(serpent.hue, 80, 60, 60);
+      beginShape();
+      vertex(8, 0);
+      vertex(0, -4);
+      vertex(-5, 0);
+      vertex(0, 4);
+      endShape(CLOSE);
+      // Eyes
+      fill(60, 90, 90, 80);
+      ellipse(3, -2, 2, 2);
+      ellipse(3, 2, 2, 2);
+      pop();
+    }
+  }
+
+  // Occasional vivid vision flash
+  if (random() < 0.003) {
+    visionFlash = 60;
+    visionHue = random([0, 300, 50, 180]);
+  }
+  if (visionFlash > 0) {
+    noStroke();
+    fill(visionHue, 80, 90, visionFlash * 0.3);
+    ellipse(random(200, 600), random(200, 600), visionFlash * 3, visionFlash * 3);
+    visionFlash -= 1;
+  }
+
+  // Slow ceremonial border pattern
+  noFill();
+  stroke(100, 40, 20, 10);
+  strokeWeight(1);
+  for (let i = 0; i < 4; i++) {
+    let offset = sin(t + i) * 5;
+    rect(20 + i * 8 + offset, 20 + i * 8 + offset,
+         width - 40 - i * 16, height - 40 - i * 16);
+  }
+
+  // Title
+  noStroke();
+  fill(100, 30, 60, 40);
+  textSize(12);
+  textAlign(LEFT, TOP);
+  text("AYAHUASCA — The Medicine", 15, 15);
+}
+
+function keyPressed() {
+  if (key === 's' || key === 'S') saveCanvas('ayahuasca-visual-fingerprint', 'png');
+}
+</script>
+</body>
+</html>
