@@ -1,0 +1,6 @@
+# Runtime state (characters, journals, per-run experiments)
+runtime/
+
+# Python
+__pycache__/
+*.pyc
