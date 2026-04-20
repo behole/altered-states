@@ -1,0 +1,4 @@
+# Temporal lab dependencies. Install with: pip install -r requirements.txt
+
+openai>=1.50.0       # OpenRouter is OpenAI-API-compatible; we point base_url at it
+python-dotenv>=1.0.1 # loads .env into os.environ

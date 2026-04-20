@@ -1,44 +1,42 @@
 #!/usr/bin/env python3
-"""Run one cycle for every active character.
+"""Run a cycle for every character whose cadence is due.
 
-Intended as the cron target. Reads characters from the configured base path,
-runs each one through the canonical TemporalLab, and prints a summary.
+Cron target. Recommended schedule: every 15 minutes.
+Per-substance cadence is in cadence.CYCLE_MINUTES — a fast character (e.g.
+salvia at 60min) fires once per hour; a slow one (e.g. ibogaine at 1440min)
+fires once per day. The dispatcher decides each run who's actually due.
 """
 
-import json
 import sys
+from datetime import datetime
 
+from cadence import due_characters
+from logger import daily_cost_summary
 from temporal_init import TemporalLab
 
 
 def main() -> int:
     lab = TemporalLab()
+    now = datetime.now()
+    due = due_characters(lab.characters_path, now)
 
-    characters = []
-    for file in sorted(lab.characters_path.glob("*.json")):
-        with open(file, "r") as f:
-            characters.append(json.load(f))
+    if not due:
+        print(f"⏸  Nothing due at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+        return 0
 
-    if not characters:
-        print("❌ No active characters found. Initialize first with temporal_init.py init <substance>")
-        return 1
-
-    print(f"🔄 Running temporal cycles for {len(characters)} characters")
-    print("=" * 50)
+    print(f"🔄 {len(due)} character(s) due at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 60)
 
     failures = 0
-    for char in characters:
+    for char in due:
         substance = char["substance"]
-        name = char["name"]
-        current = char.get("cycle_count", 0)
-        print(f"🌀 {name} ({substance}) — cycle {current + 1}")
         if not lab.run_cycle(substance):
             failures += 1
-            print(f"❌ {name} failed")
-        print("-" * 30)
+        print("-" * 60)
 
-    print(f"🎭 Done. {len(characters) - failures}/{len(characters)} cycles succeeded.")
-    print(f"📊 Journals: {lab.journals_path}")
+    summary = daily_cost_summary()
+    print(f"📊 Today so far: {summary['calls']} calls  ${summary['cost_usd']:.4f}")
+    print(f"🎭 Done. {len(due) - failures}/{len(due)} cycles succeeded.")
     return 0 if failures == 0 else 2
 
 

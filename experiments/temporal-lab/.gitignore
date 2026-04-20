@@ -1,6 +1,12 @@
-# Runtime state (characters, journals, per-run experiments)
+# Runtime state (characters, journals, logs, per-run experiments)
 runtime/
+
+# Secrets
+.env
+.env.local
 
 # Python
 __pycache__/
 *.pyc
+.venv/
+venv/
