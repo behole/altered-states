@@ -107,6 +107,66 @@ class TemporalLab:
         with open(journal_file, "w") as f:
             json.dump(journal, f, indent=2)
 
+        # Plain text mirror
+        self._write_plain_text_entry(substance, entry)
+
+    def _write_plain_text_entry(self, substance: str, entry: dict) -> None:
+        """Append a human-readable entry to <substance>_journal.txt."""
+        txt_file = self.journals_path / f"{substance}_journal.txt"
+
+        ts = entry.get("timestamp", "?")
+        cycle = entry.get("cycle", 0)
+        emotional = entry.get("emotional_state", "unknown")
+        clarity = entry.get("clarity", "")
+        integration = entry.get("integration", "")
+
+        lines = []
+        lines.append("=" * 50)
+        lines.append(f"{substance.upper()} — Cycle {cycle}")
+        lines.append(f"Timestamp: {ts}")
+        lines.append("=" * 50)
+        lines.append(f"Emotional State: {emotional}")
+        if clarity:
+            lines.append(f"Clarity: {clarity}")
+        if integration:
+            lines.append(f"Integration: {integration}")
+
+        if "experience" in entry:
+            exp = entry["experience"]
+            lines.append("")
+            if isinstance(exp, dict):
+                intensity = exp.get("intensity", 0)
+                novelty = exp.get("novelty", 0)
+                desc = exp.get("description", "")
+                lines.append(f"Experience (intensity: {intensity:.2f}, novelty: {novelty:.2f}):")
+                lines.append(f"  {desc}")
+            else:
+                lines.append(f"Experience: {exp}")
+
+        if entry.get("reflections"):
+            lines.append("")
+            lines.append("Reflections:")
+            for r in entry["reflections"]:
+                lines.append(f"  — {r}")
+
+        if entry.get("evolution_notes"):
+            lines.append("")
+            lines.append("Evolution Notes:")
+            for n in entry["evolution_notes"]:
+                lines.append(f"  * {n}")
+
+        if entry.get("questions"):
+            lines.append("")
+            lines.append("Open Questions:")
+            for q in entry["questions"]:
+                lines.append(f"  ? {q}")
+
+        lines.append("")
+        lines.append("")
+
+        with open(txt_file, "a") as f:
+            f.write("\n".join(lines))
+
     def _load_journal(self, substance: str) -> list[dict]:
         journal_file = self.journals_path / f"{substance}_journal.json"
         if not journal_file.exists():
