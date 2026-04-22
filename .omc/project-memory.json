@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1776377831236,
-  "projectRoot": "/Users/jjoosshhmbpm1/DOXICE/altered-states",
+  "lastScanned": 1776646380049,
+  "projectRoot": "/Users/jjoosshhmbpm1/Library/Mobile Documents/com~apple~CloudDocs/DOXICE/altered-states",
   "techStack": {
     "languages": [],
     "frameworks": [],
@@ -39,43 +39,64 @@
     "bin": {
       "path": "bin",
       "purpose": "Executable scripts",
-      "fileCount": 3,
-      "lastAccessed": 1776377831202,
+      "fileCount": 6,
+      "lastAccessed": 1776646380026,
       "keyFiles": [
         "nlm.py",
-        "nlm.sh"
+        "nlm.sh",
+        "requirements.txt",
+        "responses_to_grid.py",
+        "run_eval.py"
       ]
     },
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
-      "fileCount": 3,
-      "lastAccessed": 1776377831202,
+      "fileCount": 5,
+      "lastAccessed": 1776646380028,
       "keyFiles": [
         "TODO.md",
+        "research-pipeline.md",
+        "track-a-ayahuasca.md",
         "v1.2-implementation-plan.md",
         "v1.2-improvement-spec.md"
+      ]
+    },
+    "experiments": {
+      "path": "experiments",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1776646380029,
+      "keyFiles": []
+    },
+    "output": {
+      "path": "output",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1776646380029,
+      "keyFiles": [
+        "psilocybin-medium-onset-eval.md"
       ]
     },
     "research": {
       "path": "research",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1776377831203,
+      "lastAccessed": 1776646380030,
       "keyFiles": []
     },
     "skills": {
       "path": "skills",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1776377831204,
+      "lastAccessed": 1776646380031,
       "keyFiles": []
     },
     "tests": {
       "path": "tests",
       "purpose": "Test files",
-      "fileCount": 11,
-      "lastAccessed": 1776377831204,
+      "fileCount": 14,
+      "lastAccessed": 1776646380032,
       "keyFiles": [
         "cross-model-test-protocol.md",
         "eval-guide.md",
@@ -86,6 +107,48 @@
     }
   },
   "hotPaths": [
+    {
+      "path": "experiments/IDEAS.md",
+      "accessCount": 5,
+      "lastAccessed": 1776650564538,
+      "type": "file"
+    },
+    {
+      "path": "experiments/temporal-lab/README.md",
+      "accessCount": 4,
+      "lastAccessed": 1776650528234,
+      "type": "file"
+    },
+    {
+      "path": "experiments/temporal-lab/scripts/run-all-cycles.py",
+      "accessCount": 3,
+      "lastAccessed": 1776650429777,
+      "type": "file"
+    },
+    {
+      "path": "experiments/temporal-lab/scripts/temporal-dashboard.py",
+      "accessCount": 2,
+      "lastAccessed": 1776648878767,
+      "type": "file"
+    },
+    {
+      "path": "experiments/temporal-lab/scripts/extract-insights.py",
+      "accessCount": 2,
+      "lastAccessed": 1776648880028,
+      "type": "file"
+    },
+    {
+      "path": "experiments/temporal-lab/scripts/characters.py",
+      "accessCount": 2,
+      "lastAccessed": 1776650427061,
+      "type": "file"
+    },
+    {
+      "path": "experiments/temporal-lab/scripts/temporal_init.py",
+      "accessCount": 2,
+      "lastAccessed": 1776650428414,
+      "type": "file"
+    },
     {
       "path": "skills/psilocybin/SKILL.md",
       "accessCount": 1,
@@ -156,6 +219,132 @@
       "path": "bin/responses_to_grid.py",
       "accessCount": 1,
       "lastAccessed": 1776378749225,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 1,
+      "lastAccessed": 1776648180988,
+      "type": "file"
+    },
+    {
+      "path": "experiments/suno-prompts/01-psilocybin.md",
+      "accessCount": 1,
+      "lastAccessed": 1776648315406,
+      "type": "file"
+    },
+    {
+      "path": "experiments/visual-fingerprints/01-psilocybin.html",
+      "accessCount": 1,
+      "lastAccessed": 1776648315466,
+      "type": "file"
+    },
+    {
+      "path": "experiments/dialogues/01-salvia-vs-mdma-what-is-real.md",
+      "accessCount": 1,
+      "lastAccessed": 1776648315522,
+      "type": "file"
+    },
+    {
+      "path": "docs/TODO.md",
+      "accessCount": 1,
+      "lastAccessed": 1776648328815,
+      "type": "file"
+    },
+    {
+      "path": "experiments/suno-prompts/04-dmt.md",
+      "accessCount": 1,
+      "lastAccessed": 1776648395829,
+      "type": "file"
+    },
+    {
+      "path": "experiments/suno-prompts/09-salvia.md",
+      "accessCount": 1,
+      "lastAccessed": 1776648396029,
+      "type": "file"
+    },
+    {
+      "path": "experiments/suno-prompts/08-ketamine.md",
+      "accessCount": 1,
+      "lastAccessed": 1776648396185,
+      "type": "file"
+    },
+    {
+      "path": "experiments/suno-prompts/05-ayahuasca.md",
+      "accessCount": 1,
+      "lastAccessed": 1776648396214,
+      "type": "file"
+    },
+    {
+      "path": "experiments/suno-prompts/03-mdma.md",
+      "accessCount": 1,
+      "lastAccessed": 1776648396230,
+      "type": "file"
+    },
+    {
+      "path": "experiments/suno-prompts/06-5-meo-dmt.md",
+      "accessCount": 1,
+      "lastAccessed": 1776648396246,
+      "type": "file"
+    },
+    {
+      "path": "experiments/suno-prompts/07-mescaline.md",
+      "accessCount": 1,
+      "lastAccessed": 1776648396287,
+      "type": "file"
+    },
+    {
+      "path": "experiments/suno-prompts/02-lsd.md",
+      "accessCount": 1,
+      "lastAccessed": 1776648396304,
+      "type": "file"
+    },
+    {
+      "path": "experiments/suno-prompts/10-ibogaine.md",
+      "accessCount": 1,
+      "lastAccessed": 1776648396335,
+      "type": "file"
+    },
+    {
+      "path": "experiments/visual-fingerprints/index.html",
+      "accessCount": 1,
+      "lastAccessed": 1776648516335,
+      "type": "file"
+    },
+    {
+      "path": "experiments/suno-prompts/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1776648517907,
+      "type": "file"
+    },
+    {
+      "path": "experiments/temporal-lab/.env.example",
+      "accessCount": 1,
+      "lastAccessed": 1776650274711,
+      "type": "file"
+    },
+    {
+      "path": "experiments/temporal-lab/requirements.txt",
+      "accessCount": 1,
+      "lastAccessed": 1776650275817,
+      "type": "file"
+    },
+    {
+      "path": "experiments/temporal-lab/scripts/logger.py",
+      "accessCount": 1,
+      "lastAccessed": 1776650352417,
+      "type": "file"
+    },
+    {
+      "path": "experiments/temporal-lab/scripts/cadence.py",
+      "accessCount": 1,
+      "lastAccessed": 1776650353671,
+      "type": "file"
+    },
+    {
+      "path": "experiments/temporal-lab/scripts/llm_invoke.py",
+      "accessCount": 1,
+      "lastAccessed": 1776650354840,
       "type": "file"
     }
   ],

@@ -206,6 +206,8 @@ altered-states/
     mdma/                sources.md, dossier.md
     dmt/                 sources.md, dossier.md
     ayahuasca/           sources.md, dossier.md
+    5-meo-dmt/           sources.md, dossier.md, nlm/ (4 files)
+    mescaline/           sources.md, dossier.md, nlm/ (4 files)
     ketamine/            sources.md, dossier.md
     salvia/              sources.md, dossier.md
     ibogaine/            sources.md, dossier.md
@@ -216,10 +218,18 @@ altered-states/
     mdma/SKILL.md        v1.4
     dmt/SKILL.md         v1.4
     ayahuasca/SKILL.md   v1.4
+    5-meo-dmt/SKILL.md   v1.4
+    mescaline/SKILL.md   v1.4
     ketamine/SKILL.md    v1.4
     salvia/SKILL.md      v1.4
     ibogaine/SKILL.md    v1.4
     router/SKILL.md      v1.5
+  experiments/
+    temporal-lab/        Autonomous persistent character system (OpenRouter)
+    suno-prompts/        10 Custom Mode music prompts
+    visual-fingerprints/ 10 p5.js portraits + index
+    dialogues/           Paired substance conversations
+    IDEAS.md             Experiment backlog
   tests/
     eval-guide.md                     Testing framework
     eval-report-2026-04-07.md         Baseline + bleed + onset
@@ -232,17 +242,22 @@ altered-states/
     eval-report-extended-2026-04-08.md    Ayahuasca waves + LSD plateau
     cross-model-test-protocol.md      Full protocol for new models
     quick-test-card.md                 5-minute quick validation
+  output/                            Evaluation outputs
 ```
 
 ---
 
 ## By The Numbers
 
-- **63** peer-reviewed sources annotated across 8 substances
-- **9** skills (8 substances + 1 router)
+- **63** peer-reviewed sources annotated across 10 substances
+- **11** skills (10 substances + 1 router)
 - **7** phenomenological dimensions per substance
 - **213** automated tests passing
 - **0** anti-patterns flagged
+- **1** autonomous character system (temporal-lab)
+- **10** Suno music prompts
+- **10** visual fingerprint portraits
+- **1** cross-substance dialogue
 
 ---
 

@@ -29,12 +29,12 @@ SKILL_ROOT = Path(__file__).resolve().parents[3] / "skills"
 # Rough $/1M tokens for cost estimation. Update as pricing changes.
 # Input cost first, then output cost. Unknown models use a fallback.
 PRICING_PER_M_TOKENS: dict[str, tuple[float, float]] = {
-    "anthropic/claude-opus-4.6":   (15.0, 75.0),
+    "anthropic/claude-opus-4.6": (15.0, 75.0),
     "anthropic/claude-sonnet-4.6": (3.0, 15.0),
-    "anthropic/claude-haiku-4.5":  (0.80, 4.0),
-    "openai/gpt-5":                (3.0, 15.0),
-    "google/gemini-2.5-pro":       (1.25, 5.0),
-    "deepseek/deepseek-v3":        (0.27, 1.10),
+    "anthropic/claude-haiku-4.5": (0.80, 4.0),
+    "openai/gpt-5": (3.0, 15.0),
+    "google/gemini-2.5-pro": (1.25, 5.0),
+    "deepseek/deepseek-v3": (0.27, 1.10),
 }
 PRICING_FALLBACK = (3.0, 15.0)
 
@@ -42,6 +42,7 @@ PRICING_FALLBACK = (3.0, 15.0)
 # ---------------------------------------------------------------------------
 # Skill loading
 # ---------------------------------------------------------------------------
+
 
 def load_skill(substance: str) -> str:
     """Load the full SKILL.md for a substance."""
@@ -54,6 +55,7 @@ def load_skill(substance: str) -> str:
 # ---------------------------------------------------------------------------
 # Prompt assembly
 # ---------------------------------------------------------------------------
+
 
 def _format_journal_tail(history: list[dict], depth: int) -> str:
     """Compact rendering of the last `depth` journal entries."""
@@ -69,7 +71,9 @@ def _format_journal_tail(history: list[dict], depth: int) -> str:
     return "\n".join(out)
 
 
-def _build_messages(substance: str, char_info: dict, character_state: dict, journal_history: list[dict]) -> list[dict]:
+def _build_messages(
+    substance: str, char_info: dict, character_state: dict, journal_history: list[dict]
+) -> list[dict]:
     skill_md = load_skill(substance)
     journal_tail = _format_journal_tail(journal_history, depth=3)
     nickname = char_info["name"]
@@ -84,10 +88,10 @@ Below is your full phenomenological profile. Internalize it — every cycle you 
 ═══ SKILL PROFILE END ═══
 
 Your persistent state right now:
-- Cycle number: {character_state.get('cycle_count', 0)} (next: {character_state.get('cycle_count', 0) + 1})
-- Current emotional state: {character_state.get('current_state', {}).get('emotional', 'unknown')}
-- Clarity: {character_state.get('current_state', {}).get('clarity', 'moderate')}
-- Integration: {character_state.get('current_state', {}).get('integration', 'low')}
+- Cycle number: {character_state.get("cycle_count", 0)} (next: {character_state.get("cycle_count", 0) + 1})
+- Current emotional state: {character_state.get("current_state", {}).get("emotional", "unknown")}
+- Clarity: {character_state.get("current_state", {}).get("clarity", "moderate")}
+- Integration: {character_state.get("current_state", {}).get("integration", "low")}
 
 Recent memory (last few cycles):
 {journal_tail}
@@ -143,6 +147,7 @@ def _parse_json_response(text: str) -> dict:
 # Cost
 # ---------------------------------------------------------------------------
 
+
 def _estimate_cost(model: str, tokens_in: int, tokens_out: int) -> float:
     in_rate, out_rate = PRICING_PER_M_TOKENS.get(model, PRICING_FALLBACK)
     return (tokens_in * in_rate + tokens_out * out_rate) / 1_000_000
@@ -151,6 +156,7 @@ def _estimate_cost(model: str, tokens_in: int, tokens_out: int) -> float:
 # ---------------------------------------------------------------------------
 # Dry-run stub
 # ---------------------------------------------------------------------------
+
 
 def _stub_response(substance: str, char_info: dict) -> dict:
     """Deterministic-ish stub for offline wiring verification."""
@@ -171,6 +177,7 @@ def _stub_response(substance: str, char_info: dict) -> dict:
 # ---------------------------------------------------------------------------
 # Public entry point
 # ---------------------------------------------------------------------------
+
 
 def generate_cycle(
     substance: str,
@@ -208,7 +215,9 @@ def generate_cycle(
     )
 
     char_info_full = {**char_info}  # defensive copy
-    messages = _build_messages(substance, char_info_full, character_state, journal_history)
+    messages = _build_messages(
+        substance, char_info_full, character_state, journal_history
+    )
 
     last_error = None
     for attempt in range(RETRIES):
@@ -231,26 +240,51 @@ def generate_cycle(
                 parsed = _parse_json_response(text)
             except json.JSONDecodeError as e:
                 last_error = f"JSON parse failure: {e}"
-                log_call(substance, model, tokens_in, tokens_out, cost,
-                         "parse-error", last_error, duration_ms)
+                log_call(
+                    substance,
+                    model,
+                    tokens_in,
+                    tokens_out,
+                    cost,
+                    "parse-error",
+                    last_error,
+                    duration_ms,
+                )
                 if attempt + 1 < RETRIES:
                     time.sleep(BACKOFFS_SEC[attempt])
                     continue
                 raise
 
             # Light validation
-            required = {"emotional_state", "clarity", "integration", "experience", "reflections", "questions"}
+            required = {
+                "emotional_state",
+                "clarity",
+                "integration",
+                "experience",
+                "reflections",
+                "questions",
+            }
             missing = required - set(parsed.keys())
             if missing:
                 last_error = f"missing keys: {missing}"
-                log_call(substance, model, tokens_in, tokens_out, cost,
-                         "schema-error", last_error, duration_ms)
+                log_call(
+                    substance,
+                    model,
+                    tokens_in,
+                    tokens_out,
+                    cost,
+                    "schema-error",
+                    last_error,
+                    duration_ms,
+                )
                 if attempt + 1 < RETRIES:
                     time.sleep(BACKOFFS_SEC[attempt])
                     continue
                 raise ValueError(last_error)
 
-            log_call(substance, model, tokens_in, tokens_out, cost, "ok", "", duration_ms)
+            log_call(
+                substance, model, tokens_in, tokens_out, cost, "ok", "", duration_ms
+            )
             return parsed
 
         except Exception as e:
@@ -269,15 +303,19 @@ def generate_cycle(
 # Bootstrap dotenv if available
 # ---------------------------------------------------------------------------
 
+
 def _load_dotenv() -> None:
-    """Load .env from experiments/temporal-lab/ if python-dotenv is installed."""
+    """Load .env from experiments/temporal-lab/ if python-dotenv is installed.
+
+    Uses override=True so the .env file takes precedence over any system-level
+    env vars — the repo-local .env is the canonical config for this lab."""
     try:
         from dotenv import load_dotenv
     except ImportError:
         return
     env_path = Path(__file__).resolve().parent.parent / ".env"
     if env_path.exists():
-        load_dotenv(env_path)
+        load_dotenv(env_path, override=True)
 
 
 _load_dotenv()

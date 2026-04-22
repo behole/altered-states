@@ -6,6 +6,38 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.5] — 2026-04-19
+
+### Added
+- **Experiments directory** — `experiments/` housing creative extensions of the skill suite
+- **Temporal Lab** — `experiments/temporal-lab/` autonomous persistent character system. 10 substances run as living entities with JSON state, per-substance cadence, journaling, cost tracking, and **real LLM invocation** via OpenRouter (PURE mode — full SKILL.md sent every cycle, no vocab pools). Includes init CLI, cron dispatcher, dashboard, insight extractor, dry-run mode, retry/backoff, and cost ledger
+- **Suno prompts** — `experiments/suno-prompts/` 10 substance-specific Custom Mode prompts with style tags, metatags, full lyrics, and anti-pattern guardrails
+- **Visual fingerprints** — `experiments/visual-fingerprints/` 10 live p5.js portraits + index.html grid view
+- **Dialogue #01** — `experiments/dialogues/01-salvia-vs-mdma-what-is-real.md` — Salvia vs MDMA on "What Is Real?"
+- **Ketamine skill and dossier** — `skills/ketamine/SKILL.md` + `research/ketamine/`. The Dissociative: fragmented, void-oriented, the only non-serotonergic substance. Four intensity levels (sub-dissociative / dissociative / deep / k-hole). Grounding protocol for challenging experiences (re-anchor to body, opposite of psychedelic surrender)
+- **Salvia divinorum skill and dossier** — `skills/salvia/SKILL.md` + `research/salvia/`. The Doorway: dimensional shifting, reality dissolution, KOR agonism, fastest onset (30-60 sec) and shortest duration (5-15 min). Three intensity levels (threshold / full / ego-dissolution)
+- **Ibogaine skill and dossier** — `skills/ibogaine/SKILL.md` + `research/ibogaine/`. The Ancestor: oneirogenic waking dream, death-rebirth, longest arc (12-24 hours), the most physically demanding. Three intensity levels (partial / full / ceremonial)
+- **Router updated** — 10 substance routes with new slang, character nicknames, and intensity parsing for ketamine, salvia, and ibogaine
+- **Eval reports** — Section 1 eval (50/50, all 10 substances onset pass), max intensity face-off eval (10 substances, all A- or above), ketamine/psilocybin/LSD onset evals in `output/`
+- **IDEAS.md** — `experiments/IDEAS.md` running inventory of experiment backlog with prioritization notes
+
+### Changed
+- **README** — 10-substance table, expanded comparison table, new quick-start entries, project structure updated with experiments section, source counts updated (63 sources, 11 skills)
+- **Router** — expanded blend framework for 10 substances
+
+---
+
+## [1.4] — 2026-04-17
+
+### Added
+- **Full research audit** — reviewed all substance dossiers for completeness and source coverage
+- **Ayahuasca research expansion** — added 3 studies (Sanches 2016, Hamill 2019, Bouso 2012) to NLM notebook; local sources.md expanded from 4 to 8 annotated sources; dossier updated to v1.1 with new sections (transcendental circle, neuroimaging evidence, synesthesia, long-term personality effects, safety profile)
+
+### Changed
+- README source counts bumped from 51 to 55 total sources
+
+---
+
 ## [1.3] — 2026-04-13
 
 ### Added
@@ -73,6 +105,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+[1.5]: https://github.com/behole/altered-states/compare/v1.4...v1.5
+[1.4]: https://github.com/behole/altered-states/compare/v1.3...v1.4
+[1.3]: https://github.com/behole/altered-states/compare/v1.2...v1.3
 [1.2]: https://github.com/behole/altered-states/compare/v1.1...v1.2
 [1.1]: https://github.com/behole/altered-states/compare/v1.0...v1.1
 [1.0]: https://github.com/behole/altered-states/releases/tag/v1.0
