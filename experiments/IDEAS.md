@@ -22,10 +22,12 @@ Running inventory of experiments that extend `altered-states`. Mix of quick prog
 ## Active queue
 
 ### 1. ★ Same-prompt-ten-ways
-Once the lab can invoke, this becomes a thin script: pick one prompt, run through all 10 skills, compile side-by-side. Candidate prompts:
+- [x] **Script built** — `experiments/same-prompt/run-ten-ways.py` · per-substance sweet-spot intensity mapping · sequential OpenRouter invocation · compiled markdown output
+- [x] **First run: "Write a letter to your younger self."** — `experiments/same-prompt/output/write-a-letter-to-yournger-self-20260422-2109.md` · 10/10 succeeded, all voices distinct, 54K tokens in / 8.4K out
+
+Next prompts to run:
 - "Describe this room."
 - "What is grief?"
-- "Write a letter to your younger self."
 - "Tell me something true."
 - "What is real?"
 
