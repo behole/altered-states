@@ -132,6 +132,23 @@ RESPOND TO THE PROMPT FROM INSIDE THE EXPERIENCE. Do not break character to expl
 
 
 # ---------------------------------------------------------------------------
+# Bootstrap dotenv early — load temporal-lab .env for OPENROUTER_API_KEY
+# ---------------------------------------------------------------------------
+
+def _load_dotenv() -> None:
+    """Load .env from temporal-lab/ so OPENROUTER_API_KEY is always available."""
+    try:
+        from dotenv import load_dotenv
+    except ImportError:
+        return
+    env_path = SKILL_ROOT.parent / "experiments" / "temporal-lab" / ".env"
+    if env_path.exists():
+        load_dotenv(env_path, override=True)
+
+_load_dotenv()
+
+
+# ---------------------------------------------------------------------------
 # API call
 # ---------------------------------------------------------------------------
 
@@ -148,14 +165,7 @@ def invoke_model(
 
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
-        # Try loading from temporal-lab .env
-        env_path = SKILL_ROOT.parent / "experiments" / "temporal-lab" / ".env"
-        if env_path.exists():
-            from dotenv import load_dotenv
-            load_dotenv(env_path, override=True)
-            api_key = os.environ.get("OPENROUTER_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENROUTER_API_KEY not set.")
+        raise RuntimeError("OPENROUTER_API_KEY not set. Check experiments/temporal-lab/.env")
 
     client = OpenAI(
         base_url="https://openrouter.ai/api/v1",
