@@ -513,6 +513,11 @@
       .links a:last-child { border-bottom: none; }
       #theme-toggle { margin-left: 8px; }
       nav .inner { position: relative; }
+      .exp-tabs { flex-wrap: wrap; gap: 0; overflow-x: visible; border-bottom: none; }
+      .exp-tab { border-bottom: none; padding: 8px 12px; font-size: 13px; }
+      .exp-tab.active { border-bottom: 2px solid var(--text); }
+      .journal-substance-tabs { flex-wrap: wrap; }
+      .js-tab { font-size: 12px; padding: 5px 10px; }
     }
 
     @media (max-width: 480px) {
@@ -539,11 +544,11 @@
 <!-- ═══ HOME ═══ -->
 <div id="view-home" class="view-container active">
   <div class="hero">
-    <h1>Ten voices.<br>One question.</h1>
+    <h1>Altered States</h1>
     <p>
-      What would different altered states say if you asked them the same thing?
-      Each persona is built from phenomenological research &mdash; not stereotypes.
-      Their voices emerge from pharmacology, not imagination.
+      A phenomenological modeling project. Each of the ten personas is a behavioral skill
+      &mdash; a detailed set of instructions capturing what a specific substance actually
+      does to consciousness, based on published research, clinical observations, and trip reports.
     </p>
     <div class="tags">
       <span class="tag">10 substances</span>
@@ -599,8 +604,10 @@
   <div class="hero" style="padding-bottom: 24px;">
     <h1>Temporal<br>journals.</h1>
     <p>
-      Each persona runs autonomous cycles every 15 minutes, evolving their emotional
-      state, phenomenological coherence, and depth of reflection over time.
+      Each persona runs autonomous cycles at its own cadence &mdash; from every hour
+      for the short-arc substances (DMT, Salvia, 5-MeO-DMT) to once a day for
+      Ibogaine. Each cycle evolves their emotional state, phenomenological coherence,
+      and depth of reflection over time.
     </p>
   </div>
   <section style="padding-top: 0;">
@@ -873,6 +880,8 @@ renderPersonaGrid();
 renderRecentExcerpts();
 renderJournalTabs();
 renderExpTabs();
+showExperiment(0);
+showJournal(PERSONAS[0].id);
 </script>
 
 </body>
