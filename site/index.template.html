@@ -19,6 +19,7 @@
       --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
       --shadow-hover: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
       --state-bg: rgba(0,0,0,0.04);
+      --accent-bg: rgba(0,117,222,0.08);
       --reflect-border: rgba(0,0,0,0.08);
       --question-border: rgba(0,0,0,0.06);
       --hover-border: rgba(0,0,0,0.16);
@@ -44,6 +45,7 @@
       --shadow-card: 0 1px 3px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.15);
       --shadow-hover: 0 2px 8px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.2);
       --state-bg: rgba(255,255,255,0.06);
+      --accent-bg: rgba(77,163,240,0.12);
       --reflect-border: rgba(255,255,255,0.08);
       --question-border: rgba(255,255,255,0.06);
       --hover-border: rgba(255,255,255,0.18);
@@ -241,36 +243,37 @@
       font-weight: 500;
     }
 
-    /* ── EXPERIMENT TABS ── */
+    /* ── EXPERIMENT TABS (pill style) ── */
     .exp-tabs {
       margin-top: 28px;
       display: flex;
-      gap: 4px;
-      border-bottom: 1px solid var(--border);
+      gap: 6px;
+      flex-wrap: wrap;
       padding-bottom: 0;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
     }
     .exp-tab {
       font-family: var(--font-body);
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 500;
       color: var(--text-muted);
-      padding: 10px 16px;
-      border: none;
-      background: none;
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      background: var(--bg);
       cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
       white-space: nowrap;
       transition: all 0.15s;
     }
     .exp-tab:hover {
+      border-color: var(--hover-border);
       color: var(--text-secondary);
     }
     .exp-tab.active {
-      color: var(--text);
-      border-bottom-color: var(--text);
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
     }
 
     /* ── SUBSTANCE SECTION (within experiments) ── */
@@ -309,6 +312,170 @@
       white-space: pre-wrap;
       max-width: 680px;
     }
+
+    /* ── MUSIC VIEW ── */
+    .music-grid {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .music-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .music-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .music-card-header .emoji { font-size: 24px; }
+    .music-card-header .info { flex: 1; }
+    .music-card-header .name {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .music-card-header .character {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    .music-card-header .platform-badge {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 100px;
+      background: var(--state-bg);
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .music-genre-badge {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 100px;
+      background: var(--accent-bg);
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .music-genre-why {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      font-style: italic;
+      padding: 0 2px;
+      border-left: 2px solid var(--border);
+      padding-left: 10px;
+    }
+    .music-lyrics-body {
+      font-size: 13px;
+      line-height: 1.8;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      white-space: pre-wrap;
+    }
+    .music-description-toggle {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.15s;
+      user-select: none;
+      padding: 4px 0;
+    }
+    .music-description-toggle:hover { color: var(--text-secondary); }
+    .music-description-toggle .arrow {
+      display: inline-block;
+      transition: transform 0.2s;
+      font-size: 10px;
+    }
+    .music-description-toggle .arrow.open { transform: rotate(90deg); }
+    .music-description-body {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.25s ease;
+      opacity: 0;
+    }
+    .music-description-body.open {
+      max-height: 5000px;
+      opacity: 1;
+      margin-top: 4px;
+    }
+    .music-player {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-warm);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 6px 6px 14px;
+      margin-top: auto;
+    }
+    .music-player .play-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: var(--text);
+      color: var(--bg);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .music-player .play-btn:hover { opacity: 0.85; }
+    .music-player .seek-bar {
+      flex: 1;
+      height: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: var(--border);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    .music-player .seek-bar::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--text);
+      cursor: pointer;
+    }
+    .music-player .time {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      min-width: 36px;
+      text-align: right;
+    }
+    .music-empty {
+      margin-top: 36px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    .music-empty span { font-size: 32px; display: block; margin-bottom: 12px; }
 
     /* ── JOURNAL VIEW ── */
     .journal-header {
@@ -513,9 +680,9 @@
       .links a:last-child { border-bottom: none; }
       #theme-toggle { margin-left: 8px; }
       nav .inner { position: relative; }
-      .exp-tabs { flex-wrap: wrap; gap: 0; overflow-x: visible; border-bottom: none; }
-      .exp-tab { border-bottom: none; padding: 8px 12px; font-size: 13px; }
-      .exp-tab.active { border-bottom: 2px solid var(--text); }
+      .exp-tabs { flex-wrap: wrap; gap: 6px; overflow-x: visible; border-bottom: none; }
+      .exp-tab { border: 1px solid var(--border); border-radius: 100px; padding: 6px 12px; font-size: 12px; }
+      .exp-tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
       .journal-substance-tabs { flex-wrap: wrap; }
       .js-tab { font-size: 12px; padding: 5px 10px; }
     }
@@ -533,7 +700,8 @@
     <button id="hamburger" onclick="toggleMobileNav()" aria-label="Menu" style="display:none; background:none; border:1px solid var(--border); border-radius:8px; padding:6px 8px; cursor:pointer; font-size:20px; line-height:1; color:var(--text);">&#9776;</button>
     <div class="links" id="nav-links">
       <a href="#" data-view="home" class="active" onclick="showView('home'); closeMobileNav(); return false;">Personas</a>
-      <a href="#" data-view="experiments" onclick="showView('experiments'); closeMobileNav(); return false;">Experiments</a>
+      <a href="#" data-view="experiments" onclick="showView('experiments'); closeMobileNav(); return false;">1x10</a>
+      <a href="#" data-view="music" onclick="showView('music'); closeMobileNav(); return false;">Music</a>
       <a href="#" data-view="journals" onclick="showView('journals'); closeMobileNav(); return false;">Journals</a>
       <a href="#" data-view="about" onclick="showView('about'); closeMobileNav(); return false;">About</a>
     </div>
@@ -552,8 +720,9 @@
     </p>
     <div class="tags">
       <span class="tag">10 substances</span>
-      <span class="tag">207 temporal cycles</span>
-      <span class="tag">5 experiments</span>
+      <span class="tag">__CYCLE_COUNT__ temporal cycles</span>
+      <span class="tag">__EXP_COUNT__ experiments</span>
+      <span class="tag">__MUSIC_COUNT__ songs</span>
       <span class="tag">claude-sonnet-4.6</span>
     </div>
   </div>
@@ -594,6 +763,26 @@
       <!-- filled by build script -->
     </div>
     <div id="exp-content">
+      <!-- filled by build script -->
+    </div>
+  </section>
+</div>
+
+<!-- ═══ MUSIC ═══ -->
+<div id="view-music" class="view-container">
+  <div class="hero" style="padding-bottom: 24px;">
+    <h1>Sound<br>studies.</h1>
+    <p>
+      Each persona made a song. Not about a song — an actual song.
+      They chose their own genre, wrote their own lyrics, described their own sound.
+      Then we sent it all to AI music platforms to hear what comes back.
+    </p>
+  </div>
+  <section style="padding-top: 0;">
+    <div class="exp-tabs" id="music-tabs">
+      <!-- filled by build script -->
+    </div>
+    <div id="music-content">
       <!-- filled by build script -->
     </div>
   </section>
@@ -674,6 +863,7 @@
 const PERSONAS = __PERSONAS__;
 const JOURNALS = __JOURNALS__;
 const EXPERIMENTS = __EXPERIMENTS__;
+const MUSIC = __MUSIC__;
 
 // ═══ VIEW ROUTING ═══
 function showView(name) {
@@ -827,6 +1017,131 @@ function showExperiment(index) {
   `).join('');
 }
 
+// ═══ MUSIC ═══
+let currentMusic = null;
+
+function renderMusicTabs() {
+  const tabs = document.getElementById('music-tabs');
+  tabs.innerHTML = MUSIC.map((exp, i) => `
+    <button class="exp-tab${i === 0 ? ' active' : ''}" data-index="${i}"
+            onclick="showMusic(${i})">
+      ${exp.title}
+    </button>
+  `).join('');
+}
+
+function showMusic(index) {
+  currentMusic = index;
+  document.querySelectorAll('#music-tabs .exp-tab').forEach(t => {
+    t.classList.toggle('active', parseInt(t.dataset.index) === index);
+  });
+  const exp = MUSIC[index];
+  if (!exp) return;
+  const container = document.getElementById('music-content');
+  container.innerHTML = exp.tracks.map(t => {
+    const hasLyrics = !!t.lyrics;
+    const hasGenre = !!t.genre;
+    return `
+    <div class="music-card">
+      <div class="music-card-header">
+        <span class="emoji">${t.emoji}</span>
+        <div class="info">
+          <div class="name">${t.name}</div>
+          <div class="character">${t.character}</div>
+        </div>
+        ${hasGenre ? `<span class="music-genre-badge">${escHtml(t.genre)}</span>` : (t.platform ? `<span class="platform-badge">${t.platform}</span>` : '')}
+      </div>
+      ${hasGenre && t.genre_why ? `<div class="music-genre-why">${escHtml(t.genre_why)}</div>` : ''}
+      ${hasLyrics ? `
+        <div class="music-description-toggle" onclick="toggleDesc(this)">
+          <span class="arrow">&#9654;</span> Read lyrics
+        </div>
+        <div class="music-description-body music-lyrics-body">${escHtml(t.lyrics)}</div>
+      ` : `
+        <div class="music-description-toggle" onclick="toggleDesc(this)">
+          <span class="arrow">&#9654;</span> Read description
+        </div>
+        <div class="music-description-body">${escHtml(t.description)}</div>
+      `}
+      <div class="music-player">
+        <button class="play-btn" onclick="togglePlay(this, '${t.audio_url || ''}')">&#9654;</button>
+        <input type="range" class="seek-bar" value="0" max="100">
+        <span class="time">${t.audio_url ? '0:00' : '--:--'}</span>
+      </div>
+    </div>
+  `}).join('');
+}
+
+// Music player
+let activeAudio = null;
+let activeSeekBar = null;
+let activeTimeEl = null;
+
+function togglePlay(btn, url) {
+  if (!url) return;
+  const player = btn.closest('.music-player');
+  const seekBar = player.querySelector('.seek-bar');
+  const timeEl = player.querySelector('.time');
+
+  if (activeAudio && !activeAudio.paused) {
+    const sameTrack = activeAudio.dataset.url === url;
+    if (sameTrack) {
+      activeAudio.pause();
+      btn.innerHTML = '&#9654;';
+      return;
+    }
+    // Pause previous
+    document.querySelectorAll('.play-btn').forEach(b => b.innerHTML = '&#9654;');
+    activeAudio.pause();
+  }
+
+  const audio = new Audio(url);
+  audio.dataset.url = url;
+  activeAudio = audio;
+  activeSeekBar = seekBar;
+  activeTimeEl = timeEl;
+  btn.innerHTML = '&#9646;&#9646;';
+
+  audio.addEventListener('timeupdate', () => {
+    if (audio.duration) {
+      seekBar.value = (audio.currentTime / audio.duration) * 100;
+      timeEl.textContent = formatTime(audio.currentTime);
+    }
+  });
+
+  audio.addEventListener('ended', () => {
+    btn.innerHTML = '&#9654;';
+    seekBar.value = 0;
+    timeEl.textContent = formatTime(0);
+    activeAudio = null;
+  });
+
+  seekBar.addEventListener('input', () => {
+    if (audio.duration) {
+      audio.currentTime = (seekBar.value / 100) * audio.duration;
+    }
+  });
+
+  audio.play().catch(() => {
+    btn.innerHTML = '&#9654;';
+  });
+}
+
+function toggleDesc(el) {
+  const arrow = el.querySelector('.arrow');
+  const body = el.nextElementSibling;
+  arrow.classList.toggle('open');
+  body.classList.toggle('open');
+  const label = arrow.classList.contains('open') ? 'Hide description' : 'Read description';
+  el.childNodes[el.childNodes.length - 1].textContent = ' ' + (arrow.classList.contains('open') ? 'Hide description' : 'Read description');
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return m + ':' + String(sec).padStart(2, '0');
+}
+
 // ═══ UTILS ═══
 function escHtml(s) {
   if (!s) return '';
@@ -880,7 +1195,9 @@ renderPersonaGrid();
 renderRecentExcerpts();
 renderJournalTabs();
 renderExpTabs();
+renderMusicTabs();
 showExperiment(0);
+showMusic(0);
 showJournal(PERSONAS[0].id);
 </script>
 

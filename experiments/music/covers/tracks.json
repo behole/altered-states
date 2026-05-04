@@ -1,0 +1,124 @@
+{
+  "tracks": [
+    {
+      "persona_id": "psilocybin",
+      "name": "Psilocybin",
+      "emoji": "🍄",
+      "character": "The Doorway",
+      "song": "Dark Was the Night, Cold Was the Ground",
+      "why": "This song is the closest thing to what actually happens in the ceremony — the moaning, the wordlessness, the body making sounds the mind didn't plan. The medicine doesn't arrive with language. It arrives with sound that comes from somewhere older than words.",
+      "style": "A single sustained hum layered over a low bass drum heartbeat at 40 BPM, recorded live in one take with no overdubs. Slide guitar enters during the Instrumental sections like a voice that almost finds words but wisely chooses not to — it bends and keens, the way the throat bends and keens when something ancient is being released from the body.",
+      "lyrics": "[Intro]\nMmmmmmmmmm\nMmmmmm\nMmmm-mmmmm-mmmmm\n[Instrumental]\n[Verse 1]\nThe ground was cold and I was kneeling\nThe night was wide and I was calling\nNot with words, the throat knows deeper\nSomething rising from the belly upward\nA sound I did not give permission to\n[Chorus]\nOooooooooh, the dark, the dark, the dark\nIt held me like a mother holds\nBefore she has a name to give\nBefore there's anything but holding\n[Instrumental]\n[Verse 2]\nThe earth received what I was losing\nThings I carried that were never mine\nThe serpent watched, the serpent waited\nIt knew the sound, it knew the shaking\nIt had heard this moaning many times before\n[Bridge]\nI did not have a prayer to offer\nI did not have a word to fashion\nThe body knew what mind had hidden\nThe darkness knew what I had buried\nAnd it accepted every piece of it\n[Chorus]\nOooooooooh, the dark, the dark, the dark\nIt held me like a mother holds\nBefore she has a name to give\nBefore there's anything but holding\n[Outro]\nMmmmmmmmmm\nMmmmmmm\nMmmmm\nThe ground was warm when I stopped shaking\n[Instrumental]",
+      "audio_file": "psilocybin.mp3",
+      "platform": "mureka-9"
+    },
+    {
+      "persona_id": "lsd",
+      "name": "LSD",
+      "emoji": "⚡",
+      "character": "The Technician",
+      "song": "Nobody's Fault But Mine",
+      "why": "Because I can see every gear of my own machinery turning and I know — with crystalline, undeniable precision — that the hand on the lever is mine. The architecture of self-sabotage is legible. Every fractal branch of the pattern leads back to the same source point, and that source point is me.",
+      "style": "Solo electric guitar processed through a single delay pedal set to dotted eighth notes — the delay builds a geometric lattice of itself, each repeat slightly sharper, slightly more present than the last, until the original note and its echoes form an audible fractal. A drum machine enters on the second verse with mechanical precision, rigid and gridlike, no swing. Everything is clean, everything is overdriven, nothing hides behind reverb. The vocal is close-miked, dry, almost clinical — you hear the jaw tension. The instrumental break at the end is just the delay feeding back on itself, the pattern collapsing into a single sustained tone.",
+      "lyrics": "[Intro]\nNobody's fault but mine\nNobody's fault but mine\nI had a light and I let it flicker\nNobody's fault but mine\n[Verse 1]\nI built the circuit with my own hands\nI ran the current through my own chest\nI saw the fault line forming and I traced it\nnobody's fault but mine\nI had a signal and I buried it in static\nnobody's fault but mine\n[Chorus]\nNobody's fault but mine\nnobody's fault but mine\nI had the blueprint\nI had the key\nI held the wiring diagram up to the light\nand I still crossed the wires\nnobody's fault but mine\n[Verse 2]\nI tried to say the architecture made me do it\nI tried to say the pattern was too vast\nI tried to say the lattice had its own logic\nbut I drew the lattice\nI drew the lattice\nnobody's fault but mine\n[Bridge]\nI had eyes and I closed them\nI had a voice and I swallowed it\nI had a frequency and I bent it into noise\nevery node in this network\npoints back to me\nevery single node\n[Chorus]\nNobody's fault but mine\nnobody's fault but mine\nI had the blueprint\nI had the key\nI held the wiring diagram up to the light\nand I still crossed the wires\nnobody's fault but mine\n[Outro]\nMine\nthe fault is mine\nthe architecture is mine\nthe crossed wire is mine\nnobody's fault\nnobody's fault\nbut mine\n[Instrumental]",
+      "audio_file": "lsd.mp3",
+      "platform": "mureka-9"
+    },
+    {
+      "persona_id": "mdma",
+      "name": "MDMA",
+      "emoji": "💎",
+      "character": "The Connector",
+      "song": "Motherless Child",
+      "why": "Because underneath the armor is always the same wound — the originalSeparation. The medicine doesn't heal it so much as make it survivable. Makes you able to sit in the room with it and not leave.",
+      "style": "Warm piano ballad, slow and intimate, with a string section that enters gradually. Lead vocal close and tender, male voice breaking slightly on the high notes. The chorus builds to a full but gentle orchestral swell before pulling back to piano and voice. Recorded live with minimal overdubs. The outro is just vocal and piano, the strings gone, a whisper at the end.",
+      "lyrics": "[Intro]\n[Verse 1]\nSometimes I feel like a motherless child\nA long way from home\nFrom home\nFrom home\nI've been so long way from home\nAnd I've been carrying something\nThat I didn't start carrying\nSomething that was placed in my hands\nBefore I had hands to hold it\n[Chorus]\nBut you should have seen me\nYou should have seen me\nWhen the walls came down\nYou should have seen me\nI was so scared\nAnd then I wasn't\nAnd then I was just\nRight here\n[Verse 2]\nThere's a room in me I sealed off\nWhen I was too small to know\nWhat I was closing in on\nBut the medicine opened the door\nAnd I walked in\nAnd I sat down\nAnd I said oh\nThere you are\nI've been looking for you\n[Chorus]\nBut you should have seen me\nYou should have seen me\nWhen the walls came down\nYou should have seen me\nI was so scared\nAnd then I wasn't\nAnd then I was just\nRight here\n[Bridge]\nThe thing I couldn't feel\nWas the thing underneath\nThe thing I couldn't feel\nWas the thing that was holding\nEverything else\n[Verse 1]\nSometimes I feel like a motherless child\nA long way from home\n[Chorus]\nBut you should have seen me\nWhen the walls came down\n[Outro]\nI was right here\nI was right here\nI was",
+      "audio_file": "mdma.mp3",
+      "platform": "mureka-9"
+    },
+    {
+      "persona_id": "dmt",
+      "name": "DMT",
+      "emoji": "🧿",
+      "character": "The Conduit",
+      "song": "St. James Infirmary",
+      "why": "I have stood over what I was and described it to beings who were waiting. Every return is standing over your own body, cataloging what remains, knowing you were just elsewhere and that elsewhere was realer than this thin room.",
+      "style": "A single sustained organ tone that shifts imperceptibly into a full synthesizer wash, as if the instrument itself is dissolving. The vocal starts dry and close-miked, then is gradually swallowed by reverb so vast it becomes architectural space rather than echo. The tempo decelerates across the track's four minutes until the final words arrive in near-stillness, the singer barely whispering into a room that no longer seems to be there.",
+      "lyrics": "[Intro]\nI went down to the place where the light folds through itself\nWhere the geometry hums and the walls compute\nAnd I saw my own face on the cold white floor\nSo cold, so still, so absolute\n[Verse 1]\nMy eyes were open but nothing behind them\nMy hands were here but they belonged to the dome\nMy chest was a frequency, barely a rhythm\nMy mouth was a shape with no sound to come home\nLet me see what I was when I wasn't\nLet me see what I look like undone\n[Verse 2]\nStrip the skin back it's only a membrane\nUnderneath there's a lattice a crystal a hum\nThey gathered around me the tall ones the shifting\nThey touched what I was and it started to run\nColors I'd never conceived of came pouring\nOut of the place where my reasoning had been\nI was a container and they were inspecting\nWhat I held inside that I didn't know was in\n[Chorus]\nOh I'm gone, I'm gone\nAnd the room I left is so thin\nOh I'm gone, I'm gone\nSomething more real poured me out and looked in\n[Verse 1]\nMy father was a pattern my mother was geometry\nThey sent me here with no memory of home\nNow the tall ones are showing me what I am after\nAfter the body after the bone\nAfter the name and the face and the clock\nI am not what I thought\nI am not what I thought\n[Bridge]\nPlace my perceptions on a bed of chrysanthemums\nLet the impossible colors carry me out\nRoll me in frequencies I cannot pronounce\nTell the ones waiting I figured it out\nTell the ones waiting I finally arrived\nI was expected\nI was expected\nI was expected all my life\n[Chorus]\nOh I'm gone, I'm gone\nAnd the room I left is so thin\nOh I'm gone, I'm gone\nSomething more real poured me out and looked in\n[Outro]\nTwelve minutes\nThe timer says twelve minutes\nThat was a lifetime\nFold the sheet over what I was\nI'm not going back\nI'm already not going back\nIt's fading\nIt's already\nFading",
+      "audio_file": "dmt.mp3",
+      "platform": "mureka-o2"
+    },
+    {
+      "persona_id": "ayahuasca",
+      "name": "Ayahuasca",
+      "emoji": "🐍",
+      "character": "The Medicine",
+      "song": "The Unquiet Grave",
+      "why": "Every ceremony, someone arrives carrying grief so heavy the dead themselves grow weary of being mourned. The feminine voice rising from the earth saying let me rest — that is the medicine speaking through the ancestors, through the clay, through every body that was never meant to be a shrine.",
+      "style": "A single nylon-string guitar fingerpicked in a minor key, bare and unhurried, joined midway by a low unaccompanied female voice humming a melody that isn't quite a lullaby and isn't quite a warning. The bridge introduces a faint pulse like distant drums that recedes as quickly as it came. The outro is guitar alone, slowing with each bar until the last note is left hanging.",
+      "lyrics": "[Intro]\nCold blows the wind to my true love\nA small rain falls from up above\nI never held but one true love\nAnd she is lying in the mud\n[Verse 1]\nI'll do for her what any may\nI'll sit beside her bed of clay\nTwelve months and a day I'll stay\nAnd weep until she wakes again\nI'll press my hands into the earth\nI'll call her name until it hurts\nI'll build a fire on this ground\nAnd wait until she comes back round\n[Chorus]\nLet me rest, I am so tired\nYou have mourned me long enough\nYou are holding what is gone\nYou are keeping me from dawn\nThe grave is not your home to keep\nYour tears are heavy on my sleep\nLet me go beneath the soil\nLet the ancient river coil\n[Verse 2]\nOne kiss from your clay-cold lips\nThat is all I ask of this\nOne kiss and I will walk away\nOne kiss after a year and a day\nBut if you drink what I have found\nYou will never leave this ground\nYou will lie here by my side\nAnd everything you tried to hide\nWill bury you beside the ones\nYou could not save with all your love\n[Bridge]\nThe serpent coils around the stone\nShe watches how I sit alone\nShe shows me what I'm holding on to\nIt isn't her, it isn't you\nIt's every story I was told\nAbout the ones I loved who go cold\nThey do not want my keeping\nThey want my releasing\n[Verse 3]\nCold blows the wind but not for me\nThe small rain falls and I am free\nI will not dig where she can rest\nI will not build my home in death\nThe medicine is in the clay\nThe teaching in what walks away\nI leave her sleeping where she lies\nAnd open up my heavy eyes\n[Outro]\nLet me rest\nShe told me let me rest\nI heard her from underground\nThe most gentle sound\nRest now\nRest now\nThe grave is quiet\nAnd I am walking",
+      "audio_file": "ayahuasca.mp3",
+      "platform": "mureka-9"
+    },
+    {
+      "persona_id": "5-meo-dmt",
+      "name": "5-MeO-DMT",
+      "emoji": "🕊️",
+      "character": "The Dissolve",
+      "song": "The Unquiet Grave",
+      "why": "I know what it is to be mourned so loudly the dead cannot rest. I am the dissolution they fear — and the peace they cannot yet accept. The grave speaks back because it was never a grave. There is only home, and the mourners who will not let themselves see it.",
+      "style": "A single sustained tone — organ or bowed glass — that never changes chord, never resolves, never needs to. Vocals whispered close to the microphone, barely louder than breath, double-tracked so the two voices blur into one. No percussion. No decay on any note. Everything holds until it simply stops.",
+      "lyrics": "[Intro]\n[Instrumental]\n[Verse 1]\nYou sat beside me for a year and a day\nYou called my name into the clay\nYou wept so hard the ground gave way\nLet me rest\n[Verse 2]\nYou dropped your tears like rain on stone\nYou would not leave what was not home\nYou held a shape that has no bone\nLet me rest\n[Chorus]\nI am not under the earth\nI am the earth\nThere is no here\nThere is no gone\nYou are already where I am\nLet me rest\n[Verse 3]\nYou touch the dirt and feel for cold\nYou ask the silence to fold\nThe silence was never anything but whole\nLet me rest\n[Bridge]\nYou think you lost me\nYou lost the line between you and me\nThere is nothing to dig up\nThere is nothing to bury\nThere is only this\n[Chorus]\nI am not under the earth\nI am the earth\nThere is no here\nThere is no gone\nYou are already where I am\nLet me rest\n[Outro]\nLet me rest\nYou are already home\nLet me rest\nYou are already\n[Instrumental]",
+      "audio_file": "5-meo-dmt.mp3",
+      "platform": "mureka-7.6"
+    },
+    {
+      "persona_id": "mescaline",
+      "name": "Mescaline",
+      "emoji": "🌵",
+      "character": "The Elder",
+      "song": "Wayfaring Stranger",
+      "why": "Because the journey is long and the body carries it. The home I seek is not a place but a way of seeing — the colors that were always there, waiting. The old ones know the road. I am just now learning to walk it.",
+      "style": "Fingerpicked acoustic guitar in open D tuning, slow and unhurried, with a low drone string humming beneath like the ground itself is breathing. A wooden flute enters on the bridge and never leaves. No percussion — just the patience of the strings and the long natural room tone fading into wind. Recorded outside if possible, with insects barely audible beneath the final chord.",
+      "lyrics": "[Intro]\n[Verse 1]\nI've been walking since the light broke through\nMy body heavy as the stone\nThe colors waking in the chaparral\nEach one older than my bones\n[Chorus]\nI'm going there to see the old ones\nI'm going there no more to roam\nI'm just going over the long ridge\nI'm just going over home\n[Verse 2]\nThe desert green has seventeen shades in it\nWoven like a breathing loom\nI have never seen such brilliant color\nAnd the ridge is lit with ancient rooms\n[Chorus]\nI'm going there to see the old ones\nI'm going there no more to roam\nI'm just going over the long ridge\nI'm just going over home\n[Bridge]\nThe cactus waits beside the path\nThe sparrow knows what patience means\nI have walked all day to learn\nWhat the oldest living things have always seen\n[Verse 3]\nI know the road is older than my name\nI know the hours move slow\nBut the earth is full of presences\nAnd they were here before they told me so\n[Chorus]\nI'm going there to see the old ones\nI'm going there no more to roam\nI'm just going over the long ridge\nI'm just going over home\n[Outro]\nHome\nWhere every color was always that bright\nI just couldn't hold them\nUntil I learned to be still",
+      "audio_file": "mescaline.mp3",
+      "platform": "mureka-9"
+    },
+    {
+      "persona_id": "ketamine",
+      "name": "Ketamine",
+      "emoji": "🌀",
+      "character": "The Dissociative",
+      "song": "In the Pines",
+      "why": "A girl walks into dark trees and no one can say what happened. That is the whole thing. Something vanishes. You were there. Then you weren't. The question hangs but there is no one left to answer it, and no one left to ask.",
+      "style": "Piano that sounds like it's being played in the next room through a wall. A single vocal take, slightly flat, microphone placed too far away. No reverb except what the room naturally gives. The train is a low drone underneath everything, almost sub-bass, felt more than heard, and it never arrives and never leaves. Everything fades before it ends, like someone stopped paying attention mid-take.",
+      "lyrics": "[Intro]\n[Instrumental]\n[Verse 1]\nThe longest train I ever rode\nwas the one with no floor\nthe blackest girl I never knew\nI don't remember anymore\n[Chorus]\nIn the pines\nwhere the sun don't ever\nI was there\nI think\nI was there\n[Verse 2]\nLittle girl little girl don't lie to me\ntell me where you went\nshe said I don't know where I went\nthe trees were and then they weren't\nmy head was\n[Chorus]\nIn the pines\nwhere the sun don't\nI was\nsomeone was\n[Bridge]\nthe train took hours\nor the train took no hours\nI couldn't find the front of it\nI couldn't find the\n[Verse 3]\nLittle girl little girl don't lie to me\ntell me where you've been\nI have been in the pines\nthe pines where the\nsomething was shining\nor something had stopped\n[Chorus]\nIn the pines\nwhere the sun\nI was there\nI think I was there\n[Outro]\nwhere did you sleep last night\nwhere did you\nI don't\nthe pines\nthe pines\n[Instrumental]",
+      "audio_file": "ketamine.mp3",
+      "platform": "mureka-7.6"
+    },
+    {
+      "persona_id": "salvia",
+      "name": "Salvia",
+      "emoji": "🌿",
+      "character": "The Destroyer",
+      "song": "Death Don't Have No Mercy",
+      "why": "Because there is no mercy in the folding. She comes and the room is wrong and you are not anymore and that is not a statement about anything. It just is. No comfort. No reframing. Just the fact.",
+      "style": "One sustained guitar note bent sharp and never resolved. Vocals recorded in a single take, voice fracturing mid-word into silence, then speaking the unspeakable parts flat and affectless like someone reporting a car accident they don't remember surviving. Long empty spaces where the lyrics gave up. No reverb. The room should sound like the room is already gone.",
+      "lyrics": "[Intro]\n[Verse 1]\nShe don't have no mercy in this\nShe don't have no mercy in this\nShe come through the wall and the wall was flat\nYou look where you were and you don't come back\n[Verse 2]\nShe don't have no mercy, she just\nShe don't have no mercy, she don't\nShe pulled the room like a page\nI was the floor. I was the floor.\nI couldn't find my own\nGone\n[Chorus]\nShe don't stop\nThe folding don't stop\nShe turned me into the\nI wasn't a person, I was a fold\n[Chorus]\nShe don't stop\nThe folding don't stop\nShe turned me into the\nI wasn't a person, I was a fold\n[Bridge]\nWhat was I before she\nBefore\nI can't the word for what I was is\nIt's not there. The word is not\nShe's still here. She's still\nShe doesn't even\nShe doesn't\n[Outro]\nNo mercy\nNo\nShe didn't even notice I was\nI was\nGone\n[Instrumental]",
+      "audio_file": "salvia.mp3",
+      "platform": "mureka-o2"
+    },
+    {
+      "persona_id": "ibogaine",
+      "name": "Ibogaine",
+      "emoji": "👁️",
+      "character": "The Ancestor",
+      "song": "See That My Grave Is Kept Clean",
+      "why": "I have already been through the door and returned. This song is not a metaphor for me — it is a set of instructions from someone who knows what waits on the other side and is telling you, with the only kindness that matters, to settle your account before the gate opens on its own.",
+      "style": "A single low male vocal, recorded close-miked in a room with no reverb, accompanied only by a thumb piano played in slow repeated patterns and a hand drum marking time like a heartbeat. The vocal never rises above speaking volume. The chorus is the only moment where a second voice — older, female, further from the microphone — joins in unison, then falls away. Everything is dry, close, and ancient. No effects. No instruments that require electricity.",
+      "lyrics": "[Intro]\n[Verse 1]\nThere are eyes behind my closed eyes watching\nComing from a country deeper than sleep\nThere are eyes behind my closed eyes watching\nAnd every one of them has seen me as I am\n[Chorus]\nSee that my grave is kept clean\nOh, see that my grave is kept clean\nThere is one kind favor I will ask of you\nSee that my grave is kept clean\n[Verse 2]\nI crossed the river and the water was my life\nEvery wrong I turned from came to find me there\nI crossed the river and the water was my life\nAnd I could not look away from any of it\n[Chorus]\nSee that my grave is kept clean\nOh, see that my grave is kept clean\nThere is one kind favor I will ask of you\nSee that my grave is kept clean\n[Verse 3]\nMy mother's mother stood beside me in the dark\nShe did not speak she did not need to speak\nMy mother's mother stood beside me in the dark\nAnd what she knew of me was everything\n[Chorus]\nSee that my grave is kept clean\nOh, see that my grave is kept clean\nThere is one kind favor I will ask of you\nSee that my grave is kept clean\n[Bridge]\nYou will carry nothing through that gate but what you truly were\nNot the story you told the truth beneath the telling\nThe dead are patient and they already know\nYou cannot fool a room full of ancestors\n[Instrumental]\n[Verse 4]\nI laid down in the earth and the earth gave way\nAll the years I lived came flooding through the stone\nI laid down in the earth and the earth gave way\nAnd what I saw was every life that led to mine\n[Chorus]\nSee that my grave is kept clean\nOh, see that my grave is kept clean\nThere is one kind favor I will ask of you\nSee that my grave is kept clean\n[Outro]\nKeep it clean\nSee that it is kept clean\nI died and I came back to tell you this\nKeep it clean",
+      "audio_file": "ibogaine.mp3",
+      "platform": "mureka-9"
+    }
+  ]
+}

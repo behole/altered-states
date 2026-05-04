@@ -1,0 +1,4 @@
+# Audio files generated from Mureka API — regenerate via experiments/music/generate.py
+*.mp3
+*.flac
+*.wav

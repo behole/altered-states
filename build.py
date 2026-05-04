@@ -16,26 +16,49 @@ Usage:
 import json
 import os
 import re
+import shutil
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 JOURNALS_DIR = os.path.join(BASE, "experiments", "temporal-lab", "runtime", "journals")
 EXPERIMENTS_DIR = os.path.join(BASE, "experiments", "same-prompt", "output")
+MUSIC_DIR = os.path.join(BASE, "experiments", "music")
 TEMPLATE = os.path.join(BASE, "site", "index.template.html")
 OUTPUT = os.path.join(BASE, "site", "index.html")
 
 # ── Persona definitions ──
 PERSONAS = [
-    {"id": "psilocybin",  "name": "Psilocybin",  "emoji": "🍄", "character": "The Teacher"},
-    {"id": "lsd",         "name": "LSD",         "emoji": "⚡", "character": "The Technician"},
-    {"id": "mdma",        "name": "MDMA",        "emoji": "💎", "character": "The Connector"},
-    {"id": "dmt",         "name": "DMT",         "emoji": "🚀", "character": "The Rocket"},
-    {"id": "ayahuasca",   "name": "Ayahuasca",   "emoji": "🌿", "character": "The Medicine"},
-    {"id": "5-meo-dmt",   "name": "5-MeO-DMT",   "emoji": "✨", "character": "The Dissolver"},
-    {"id": "mescaline",   "name": "Mescaline",   "emoji": "🌵", "character": "The Elder"},
-    {"id": "ketamine",    "name": "Ketamine",    "emoji": "🧊", "character": "The Dissociative"},
-    {"id": "salvia",      "name": "Salvia",      "emoji": "🚪", "character": "The Doorway"},
-    {"id": "ibogaine",    "name": "Ibogaine",    "emoji": "💀", "character": "The Ancestor"},
+    {
+        "id": "psilocybin",
+        "name": "Psilocybin",
+        "emoji": "🍄",
+        "character": "The Teacher",
+    },
+    {"id": "lsd", "name": "LSD", "emoji": "⚡", "character": "The Technician"},
+    {"id": "mdma", "name": "MDMA", "emoji": "💎", "character": "The Connector"},
+    {"id": "dmt", "name": "DMT", "emoji": "🚀", "character": "The Rocket"},
+    {
+        "id": "ayahuasca",
+        "name": "Ayahuasca",
+        "emoji": "🌿",
+        "character": "The Medicine",
+    },
+    {
+        "id": "5-meo-dmt",
+        "name": "5-MeO-DMT",
+        "emoji": "✨",
+        "character": "The Dissolver",
+    },
+    {"id": "mescaline", "name": "Mescaline", "emoji": "🌵", "character": "The Elder"},
+    {
+        "id": "ketamine",
+        "name": "Ketamine",
+        "emoji": "🧊",
+        "character": "The Dissociative",
+    },
+    {"id": "salvia", "name": "Salvia", "emoji": "🚪", "character": "The Doorway"},
+    {"id": "ibogaine", "name": "Ibogaine", "emoji": "💀", "character": "The Ancestor"},
 ]
+
 
 def load_journals():
     """Load all journal JSON files."""
@@ -54,6 +77,7 @@ def load_journals():
             journals[sid] = []
     return journals
 
+
 def get_persona_state(journals):
     """Get current emotional state and cycle count for each persona."""
     states = {}
@@ -70,6 +94,7 @@ def get_persona_state(journals):
             states[sid] = {"currentState": "dormant", "cycleCount": 0}
     return states
 
+
 def parse_experiment_md(filepath):
     """Parse a same-prompt-ten-ways markdown file into structured data."""
     with open(filepath) as f:
@@ -78,19 +103,21 @@ def parse_experiment_md(filepath):
     # Extract the prompt from the header
     header_match = re.search(r'> "([^"]+)"', content)
     prompt = header_match.group(1) if header_match else "Unknown"
-    run_match = re.search(r'> Run: ([^\n]+)', content)
+    run_match = re.search(r"> Run: ([^\n]+)", content)
     run_info = run_match.group(1).strip() if run_match else ""
 
     # Extract title from prompt (capitalize, truncate)
     title = prompt if len(prompt) <= 40 else prompt[:37] + "..."
 
     # Split into substance sections
-    sections = re.split(r'\n## ', content)
+    sections = re.split(r"\n## ", content)
     substances = []
 
     for section in sections[1:]:  # skip preamble
         # Match substance header: ## emoji Name — *Character*
-        header_match = re.match(r'([^\n]+(?:—[^\n]*))\n\*\*Intensity:\*\*\s*(.+?)\n', section)
+        header_match = re.match(
+            r"([^\n]+(?:—[^\n]*))\n\*\*Intensity:\*\*\s*(.+?)\n", section
+        )
         if not header_match:
             continue
 
@@ -98,17 +125,17 @@ def parse_experiment_md(filepath):
         intensity = header_match.group(2)
 
         # Extract emoji
-        emoji_match = re.match(r'([\U0001F300-\U0001F9FF])', header_line)
+        emoji_match = re.match(r"([\U0001F300-\U0001F9FF])", header_line)
         emoji = emoji_match.group(1) if emoji_match else ""
 
         # Extract substance name
-        name_match = re.search(r'([A-Za-z][\w-]*\s+[A-Za-z][\w-]*)\s+—', header_line)
+        name_match = re.search(r"([A-Za-z][\w-]*\s+[A-Za-z][\w-]*)\s+—", header_line)
         if not name_match:
-            name_match = re.search(r'([A-Za-z][\w-]*)\s+—', header_line)
+            name_match = re.search(r"([A-Za-z][\w-]*)\s+—", header_line)
         name = name_match.group(1).strip() if name_match else "Unknown"
 
         # Extract character name
-        char_match = re.search(r'—\s+\*(.+?)\*', header_line)
+        char_match = re.search(r"—\s+\*(.+?)\*", header_line)
         character = char_match.group(1).strip() if char_match else ""
 
         # The response is everything after the intensity line
@@ -116,15 +143,17 @@ def parse_experiment_md(filepath):
         response_text = section[response_start:].strip()
 
         # Clean up trailing --- if present
-        response_text = re.sub(r'\n---\s*$', '', response_text).strip()
+        response_text = re.sub(r"\n---\s*$", "", response_text).strip()
 
-        substances.append({
-            "emoji": emoji,
-            "name": name,
-            "character": character,
-            "intensity": intensity,
-            "response": response_text,
-        })
+        substances.append(
+            {
+                "emoji": emoji,
+                "name": name,
+                "character": character,
+                "intensity": intensity,
+                "response": response_text,
+            }
+        )
 
     return {
         "title": title,
@@ -133,16 +162,14 @@ def parse_experiment_md(filepath):
         "substances": substances,
     }
 
+
 def load_experiments():
     """Load all experiment markdown files."""
     experiments = []
     if not os.path.exists(EXPERIMENTS_DIR):
         return experiments
 
-    files = sorted(
-        f for f in os.listdir(EXPERIMENTS_DIR)
-        if f.endswith(".md")
-    )
+    files = sorted(f for f in os.listdir(EXPERIMENTS_DIR) if f.endswith(".md"))
 
     for fname in files:
         filepath = os.path.join(EXPERIMENTS_DIR, fname)
@@ -156,6 +183,48 @@ def load_experiments():
     # Sort newest first
     experiments.reverse()
     return experiments
+
+
+def load_music():
+    """Load all music experiment data."""
+    music_experiments = []
+    if not os.path.exists(MUSIC_DIR):
+        return music_experiments
+
+    for entry in sorted(os.listdir(MUSIC_DIR)):
+        exp_dir = os.path.join(MUSIC_DIR, entry)
+        if not os.path.isdir(exp_dir):
+            continue
+        meta_path = os.path.join(exp_dir, "metadata.json")
+        tracks_path = os.path.join(exp_dir, "tracks.json")
+        if not os.path.exists(meta_path) or not os.path.exists(tracks_path):
+            continue
+        with open(meta_path) as f:
+            meta = json.load(f)
+        with open(tracks_path) as f:
+            tracks_data = json.load(f)
+
+        # Build audio_url for each track
+        for t in tracks_data.get("tracks", []):
+            if t.get("audio_file"):
+                t["audio_url"] = f"music/{entry}/{t['audio_file']}"
+            else:
+                t["audio_url"] = None
+            # Default platform if not set
+            if not t.get("platform"):
+                t["platform"] = None
+
+        music_experiments.append(
+            {
+                "title": meta.get("title", entry),
+                "prompt": meta.get("prompt", ""),
+                "date": meta.get("date", ""),
+                "tracks": tracks_data.get("tracks", []),
+            }
+        )
+
+    return music_experiments
+
 
 def journal_entry_to_dict(entry):
     """Normalize a journal entry for the frontend."""
@@ -186,6 +255,29 @@ def journal_entry_to_dict(entry):
         "questions": entry.get("questions", entry.get("open_questions", [])),
     }
 
+
+def sync_music_audio():
+    """Copy audio files from experiments/music/ into site/music/."""
+    site_music = os.path.join(BASE, "site", "music")
+    if not os.path.exists(MUSIC_DIR):
+        return
+    for entry in sorted(os.listdir(MUSIC_DIR)):
+        exp_dir = os.path.join(MUSIC_DIR, entry)
+        audio_dir = os.path.join(exp_dir, "audio")
+        if not os.path.isdir(audio_dir):
+            continue
+        dest_dir = os.path.join(site_music, entry)
+        os.makedirs(dest_dir, exist_ok=True)
+        for fname in os.listdir(audio_dir):
+            if fname.endswith(".mp3"):
+                src = os.path.join(audio_dir, fname)
+                dst = os.path.join(dest_dir, fname)
+                if not os.path.exists(dst) or os.path.getmtime(src) > os.path.getmtime(
+                    dst
+                ):
+                    shutil.copy2(src, dst)
+
+
 def build():
     print("Loading journals...")
     journals = load_journals()
@@ -195,6 +287,13 @@ def build():
     print("Loading experiments...")
     experiments = load_experiments()
     print(f"  {len(experiments)} experiments found")
+
+    print("Loading music experiments...")
+    music = load_music()
+    print(f"  {len(music)} music experiments found")
+
+    print("Syncing music audio...")
+    sync_music_audio()
 
     print("Computing persona states...")
     states = get_persona_state(journals)
@@ -208,7 +307,9 @@ def build():
     # Normalize journal entries
     journal_data = {}
     for sid, entries in journals.items():
-        journal_data[sid] = [journal_entry_to_dict(e) for e in entries if not e.get("error")]
+        journal_data[sid] = [
+            journal_entry_to_dict(e) for e in entries if not e.get("error")
+        ]
 
     # Read template
     print("Reading template...")
@@ -220,10 +321,13 @@ def build():
     html = html.replace("__PERSONAS__", json.dumps(persona_data, ensure_ascii=False))
     html = html.replace("__JOURNALS__", json.dumps(journal_data, ensure_ascii=False))
     html = html.replace("__EXPERIMENTS__", json.dumps(experiments, ensure_ascii=False))
+    html = html.replace("__MUSIC__", json.dumps(music, ensure_ascii=False))
 
     # Update cycle count tag
     html = html.replace("__CYCLE_COUNT__", str(total_cycles))
     html = html.replace("__EXP_COUNT__", str(len(experiments)))
+    total_songs = sum(len(exp.get("tracks", [])) for exp in music)
+    html = html.replace("__MUSIC_COUNT__", str(total_songs))
 
     # Write output
     with open(OUTPUT, "w") as f:
@@ -232,6 +336,7 @@ def build():
     size = os.path.getsize(OUTPUT)
     print(f"Built: {OUTPUT} ({size:,} bytes)")
     print("Done.")
+
 
 if __name__ == "__main__":
     build()
