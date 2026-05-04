@@ -1,0 +1,37 @@
+[
+  {
+    "id": "altered-states",
+    "name": "Altered States",
+    "description": "AI skills that simulate the phenomenology of mind-altering substances, grounded in peer-reviewed clinical research.",
+    "url": "https://github.com/jjoosshhmbpm1/altered-states",
+    "color": "#e74c3c"
+  },
+  {
+    "id": "temporal-lab",
+    "name": "Temporal Lab",
+    "description": "Autonomous character systems with persistent memory, emotional arcs, and temporal reasoning.",
+    "url": "#",
+    "color": "#3498db"
+  },
+  {
+    "id": "music-experiments",
+    "name": "Music Experiments",
+    "description": "10-persona audio generation: describe a song and hear it through the lens of different altered states.",
+    "url": "#",
+    "color": "#9b59b6"
+  },
+  {
+    "id": "visual-fingerprints",
+    "name": "Visual Fingerprints",
+    "description": "Generative art explorations of perceptual changes across different phenomenological states.",
+    "url": "#",
+    "color": "#2ecc71"
+  },
+  {
+    "id": "eval-framework",
+    "name": "Evaluation Framework",
+    "description": "Cross-model testing protocols, blind evaluations, and structured reporting for altered-state skill quality.",
+    "url": "#",
+    "color": "#f39c12"
+  }
+]
