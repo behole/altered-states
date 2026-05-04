@@ -57,6 +57,19 @@ Strip labels from a transcript corpus, ask a reader (human or LLM-judge) to iden
 - [ ] **Poster series** — typographic interpretation of each substance.
 - [ ] **Short film / music video treatments** based on the dialogues.
 
+### High-tension constraint experiments
+
+These are same-prompt-ten-ways variants with a critical difference: the prompt is a **high-stakes situation that demands coherence, brevity, or emotional accountability**. The art is in what the persona *cannot* do well — how it fails under pressure. The tension prevents "AI cosplaying" (black-light-poster psychedelia) because the persona is struggling against a form, not decorating a surface.
+
+- [ ] ★ **The Breakup Text** — End a relationship in 160 characters. Real emotional stakes, no room for cosmic rambling. MDMA is too loving to actually leave; DMT dissolves the concept of "relationship"; Ibogaine takes 12 hours to trace the ancestral chain of events that led to the wrong. Constraint forces the persona to be *human* in a way it isn't built for. *Inspired by:* constraint as character reveal.
+- [ ] ★ **The Cross-Examination** — Each persona is a witness in a trial. The lawyer asks the same boring questions ("Where were you on the night of the 14th?"). Psilocybin circles the wound. LSD sees patterns the lawyer didn't ask about. DMT answers questions from a dimension where the crime didn't happen. The formal system of law collides with consciousness that doesn't obey rules. *Inspired by:* formality vs. phenomenological chaos.
+- [ ] ★ **The Standardized Test** — Each persona takes the same SAT / IQ test / citizenship exam. Ketamine forgets what section it's on. Salvia dissolves the boundary between question and answer. 5-MeO-DMT dissolves the concept of "correct." The tension: *can a non-standard consciousness perform normative reasoning?* Half-comedy, half-existential horror. *Inspired by:* normative systems vs. altered cognition.
+
+Other high-tension candidates to consider later:
+- **The Eulogy** — Each persona delivers a eulogy for the same person. You can't retreat into abstraction when talking about a dead body. Ketamine is detached and spatial; Salvia dissolves the living/dead boundary mid-sentence; MDMA forgives everyone, including the dead.
+- **The Instruction Manual** — Write instructions for a mundane task (IKEA furniture, sourdough). The constraint is functional clarity. LSD gets lost in the beauty of the hex key. Salvia dissolves the boundary between assembler and assembled.
+- **The Apology** — Write a sincere apology for the same wrong. Requires accountability and narrative coherence. Ibogaine takes 12 hours to explain the chain of events. 5-MeO-DMT dissolves the concept of "wrong."
+
 ## Backlog — Research / eval (days each)
 
 - [ ] **Cross-model fidelity** — run the same skill on Opus / Sonnet / GPT-5 / Gemini, score which holds the phenomenology best. Test infra already exists in `tests/`.
