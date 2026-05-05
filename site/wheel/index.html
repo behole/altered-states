@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Wheel</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #111;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .slot-container {
+      width: 100%;
+      height: 160px;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid #e74c3c;
+      border-radius: 12px;
+      background: #1a1a1a;
+      cursor: pointer;
+    }
+
+    .slot-container::before,
+    .slot-container::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 40px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .slot-container::before {
+      top: 0;
+      background: linear-gradient(to bottom, #1a1a1a, transparent);
+    }
+
+    .slot-container::after {
+      bottom: 0;
+      background: linear-gradient(to top, #1a1a1a, transparent);
+    }
+
+    .winner-indicator {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #e74c3c;
+      transform: translateY(-50%);
+      z-index: 1;
+      opacity: 0.5;
+    }
+
+    .strip {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      will-change: transform;
+    }
+
+    .card {
+      height: 140px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #222;
+      font-size: 18px;
+      font-weight: 500;
+      padding: 0 16px;
+      text-align: center;
+    }
+
+    .card:last-child {
+      margin-bottom: 0;
+    }
+
+    .spin-button {
+      padding: 14px 48px;
+      font-size: 18px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      background: #e74c3c;
+      color: #fff;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .spin-button:hover:not(:disabled) {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+
+    .spin-button:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .spin-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .retry-button {
+      margin-top: 8px;
+      padding: 8px 16px;
+      font-size: 14px;
+      border: 1px solid #e74c3c;
+      border-radius: 6px;
+      background: transparent;
+      color: #e74c3c;
+      cursor: pointer;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      z-index: 100;
+    }
+
+    .modal-backdrop.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 400px;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+    }
+
+    .modal-backdrop.active .modal {
+      transform: scale(1);
+    }
+
+    @media (max-width: 480px) {
+      .modal {
+        transform: translateY(20px);
+      }
+      .modal-backdrop.active .modal {
+        transform: translateY(0);
+      }
+    }
+
+    .modal h2 {
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+
+    .modal p {
+      color: #aaa;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      flex: 1;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: 8px;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      border: none;
+    }
+
+    .btn-primary:hover,
+    .btn-secondary:hover {
+      opacity: 0.9;
+    }
+
+    .btn-primary {
+      background: #e74c3c;
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #fff;
+      border: 1px solid #555;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Pick a Project</h1>
+
+    <div class="slot-container" id="slotContainer">
+      <div class="strip" id="strip"></div>
+      <div class="winner-indicator"></div>
+    </div>
+
+    <button class="spin-button" id="spinButton" aria-label="Spin the wheel">SPIN</button>
+
+    <div class="error-message" id="errorMessage">
+      <span id="errorText"></span>
+      <button class="retry-button" id="retryButton" style="display:none;">Retry</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-label="Project selected">
+    <div class="modal">
+      <h2 id="modalTitle"></h2>
+      <p id="modalDescription"></p>
+      <div class="modal-actions">
+        <a id="modalLink" href="#" target="_blank" class="btn-primary">Visit Project</a>
+        <button id="spinAgainButton" class="btn-secondary">Spin Again</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="projects-data">
+  [
+    {"id":"example-1","name":"Example Project 1","description":"This is a sample project description.","url":"https://example.com"},
+    {"id":"example-2","name":"Example Project 2","description":"Another sample project.","url":"https://example.com"},
+    {"id":"example-3","name":"Example Project 3","description":"A third sample project.","url":"https://example.com"}
+  ]
+  </script>
+
+  <script>
+    const CARD_HEIGHT = 140;
+    const CARD_GAP = 16;
+    const CARD_SPACING = CARD_HEIGHT + CARD_GAP;
+    const VIEWPORT_HEIGHT = 160;
+    const CENTER_OFFSET = (VIEWPORT_HEIGHT - CARD_HEIGHT) / 2;
+    const DUPLICATES = 3;
+    const RAMP_UP_MS = 200;
+    const MAX_SPEED = -2500;
+    const SPRING_STIFFNESS = 80;
+    const SPRING_DAMPING = 0.50;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let projects = [];
+    let isSpinning = false;
+    let animationId = null;
+    let stripPosition = CENTER_OFFSET;
+
+    const strip = document.getElementById('strip');
+    const spinButton = document.getElementById('spinButton');
+    const slotContainer = document.getElementById('slotContainer');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDescription = document.getElementById('modalDescription');
+    const modalLink = document.getElementById('modalLink');
+    const spinAgainButton = document.getElementById('spinAgainButton');
+    const errorMessage = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+    const retryButton = document.getElementById('retryButton');
+
+    async function loadProjects() {
+      errorText.textContent = '';
+      retryButton.style.display = 'none';
+      spinButton.disabled = false;
+
+      try {
+        const response = await fetch('projects.json');
+        if (!response.ok) throw new Error('Failed to load');
+        projects = await response.json();
+        validateAndRender();
+      } catch (e) {
+        const fallback = document.getElementById('projects-data');
+        if (fallback) {
+          try {
+            projects = JSON.parse(fallback.textContent);
+            validateAndRender();
+            return;
+          } catch {}
+        }
+        showError("Couldn't load projects. Check that projects.json exists.");
+      }
+    }
+
+    function validateAndRender() {
+      if (!Array.isArray(projects) || projects.length === 0) {
+        showError('Add projects to spin!');
+        return;
+      }
+      renderStrip();
+    }
+
+    function showError(msg) {
+      errorText.textContent = msg;
+      retryButton.style.display = 'inline-block';
+      spinButton.disabled = true;
+    }
+
+    function renderStrip() {
+      strip.innerHTML = '';
+      const totalCards = projects.length * DUPLICATES;
+
+      for (let i = 0; i < totalCards; i++) {
+        const project = projects[i % projects.length];
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.textContent = project.name || project.id || 'Unnamed Project';
+        card.dataset.projectId = project.id;
+        strip.appendChild(card);
+      }
+
+      stripPosition = CENTER_OFFSET;
+      strip.style.transform = `translateY(${stripPosition}px)`;
+    }
+
+    function startSpin() {
+      if (isSpinning || projects.length === 0) return;
+      isSpinning = true;
+      spinButton.disabled = true;
+      closeModal();
+      resetStrip();
+
+      const winnerIndex = Math.floor(Math.random() * projects.length);
+      const winner = projects[winnerIndex];
+
+      if (prefersReducedMotion) {
+        const middleBase = projects.length;
+        const targetIndex = middleBase + winnerIndex;
+        stripPosition = CENTER_OFFSET - (targetIndex * CARD_SPACING);
+        strip.style.transform = `translateY(${stripPosition}px)`;
+        isSpinning = false;
+        spinButton.disabled = false;
+        showWinModal(winner);
+        return;
+      }
+
+      const middleBase = projects.length;
+      const targetIndex = middleBase + winnerIndex;
+      const targetPosition = CENTER_OFFSET - (targetIndex * CARD_SPACING);
+
+      const state = {
+        position: stripPosition,
+        velocity: 0,
+        target: targetPosition,
+        startTime: performance.now(),
+        phase: 'ramp-up',
+        winner
+      };
+
+      let lastTime = performance.now();
+
+      function animate(now) {
+        const dt = Math.min((now - lastTime) / 1000, 0.05);
+        lastTime = now;
+        const elapsed = now - state.startTime;
+
+        if (state.phase === 'ramp-up') {
+          const progress = Math.min(elapsed / RAMP_UP_MS, 1);
+          state.velocity = MAX_SPEED * progress;
+          if (progress >= 1) state.phase = 'cruise';
+        } else if (state.phase === 'cruise') {
+          state.velocity = MAX_SPEED;
+          const distance = Math.abs(state.target - state.position);
+          const decelDistance = Math.abs(MAX_SPEED) * 0.1;
+          if (distance <= decelDistance) {
+            state.phase = 'decelerate';
+          }
+        } else if (state.phase === 'decelerate') {
+          const force = (state.target - state.position) * SPRING_STIFFNESS;
+          state.velocity = state.velocity * SPRING_DAMPING + force * dt;
+
+          if (Math.abs(state.target - state.position) < 1.5 && Math.abs(state.velocity) < 20) {
+            state.position = state.target;
+            state.phase = 'done';
+          }
+        }
+
+        if (state.phase !== 'done') {
+          state.position += state.velocity * dt;
+          strip.style.transform = `translateY(${state.position}px)`;
+          animationId = requestAnimationFrame(animate);
+        } else {
+          stripPosition = state.position;
+          isSpinning = false;
+          spinButton.disabled = false;
+          showWinModal(state.winner);
+        }
+      }
+
+      animationId = requestAnimationFrame(animate);
+    }
+
+    function showWinModal(project) {
+      modalTitle.textContent = project.name || project.id || 'Unnamed Project';
+      if (project.description) {
+        modalDescription.textContent = project.description;
+        modalDescription.style.display = 'block';
+      } else {
+        modalDescription.style.display = 'none';
+      }
+
+      if (project.url) {
+        modalLink.href = project.url;
+        modalLink.style.display = 'inline-flex';
+      } else {
+        modalLink.style.display = 'none';
+      }
+
+      modalBackdrop.classList.add('active');
+    }
+
+    function closeModal() {
+      modalBackdrop.classList.remove('active');
+    }
+
+    function resetStrip() {
+      stripPosition = CENTER_OFFSET;
+      strip.style.transform = `translateY(${stripPosition}px)`;
+    }
+
+    spinButton.addEventListener('click', startSpin);
+    slotContainer.addEventListener('click', startSpin);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !e.repeat && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+        if (modalBackdrop.classList.contains('active')) return;
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+        e.preventDefault();
+        startSpin();
+      }
+    });
+
+    spinAgainButton.addEventListener('click', () => {
+      closeModal();
+      resetStrip();
+      requestAnimationFrame(() => startSpin());
+    });
+
+    modalBackdrop.addEventListener('click', (e) => {
+      if (e.target === modalBackdrop) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Escape') closeModal();
+    });
+
+    retryButton.addEventListener('click', loadProjects);
+
+    loadProjects();
+  </script>
+</body>
+</html>
