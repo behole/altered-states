@@ -86,9 +86,14 @@ def get_persona_state(journals):
         entries = journals.get(sid, [])
         if entries:
             last = entries[-1]
+            # Count unique cycle numbers from successful (non-error) entries.
+            # Error retries inflate the raw entry count, making the persona
+            # cards misleading (e.g. 3,157 entries but only 44 real cycles).
+            successful = [e for e in entries if not e.get("error")]
+            cycle_numbers = {e.get("cycle") for e in successful if e.get("cycle") is not None}
             states[sid] = {
                 "currentState": last.get("emotional_state", "unknown"),
-                "cycleCount": len(entries),
+                "cycleCount": len(cycle_numbers) if cycle_numbers else len(successful),
             }
         else:
             states[sid] = {"currentState": "dormant", "cycleCount": 0}
@@ -281,7 +286,11 @@ def sync_music_audio():
 def build():
     print("Loading journals...")
     journals = load_journals()
-    total_cycles = sum(len(v) for v in journals.values())
+    # Count unique successful cycles (matches persona cards)
+    total_cycles = sum(
+        len({e.get("cycle") for e in v if not e.get("error") and e.get("cycle") is not None})
+        for v in journals.values()
+    )
     print(f"  {total_cycles} total cycles across {len(journals)} substances")
 
     print("Loading experiments...")
