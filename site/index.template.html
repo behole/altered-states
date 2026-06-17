@@ -801,14 +801,15 @@
   <div class="hero">
     <h1>Ten pharmacological voices. One open model.</h1>
     <p>
-      <strong>Altered States</strong> began as <a href="https://github.com/behole/altered-states" target="_blank" rel="noopener" style="color: var(--accent); text-decoration: underline;">slash skills for Claude Code</a>
-      &mdash; type <code style="font-family: var(--font-mono); font-size: 0.9em; background: var(--state-bg); padding: 2px 6px; border-radius: 4px;">/psilocybin</code> or
-      <code style="font-family: var(--font-mono); font-size: 0.9em; background: var(--state-bg); padding: 2px 6px; border-radius: 4px;">/lsd</code> and the AI becomes
-      a phenomenologically-grounded character shaped by what that substance actually does to consciousness.
-      Each skill is built from peer-reviewed clinical research, not trip lore.
+      <strong>Altered States</strong> is a set of <a href="https://github.com/behole/altered-states" target="_blank" rel="noopener" style="color: var(--accent); text-decoration: underline;">open phenomenological skills</a>
+      for any AI assistant. Type <code style="font-family: var(--font-mono); font-size: 0.9em; background: var(--state-bg); padding: 2px 6px; border-radius: 4px;">/psilocybin</code> or
+      <code style="font-family: var(--font-mono); font-size: 0.9em; background: var(--state-bg); padding: 2px 6px; border-radius: 4px;">/lsd</code> in Claude Code, paste a SKILL.md into Cursor's custom instructions,
+      or add them to OpenCode, Gemini CLI, or any system that accepts markdown prompts.
+      Each skill transforms the AI into a phenomenologically-grounded character shaped by what that substance
+      actually does to consciousness — built from peer-reviewed clinical research, not trip lore.
     </p>
     <p style="margin-top: 14px;">
-      This site is the interactive window into that model &mdash; autonomous journals, same-prompt experiments,
+      This site is the interactive window into that model — autonomous journals, same-prompt experiments,
       sound studies, and (below) a live chat where you can talk to any persona directly.
     </p>
     <div class="hero-cta">
@@ -825,7 +826,7 @@
       <span class="tag">__CYCLE_COUNT__ temporal cycles</span>
       <span class="tag">__EXP_COUNT__ experiments</span>
       <span class="tag">__MUSIC_COUNT__ songs</span>
-      <span class="tag">claude-sonnet-4.6</span>
+      <span class="tag">model-agnostic</span>
     </div>
   </div>
 
@@ -995,8 +996,10 @@
         not just different words, but different <em>ways of thinking</em>.
       </p>
       <p>
-        Built with Claude Sonnet 4.6, Python, and obsessive attention to the difference
-        between "trippy" and "accurate." The project is open source.
+        Built with Python, OpenRouter, and obsessive attention to the difference
+        between "trippy" and "accurate." The project is open source and model-agnostic —
+        the skills work with Claude, GPT, Gemini, DeepSeek, or any LLM that accepts
+        markdown prompts or custom instructions.
       </p>
     </div>
   </section>
@@ -1347,7 +1350,7 @@ let chatHistory = {}; // keyed by persona id
 
 const CHAT_PROVIDERS = {
   deepseek: { baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
-  openrouter: { baseUrl: 'https://openrouter.ai/api/v1', model: 'anthropic/claude-sonnet-4' },
+  openrouter: { baseUrl: 'https://openrouter.ai/api/v1', model: 'openai/gpt-4.1-mini' },
   custom: { baseUrl: '', model: '' }
 };
 
