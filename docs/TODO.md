@@ -1,5 +1,16 @@
 # TODO
 
+## #5 — Explain what Altered States is (slash skill vs embed?)
+
+**Status:** Open (2026-06-16)
+**Question:** Is Altered States distributed as a slash skill (`/psilocybin`, `/lsd`, etc.) or an embed (e.g. CLAUDE.md, GEMINI.md, system prompt)?
+
+Current README shows slash skill installation for Claude Code and OpenCode, plus GEMINI.md embeds for Gemini CLI. Need to clarify the primary delivery model and write a clear "What is this?" explainer.
+
+**Action:** Decide on primary framing, write 2-3 paragraph explainer, update README intro.
+
+---
+
 All items resolved.
 
 ## #4 — Ayahuasca: Thin Research Base
