@@ -1,6 +1,8 @@
 # AI agent session data
 .omc/
 .claude/
+.superpowers/
+.regent/
 
 # Superset config
 .superset/
