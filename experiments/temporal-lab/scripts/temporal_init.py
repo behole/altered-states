@@ -259,7 +259,7 @@ def _print_usage() -> None:
     print("\nSubstances: " + ", ".join(available_substances()))
     print("\nStorage path (override with ALTERED_STATES_TEMPORAL_PATH):")
     print(f"  {resolve_base_path()}")
-    model = os.environ.get("TEMPORAL_LAB_MODEL", "anthropic/claude-sonnet-4.6 (default)")
+    model = os.environ.get("TEMPORAL_LAB_MODEL", "deepseek-v4-pro (default)")
     print(f"\nModel: {model}")
     if os.environ.get("TEMPORAL_LAB_DRY_RUN"):
         print("⚠️  TEMPORAL_LAB_DRY_RUN is set — calls will return stubs.")

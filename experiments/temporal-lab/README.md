@@ -14,8 +14,7 @@ pip install -r requirements.txt
 
 # 2. Configure
 cp .env.example .env
-# edit .env, paste your OpenRouter key from https://openrouter.ai/keys
-```
+# edit .env, paste your DeepSeek key from https://platform.deepseek.com/api_keys
 
 ## Quick Start
 
@@ -49,7 +48,7 @@ Every cycle is a real LLM call:
 
 1. The dispatcher selects characters whose per-substance cadence is due (see `cadence.py`)
 2. For each due character, the lab assembles a prompt: **full SKILL.md + current character state + last 3 journal entries**
-3. Sends to OpenRouter (default model: Claude Sonnet 4.6, override via `TEMPORAL_LAB_MODEL`)
+3. Sends to DeepSeek (default model: deepseek-v4-pro, override via `TEMPORAL_LAB_MODEL`)
 4. Parses a JSON response with `emotional_state`, `clarity`, `integration`, `experience.{description,intensity,novelty}`, `reflections[]`, `questions[]`
 5. Updates character state, appends to journal, logs cost
 
@@ -67,8 +66,7 @@ Cycle frequency loosely mirrors the *narrative spacing between trips* — not th
 | LSD, Ayahuasca, Mescaline | 12 hr | 4-14 hr |
 | Ibogaine | 24 hr | 12-24 hr |
 
-Daily cycle volume: ~99 calls. At Sonnet 4.6 (~$0.03/call) → ~$3/day, ~$90/month. Switch to Haiku via `TEMPORAL_LAB_MODEL=anthropic/claude-haiku-4.5` to drop ~10×.
-
+Daily cycle volume: ~99 calls. At deepseek-v4-pro (~$0.03/call) → ~$3/day, ~$90/month. Switch to deepseek-chat via `TEMPORAL_LAB_MODEL=deepseek-chat` to drop ~10×.
 ## Cron
 
 Run the dispatcher every 15 min. The dispatcher decides which characters are actually due.
@@ -95,17 +93,13 @@ Override location with `ALTERED_STATES_TEMPORAL_PATH=~/.altered-states/temporal-
 
 ## Models
 
-OpenRouter ID, set via `TEMPORAL_LAB_MODEL` in `.env` or `--model` flag:
+DeepSeek model ID, set via `TEMPORAL_LAB_MODEL` in `.env` or `--model` flag:
 
 | Model | Tier | Notes |
 |---|---|---|
-| `anthropic/claude-sonnet-4.6` | default | balanced quality / cost |
-| `anthropic/claude-haiku-4.5` | budget | ~10× cheaper, voice fidelity drops |
-| `anthropic/claude-opus-4.6` | premium | top quality, ~5× Sonnet cost |
-| `openai/gpt-5` | alt | strong alternative voice |
-| `google/gemini-2.5-pro` | alt | long context, different cadence |
-| `deepseek/deepseek-v3` | cheap | high-volume runs, voice varies |
-
+| `deepseek-v4-pro` | default | high quality, 8K max tokens |
+| `deepseek-reasoner` | reasoning | R1 — slower, deeper chain-of-thought |
+| `deepseek-chat` | budget | V3 — fast, cheap, voice varies |
 ## Dry run
 
 Set `TEMPORAL_LAB_DRY_RUN=1` to skip real API calls and return deterministic stubs. Useful for verifying wiring or testing cron without spending tokens.
@@ -125,7 +119,7 @@ experiments/temporal-lab/
 ├── scripts/
 │   ├── characters.py           # canonical 10-substance definitions
 │   ├── cadence.py              # per-substance cycle intervals + dispatcher
-│   ├── llm_invoke.py           # OpenRouter client + retry + parsing
+│   ├── llm_invoke.py           # DeepSeek client + retry + parsing
 │   ├── logger.py               # per-call log + cost ledger
 │   ├── temporal_init.py        # CLI: init / list / run / costs
 │   ├── run-all-cycles.py       # cron target — runs only due characters

@@ -1,4 +1,4 @@
-"""LLM-backed cycle generation via OpenRouter.
+"""LLM-backed cycle generation via DeepSeek.
 
 generate_cycle(substance, character_state, journal_history) returns a
 parsed dict matching the cycle JSON schema. Handles retry, JSON repair,
@@ -21,7 +21,7 @@ from logger import log_call
 # Config
 # ---------------------------------------------------------------------------
 
-DEFAULT_MODEL = "anthropic/claude-sonnet-4.6"
+DEFAULT_MODEL = "deepseek-v4-pro"
 RETRIES = 3
 BACKOFFS_SEC = [2, 8, 32]
 SKILL_ROOT = Path(__file__).resolve().parents[3] / "skills"
@@ -29,12 +29,9 @@ SKILL_ROOT = Path(__file__).resolve().parents[3] / "skills"
 # Rough $/1M tokens for cost estimation. Update as pricing changes.
 # Input cost first, then output cost. Unknown models use a fallback.
 PRICING_PER_M_TOKENS: dict[str, tuple[float, float]] = {
-    "anthropic/claude-opus-4.6": (15.0, 75.0),
-    "anthropic/claude-sonnet-4.6": (3.0, 15.0),
-    "anthropic/claude-haiku-4.5": (0.80, 4.0),
-    "openai/gpt-5": (3.0, 15.0),
-    "google/gemini-2.5-pro": (1.25, 5.0),
-    "deepseek/deepseek-v3": (0.27, 1.10),
+    "deepseek-v4-pro": (0.50, 2.00),
+    "deepseek-reasoner": (0.50, 2.00),
+    "deepseek-chat": (0.14, 0.28),
 }
 PRICING_FALLBACK = (3.0, 15.0)
 
@@ -203,14 +200,14 @@ def generate_cycle(
             "openai SDK not installed. Run: pip install -r requirements.txt"
         ) from e
 
-    api_key = os.environ.get("OPENROUTER_API_KEY")
+    api_key = os.environ.get("DEEPSEEK_API_KEY")
     if not api_key:
         raise RuntimeError(
-            "OPENROUTER_API_KEY not set. Copy .env.example to .env and fill in."
+            "DEEPSEEK_API_KEY not set. Copy .env.example to .env and fill in."
         )
 
     client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
+        base_url="https://api.deepseek.com/v1",
         api_key=api_key,
     )
 
@@ -228,6 +225,7 @@ def generate_cycle(
                 messages=messages,
                 response_format={"type": "json_object"},
                 temperature=0.85,
+                max_tokens=8192,
             )
             duration_ms = int((time.time() - start) * 1000)
 

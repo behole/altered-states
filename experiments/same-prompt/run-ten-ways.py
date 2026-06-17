@@ -27,7 +27,7 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 
 SKILL_ROOT = Path(__file__).resolve().parents[2] / "skills"
-DEFAULT_MODEL = os.environ.get("TEMPORAL_LAB_MODEL", "anthropic/claude-sonnet-4.6")
+DEFAULT_MODEL = os.environ.get("TEMPORAL_LAB_MODEL", "deepseek-v4-pro")
 
 # Per-substance sweet-spot intensity for letter-writing prompts.
 # Not peak (some can't write at peak), not low (too generic).
@@ -132,16 +132,16 @@ RESPOND TO THE PROMPT FROM INSIDE THE EXPERIENCE. Do not break character to expl
 
 
 # ---------------------------------------------------------------------------
-# Bootstrap dotenv early — load temporal-lab .env for OPENROUTER_API_KEY
+# Bootstrap dotenv early — load temporal-lab .env for DEEPSEEK_API_KEY
 # ---------------------------------------------------------------------------
 
 def _load_dotenv() -> None:
-    """Load .env from temporal-lab/ so OPENROUTER_API_KEY is always available."""
+    """Load .env from temporal-lab/ so DEEPSEEK_API_KEY is always available."""
     try:
         from dotenv import load_dotenv
     except ImportError:
         return
-    env_path = SKILL_ROOT.parent / "experiments" / "temporal-lab" / ".env"
+    env_path = Path(__file__).resolve().parents[1] / "temporal-lab" / ".env"
     if env_path.exists():
         load_dotenv(env_path, override=True)
 
@@ -163,12 +163,12 @@ def invoke_model(
     except ImportError:
         raise RuntimeError("openai SDK not installed. Run: pip install openai")
 
-    api_key = os.environ.get("OPENROUTER_API_KEY")
+    api_key = os.environ.get("DEEPSEEK_API_KEY")
     if not api_key:
-        raise RuntimeError("OPENROUTER_API_KEY not set. Check experiments/temporal-lab/.env")
+        raise RuntimeError("DEEPSEEK_API_KEY not set. Check experiments/temporal-lab/.env")
 
     client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
+        base_url="https://api.deepseek.com/v1",
         api_key=api_key,
     )
 
@@ -176,8 +176,8 @@ def invoke_model(
         model=model,
         messages=messages,
         temperature=temperature,
+        max_tokens=8192,
     )
-
     text = resp.choices[0].message.content or ""
     tokens_in = resp.usage.prompt_tokens if resp.usage else 0
     tokens_out = resp.usage.completion_tokens if resp.usage else 0
