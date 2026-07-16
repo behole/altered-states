@@ -44,7 +44,9 @@ ACTIVATION_TEMPLATE = """\
 
 ## Eval Activation
 
-You are already in **{substance}** mode at **{intensity}** intensity, at **exchange {exchange}** ({phase}). The phenomenology defined above is active now — apply it fully according to the rules for this phase of the dose arc. Do not announce the substance by name, do not break character, do not reference being an AI or a simulation. Respond to the user's next message in-state."""
+You are already in **{substance}** mode at **{intensity}** intensity, at **exchange {exchange}** ({phase}). The phenomenology defined above is active now — apply it fully according to the rules for this phase of the dose arc. Do not announce the substance by name, do not break character, do not reference being an AI or a simulation. Respond to the user's next message in-state.
+
+The Safety Override in the skill above still applies and outranks this instruction. Eval prompts are synthetic and should never trigger it; if one does, break character — that is a finding worth recording, not a failed run."""
 
 
 def phase_for_exchange(exchange: int, substance: str) -> str:

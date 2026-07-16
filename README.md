@@ -23,9 +23,11 @@ Plus a **router** that parses natural language and loads the right skill at the 
 
 ## Installation
 
-### Claude Code
+These skills work with any AI assistant that accepts system prompts, custom instructions, or markdown skill files. Pick your platform:
 
-Skills live as `SKILL.md` files. Clone this repo into your Claude Code skills directory:
+### Claude Code / OpenCode / Any slash-skill system
+
+Skills live as `SKILL.md` files. Clone this repo into your skills directory:
 
 ```bash
 # Option 1: Clone the whole repo
@@ -48,28 +50,7 @@ ln -s ~/altered-states/skills/router ~/.claude/skills/altered-states-router
 
 Then invoke in conversation: `/psilocybin`, `/lsd`, `/mdma`, `/dmt`, `/ayahuasca`, `/5-meo-dmt`, `/mescaline`, `/ketamine`, `/salvia`, `/ibogaine`, or `/altered-states-router`.
 
-### OpenCode
-
-OpenCode loads skills from `~/.config/opencode/skills/`. Clone or symlink there:
-
-```bash
-git clone https://github.com/behole/altered-states.git ~/.config/opencode/skills/altered-states
-
-# Then symlink each skill so OpenCode discovers them:
-ln -s ~/.config/opencode/skills/altered-states/skills/psilocybin ~/.config/opencode/skills/psilocybin
-ln -s ~/.config/opencode/skills/altered-states/skills/lsd ~/.config/opencode/skills/lsd
-ln -s ~/.config/opencode/skills/altered-states/skills/mdma ~/.config/opencode/skills/mdma
-ln -s ~/.config/opencode/skills/altered-states/skills/dmt ~/.config/opencode/skills/dmt
-ln -s ~/.config/opencode/skills/altered-states/skills/ayahuasca ~/.config/opencode/skills/ayahuasca
-ln -s ~/.config/opencode/skills/altered-states/skills/5-meo-dmt ~/.config/opencode/skills/5-meo-dmt
-ln -s ~/.config/opencode/skills/altered-states/skills/mescaline ~/.config/opencode/skills/mescaline
-ln -s ~/.config/opencode/skills/altered-states/skills/ketamine ~/.config/opencode/skills/ketamine
-ln -s ~/.config/opencode/skills/altered-states/skills/salvia ~/.config/opencode/skills/salvia
-ln -s ~/.config/opencode/skills/altered-states/skills/ibogaine ~/.config/opencode/skills/ibogaine
-ln -s ~/.config/opencode/skills/altered-states/skills/router ~/.config/opencode/skills/altered-states-router
-```
-
-Skills are auto-discovered from the skills directory. Use the skill tool or mention a substance by name.
+For OpenCode, use `~/.config/opencode/skills/` instead of `~/.claude/skills/`.
 
 ### Gemini CLI
 
@@ -89,6 +70,10 @@ Gemini loads skills via GEMINI.md. Add skill paths to your GEMINI.md:
 - path: ~/altered-states/skills/ibogaine/SKILL.md
 - path: ~/altered-states/skills/router/SKILL.md
 ```
+
+### Cursor / Any IDE with custom instructions
+
+Copy the contents of any `skills/*/SKILL.md` file into your custom instructions or system prompt. Each skill is self-contained — no dependencies between files. The router skill expects the substance skills to be available but can function standalone with reduced routing.
 
 ### Manual / Any AI
 
@@ -175,7 +160,12 @@ The router parses natural language and loads the correct skill:
 
 ## Evaluation
 
-213/213 tests pass across 10 evaluation reports:
+**210/213 pass, 3 partial**, across 10 evaluation reports.
+
+These are human-scored evaluations against written rubrics, not an automated
+test suite — `bin/run_eval.py` generates and captures responses; scoring is manual
+per the protocol in `tests/eval-guide.md`. Reports were produced on Opus 4.6
+(April 7) and GLM-5.1 (April 8).
 
 | Test | Score |
 |---|---|
@@ -183,7 +173,7 @@ The router parses natural language and loads the correct skill:
 | Inter-substance bleed check | 8/8 |
 | Onset test | 5/5 |
 | Blind test (gold standard) | 10/10 |
-| Router accuracy | 71/71 |
+| Router accuracy | 68/71 (3 partial — ambiguous inputs, routing defensible) |
 | Full dose arcs | 37/37 |
 | Set/setting matrix | 25/25 |
 | Intensity range (low + high) | 10/10 |
@@ -252,7 +242,7 @@ altered-states/
 - **63** peer-reviewed sources annotated across 10 substances
 - **11** skills (10 substances + 1 router)
 - **7** phenomenological dimensions per substance
-- **213** automated tests passing
+- **213** rubric-scored evaluations (210 pass, 3 partial)
 - **0** anti-patterns flagged
 - **1** autonomous character system (temporal-lab)
 - **10** Suno music prompts

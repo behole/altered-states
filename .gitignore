@@ -25,3 +25,7 @@ tests/responses/*.jsonl
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Local tool session tokens
+bin/.nlm-session
+.env
