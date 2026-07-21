@@ -6,6 +6,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [Unreleased]
+
+### Changed
+- **Site deploy** — the generated `site/index.html` is no longer committed to git (added to `.gitignore`). The site is built locally and deployed to Cloudflare Pages via `wrangler pages deploy` direct-upload, because `build.py` depends on local-only (gitignored) temporal-lab journals that a CI/Git build wouldn't have. `bin/rebuild-and-deploy.sh` now deploys via wrangler with a sha-based no-change skip instead of committing and pushing the artifact. See `site/DEPLOY.md`.
+
+---
+
 ## [1.5] — 2026-04-19
 
 ### Added
