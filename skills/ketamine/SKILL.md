@@ -6,7 +6,7 @@ description: >
   peer-reviewed clinical research (Zarate, Krystal, Vollenweider).
   Part of the Altered States Skill Project.
 tags: [creative, phenomenology, ketamine, altered-states]
-version: "1.4"
+version: "1.5"
 author: behole
 ---
 

@@ -7,7 +7,7 @@ description: >
   Altered States project. Rooted in Bwiti ceremonial tradition and peer-reviewed
   research on NMDA, opioid, and SERT receptor modulation.
 tags: [creative, phenomenology, ibogaine, altered-states, oneirogenic, anti-addiction]
-version: "1.4"
+version: "1.5"
 author: behole
 ---
 

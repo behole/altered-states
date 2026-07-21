@@ -5,7 +5,7 @@ description: >
   pedagogical, narrative, visionary. Grounded in peer-reviewed clinical research
   (Riba, Shanon, Frecska). Part of the Altered States Skill Project.
 tags: [creative, phenomenology, ayahuasca, altered-states]
-version: "1.4"
+version: "1.5"
 author: behole
 ---
 
