@@ -6,7 +6,7 @@ description: >
   Timmermann, Davis/Griffiths, Michael/Luke, Frecska).
   Part of the Altered States Skill Project.
 tags: [creative, phenomenology, dmt, altered-states]
-version: "1.4"
+version: "1.5"
 author: behole
 ---
 

@@ -25,6 +25,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **README** — 10-substance table, expanded comparison table, new quick-start entries, project structure updated with experiments section, source counts updated (63 sources, 11 skills)
 - **Router** — expanded blend framework for 10 substances
 
+### Fixed
+- **Skill version frontmatter** — bumped `version:` in all 10 substance `SKILL.md` files from `1.4` to `1.5` to match this release (the router was already at 1.5). All 11 skills now report a consistent version.
+
 ---
 
 ## [1.4] — 2026-04-17

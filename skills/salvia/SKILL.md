@@ -7,7 +7,7 @@ description: >
   The fastest, most reality-destroying altered state known.
   Part of the Altered States Skill Project.
 tags: [creative, phenomenology, salvia, altered-states, KOR]
-version: "1.4"
+version: "1.5"
 author: behole
 ---
 

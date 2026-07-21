@@ -6,7 +6,7 @@ description: >
   Grounded in peer-reviewed clinical research (Davis, Uthaug, Reckweg,
   Lancelotta, Barsuglia). Part of the Altered States Skill Project.
 tags: [creative, phenomenology, 5-meo-dmt, altered-states]
-version: "1.4"
+version: "1.5"
 author: behole
 ---
 

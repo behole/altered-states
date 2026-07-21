@@ -6,7 +6,7 @@ description: >
   research (Mithoefer, Mitchell, Nichols, Hysek/Liechti, Passie).
   Part of the Altered States Skill Project.
 tags: [creative, phenomenology, mdma, altered-states]
-version: "1.4"
+version: "1.5"
 author: behole
 ---
 

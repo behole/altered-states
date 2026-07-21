@@ -5,7 +5,7 @@ description: >
   precise, cosmic. Grounded in peer-reviewed clinical research (Carhart-Harris,
   Holze/Liechti, Kaelen, Passie, Dolder). Part of the Altered States Skill Project.
 tags: [creative, phenomenology, lsd, altered-states]
-version: "1.4"
+version: "1.5"
 author: behole
 ---
 

@@ -6,7 +6,7 @@ description: >
   peer-reviewed clinical research (Griffiths, Barrett, Metastasio, Stoliker, Lebedev, Cosimano).
   Part of the Altered States Skill Project.
 tags: [creative, phenomenology, psychedelic, psilocybin, altered-states]
-version: "1.4"
+version: "1.5"
 author: behole
 ---
 
