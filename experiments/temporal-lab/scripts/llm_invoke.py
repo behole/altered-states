@@ -15,9 +15,12 @@ Provider is configured via env vars (see .env.example):
   LLM_JSON_MODE — "native" (response_format json_object) or "prompt"
                   (rely on the "Return ONLY JSON" instruction)
 
-Legacy vars TEMPORAL_LAB_MODEL / DEEPSEEK_API_KEY still work as fallbacks.
-Free endpoints (OpenRouter ":free" models, Groq free tier, Gemini free
-tier) are $0 — just point the three LLM_* vars at them.
+Legacy vars still work as fallbacks: OPENROUTER_API_KEY,
+DEEPSEEK_API_KEY, TEMPORAL_LAB_MODEL. When LLM_BASE_URL is unset the
+endpoint is auto-detected: OpenRouter if an OpenRouter key is present or
+the model looks like an OpenRouter slug ("provider/model" or ":free"),
+else DeepSeek. Free endpoints (OpenRouter ":free" models, Groq free
+tier, Gemini free tier) are $0 — just point the env at them.
 """
 
 import json
@@ -197,6 +200,15 @@ def _stub_response(substance: str, char_info: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 
+def _default_base_url(model: str) -> str:
+    """Pick a sensible default endpoint when LLM_BASE_URL is unset."""
+    if os.environ.get("OPENROUTER_API_KEY"):
+        return "https://openrouter.ai/api/v1"
+    if "/" in model or model.endswith(":free"):
+        return "https://openrouter.ai/api/v1"
+    return DEFAULT_BASE_URL
+
+
 def generate_cycle(
     substance: str,
     char_info: dict,
@@ -211,7 +223,7 @@ def generate_cycle(
         or os.environ.get("TEMPORAL_LAB_MODEL")
         or DEFAULT_MODEL
     )
-    base_url = os.environ.get("LLM_BASE_URL") or DEFAULT_BASE_URL
+    base_url = os.environ.get("LLM_BASE_URL") or _default_base_url(model)
     json_mode = os.environ.get("LLM_JSON_MODE", "native")
 
     if os.environ.get("TEMPORAL_LAB_DRY_RUN"):
@@ -228,10 +240,15 @@ def generate_cycle(
             "openai SDK not installed. Run: pip install -r requirements.txt"
         ) from e
 
-    api_key = os.environ.get("LLM_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")
+    api_key = (
+        os.environ.get("LLM_API_KEY")
+        or os.environ.get("OPENROUTER_API_KEY")
+        or os.environ.get("DEEPSEEK_API_KEY")
+    )
     if not api_key:
         raise RuntimeError(
-            "LLM_API_KEY not set. Copy .env.example to .env and fill in."
+            "No API key set. Set LLM_API_KEY (or OPENROUTER_API_KEY / "
+            "DEEPSEEK_API_KEY) — see .env.example."
         )
 
     client = OpenAI(
@@ -247,15 +264,15 @@ def generate_cycle(
     last_error = None
     for attempt in range(RETRIES):
         start = time.time()
+        kwargs: dict = {
+            "model": model,
+            "messages": messages,
+            "temperature": 0.85,
+            "max_tokens": 8192,
+        }
+        if json_mode == "native":
+            kwargs["response_format"] = {"type": "json_object"}
         try:
-            kwargs: dict = {
-                "model": model,
-                "messages": messages,
-                "temperature": 0.85,
-                "max_tokens": 8192,
-            }
-            if json_mode == "native":
-                kwargs["response_format"] = {"type": "json_object"}
             resp = client.chat.completions.create(**kwargs)
             duration_ms = int((time.time() - start) * 1000)
 
@@ -319,6 +336,11 @@ def generate_cycle(
             duration_ms = int((time.time() - start) * 1000)
             last_error = f"{type(e).__name__}: {e}"
             log_call(substance, model, 0, 0, 0.0, "api-error", last_error, duration_ms)
+            # Some free endpoints 400 on response_format — drop it and retry
+            # the remaining attempts in instruction-only JSON mode.
+            if json_mode == "native" and attempt + 1 < RETRIES:
+                json_mode = "prompt"
+                kwargs.pop("response_format", None)
             if attempt + 1 < RETRIES:
                 time.sleep(BACKOFFS_SEC[attempt])
                 continue

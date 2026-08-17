@@ -95,9 +95,13 @@ Override location with `ALTERED_STATES_TEMPORAL_PATH=~/.altered-states/temporal-
 ## Models
 
 Provider-agnostic: set `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` in `.env`
-(any OpenAI-compatible endpoint). Legacy `DEEPSEEK_API_KEY` /
-`TEMPORAL_LAB_MODEL` still work. `LLM_JSON_MODE` toggles native
-`response_format` (default) vs. instruction-only JSON.
+(any OpenAI-compatible endpoint). Legacy `OPENROUTER_API_KEY` /
+`DEEPSEEK_API_KEY` / `TEMPORAL_LAB_MODEL` still work, and the endpoint is
+auto-detected when `LLM_BASE_URL` is unset (OpenRouter if an OpenRouter
+key is present or the model is an OpenRouter slug, else DeepSeek).
+`LLM_JSON_MODE` toggles native `response_format` (default) vs.
+instruction-only JSON; a 400 on `response_format` auto-retries in prompt
+mode.
 
 | Provider | Cost | Key at | Model |
 |---|---|---|---|
