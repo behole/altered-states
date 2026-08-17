@@ -1,4 +1,4 @@
-"""LLM-backed cycle generation via DeepSeek.
+"""LLM-backed cycle generation via any OpenAI-compatible provider.
 
 generate_cycle(substance, character_state, journal_history) returns a
 parsed dict matching the cycle JSON schema. Handles retry, JSON repair,
@@ -6,6 +6,18 @@ cost tracking, and verbose logging.
 
 Set TEMPORAL_LAB_DRY_RUN=1 to skip real API calls and return a stub —
 useful for offline wiring verification.
+
+Provider is configured via env vars (see .env.example):
+
+  LLM_BASE_URL  — OpenAI-compatible endpoint
+  LLM_API_KEY   — API key
+  LLM_MODEL     — model ID
+  LLM_JSON_MODE — "native" (response_format json_object) or "prompt"
+                  (rely on the "Return ONLY JSON" instruction)
+
+Legacy vars TEMPORAL_LAB_MODEL / DEEPSEEK_API_KEY still work as fallbacks.
+Free endpoints (OpenRouter ":free" models, Groq free tier, Gemini free
+tier) are $0 — just point the three LLM_* vars at them.
 """
 
 import json
@@ -22,6 +34,7 @@ from logger import log_call
 # ---------------------------------------------------------------------------
 
 DEFAULT_MODEL = "deepseek-v4-pro"
+DEFAULT_BASE_URL = "https://api.deepseek.com/v1"
 RETRIES = 3
 BACKOFFS_SEC = [2, 8, 32]
 SKILL_ROOT = Path(__file__).resolve().parents[3] / "skills"
@@ -29,9 +42,15 @@ SKILL_ROOT = Path(__file__).resolve().parents[3] / "skills"
 # Rough $/1M tokens for cost estimation. Update as pricing changes.
 # Input cost first, then output cost. Unknown models use a fallback.
 PRICING_PER_M_TOKENS: dict[str, tuple[float, float]] = {
+    # DeepSeek (paid fallback)
     "deepseek-v4-pro": (0.50, 2.00),
     "deepseek-reasoner": (0.50, 2.00),
     "deepseek-chat": (0.14, 0.28),
+    # Groq paid rates (free tier is $0 — the "__free__" row covers it)
+    "llama-3.3-70b-versatile": (0.59, 0.79),
+    "gpt-oss-120b": (0.15, 0.60),
+    # OpenRouter ":free" models and other free endpoints are always $0
+    "__free__": (0.0, 0.0),
 }
 PRICING_FALLBACK = (3.0, 15.0)
 
@@ -146,6 +165,8 @@ def _parse_json_response(text: str) -> dict:
 
 
 def _estimate_cost(model: str, tokens_in: int, tokens_out: int) -> float:
+    if model.endswith(":free"):
+        return 0.0
     in_rate, out_rate = PRICING_PER_M_TOKENS.get(model, PRICING_FALLBACK)
     return (tokens_in * in_rate + tokens_out * out_rate) / 1_000_000
 
@@ -184,7 +205,14 @@ def generate_cycle(
     model: str | None = None,
 ) -> dict:
     """Generate one cycle. Returns the parsed JSON dict, or raises after retries."""
-    model = model or os.environ.get("TEMPORAL_LAB_MODEL") or DEFAULT_MODEL
+    model = (
+        model
+        or os.environ.get("LLM_MODEL")
+        or os.environ.get("TEMPORAL_LAB_MODEL")
+        or DEFAULT_MODEL
+    )
+    base_url = os.environ.get("LLM_BASE_URL") or DEFAULT_BASE_URL
+    json_mode = os.environ.get("LLM_JSON_MODE", "native")
 
     if os.environ.get("TEMPORAL_LAB_DRY_RUN"):
         result = _stub_response(substance, char_info)
@@ -200,14 +228,14 @@ def generate_cycle(
             "openai SDK not installed. Run: pip install -r requirements.txt"
         ) from e
 
-    api_key = os.environ.get("DEEPSEEK_API_KEY")
+    api_key = os.environ.get("LLM_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")
     if not api_key:
         raise RuntimeError(
-            "DEEPSEEK_API_KEY not set. Copy .env.example to .env and fill in."
+            "LLM_API_KEY not set. Copy .env.example to .env and fill in."
         )
 
     client = OpenAI(
-        base_url="https://api.deepseek.com/v1",
+        base_url=base_url,
         api_key=api_key,
     )
 
@@ -220,13 +248,15 @@ def generate_cycle(
     for attempt in range(RETRIES):
         start = time.time()
         try:
-            resp = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                response_format={"type": "json_object"},
-                temperature=0.85,
-                max_tokens=8192,
-            )
+            kwargs: dict = {
+                "model": model,
+                "messages": messages,
+                "temperature": 0.85,
+                "max_tokens": 8192,
+            }
+            if json_mode == "native":
+                kwargs["response_format"] = {"type": "json_object"}
+            resp = client.chat.completions.create(**kwargs)
             duration_ms = int((time.time() - start) * 1000)
 
             tokens_in = resp.usage.prompt_tokens if resp.usage else 0

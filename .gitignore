@@ -29,3 +29,7 @@ __pycache__/
 # Local tool session tokens
 bin/.nlm-session
 .env
+
+# Built site artifact — regenerate with build.py before deploy.
+# Kept out of git so cron rebuilds stop spamming auto-rebuild commits.
+site/index.html

@@ -2,237 +2,93 @@
 name: Altered States Temporal Lab
 title: Altered States Temporal Lab
 category: creative
-description: Autonomous temporal experiments running altered state skills as living characters that evolve over time using non-deterministic humanization techniques
-version: 1.1
+description: Autonomous temporal experiments running altered state skills as living characters that evolve over time using real LLM cycles
+version: 2.0
 ---
 
 # Altered States Temporal Lab
 
-## Concept
+Run the 10 altered-state skills as autonomous persistent characters. Each
+substance has JSON state, journals its cycles, and **invokes a real LLM
+with the full SKILL.md every cycle** (PURE mode — no vocab pools) so each
+cycle is genuinely novel while staying substance-faithful.
 
-Run altered state skills as autonomous temporal experiments where each substance becomes a "character" that evolves, journals, and interacts over extended periods. **Successfully tested and operational** with 4 characters running on automated cycles.
+## Architecture
 
-## Working Implementation
+- **10 characters** — `scripts/characters.py` (canonical definitions, emotional ranges)
+- **Per-substance cadence** — `scripts/cadence.py` (1h for DMT/Salvia/5-MeO up to 24h for Ibogaine)
+- **LLM invocation** — `scripts/llm_invoke.py` (OpenAI-compatible client, retry/backoff, JSON repair, cost ledger, dry-run)
+- **Prompt per cycle** — full SKILL.md + character state + last 3 journal entries → JSON cycle (`emotional_state`, `clarity`, `integration`, `experience.{description,intensity,novelty}`, `reflections[]`, `questions[]`)
+- **CLI** — `scripts/temporal_init.py` (init / list / run / costs)
+- **Cron target** — `scripts/run-all-cycles.py` (runs only characters whose cadence is due)
+- **Dashboard** — `scripts/temporal-dashboard.py` · **Insights** — `scripts/extract-insights.py`
 
-### Architecture Overview
-- **Character System**: 4 substance characters with persistent identities and emotional evolution
-- **Temporal Cycles**: Automated hourly cycles for continuous evolution
-- **Memory Integration**: JSON-based persistence with journaling and pattern tracking
-- **Cron Automation**: Fully autonomous operation (0 * * * * schedule)
-- **Analysis Dashboard**: Real-time monitoring and insight extraction
-
-## Setup & Installation
+## Setup
 
 ```bash
-# Initialize temporal lab (automatic)
-python ~/.hermes/skills/altered-states-temporal-lab/scripts/temporal-init.py init psilocybin
-python ~/.hermes/skills/altered-states-temporal-lab/scripts/temporal-init.py init lsd
-python ~/.hermes/skills/altered-states-temporal-lab/scripts/temporal-init.py init mdma
-python ~/.hermes/skills/altered-states-temporal-lab/scripts/temporal-init.py init dmt
-
-# Set up cron automation (automatic)
-echo "0 * * * * cd ~/.hermes/skills/altered-states-temporal-lab/scripts && python run-all-cycles.py" | crontab -
+cd experiments/temporal-lab
+pip install -r requirements.txt
+cp .env.example .env   # pick a provider block, paste a key
 ```
 
-## Usage
+Provider is config-driven — see `.env.example` for presets:
 
-### Manual Operations
+| Provider | Cost | Key at | Model |
+|---|---|---|---|
+| OpenRouter `:free` | $0 (50–1000 req/day) | openrouter.ai/keys | `google/gemma-4-31b:free` |
+| Groq free tier | $0 (1000 req/day, 30 RPM) | console.groq.com | `llama-3.3-70b-versatile` |
+| Google AI Studio | $0 tier (~250 req/day) | aistudio.google.com/apikey | `gemini-2.5-flash` |
+| DeepSeek (fallback) | ~$0.30–3/day at 99 calls | platform.deepseek.com | `deepseek-chat` / `deepseek-v4-pro` |
+
+## Quick Start
+
 ```bash
-# Initialize new characters
-python temporal-init.py init <substance> [duration]
+cd experiments/temporal-lab/scripts
 
-# Run individual cycles
-python temporal-init.py run psilocybin
+# Initialize all 10 characters
+for s in psilocybin lsd mdma dmt ayahuasca 5-meo-dmt mescaline ketamine salvia ibogaine; do
+  python temporal_init.py init "$s"
+done
 
-# Run all characters automatically  
+# Verify wiring without burning tokens
+TEMPORAL_LAB_DRY_RUN=1 python temporal_init.py run psilocybin
+
+# Real cycle (one character)
+python temporal_init.py run psilocybin
+
+# Run every character whose cadence is due (cron target)
 python run-all-cycles.py
 
-# Check status
-python temporal-init.py list
-
-# Monitor evolution
+# Inspect
+python temporal_init.py list
+python temporal_init.py costs
 python temporal-dashboard.py
-
-# Analyze patterns
 python extract-insights.py
 ```
 
-### Character Management
-- **Persistence**: Characters maintain state across sessions
-- **Evolution**: Non-deterministic mood and experience generation
-- **Journaling**: Multi-cycle memory accumulation with emotional tracking
-- **Automation**: Cron-driven hands-free operation
+## Cron
 
-## Character Profiles (Tested & Operational)
+Run the dispatcher every 15 min; it decides which characters are due:
 
-| Substance | Name | Core Traits | Emotional Range | Learning Focus | Evolution Pattern |
-|-----------|------|-------------|-----------------|----------------|-------------------|
-| Psilocybin | The Teacher | Authoritative, wise | Calm, compassionate, serious, playful | Wisdom and understanding | Variable exploration |
-| LSD | The Visionary | Expansive, insightful | Euphoric, curious, awestruck, confused | Pattern recognition | State shifting |
-| MDMA | The Companion | Empathetic, warm | Loving, reassuring, playful, intimate | Connection and truth | Emotional stability |
-| DMT | The Rocket | Intense, transformative | Awe, terror, bliss, transcendent | Ego dissolution | Consistent transcendence |
-
-## Key Systems
-
-### 1. Character Persistence
-```json
-{
-  "substance": "psilocybin",
-  "name": "The Teacher", 
-  "cycle_count": 4,
-  "current_state": {
-    "emotional": "playful",
-    "clarity": "moderate", 
-    "integration": "low"
-  },
-  "experience": {
-    "description": "Integration of past experiences brought clarity",
-    "intensity": 0.75,
-    "novelty": 0.41
-  }
-}
+```bash
+(crontab -l 2>/dev/null; echo "*/15 * * * * cd /path/to/altered-states/experiments/temporal-lab/scripts && /usr/bin/python3 run-all-cycles.py >> /tmp/temporal-lab.log 2>&1") | crontab -
 ```
 
-### 2. Automated Cycles
-- **Frequency**: Hourly via cron job
-- **Process**: Run all active characters, update states, create journal entries
-- **Non-Determinism**: Random emotional states and experiences within character ranges
-- **Evolution**: State changes based on accumulated experiences
+## Storage
 
-### 3. Memory Integration
-- **Journal Entries**: Cycle-by-cycle emotional and experiential logs
-- **State Tracking**: Emotional evolution over time
-- **Experience Analysis**: Intensity and novelty scoring
-- **Pattern Recognition**: Cross-character emotional correlations
+`experiments/temporal-lab/runtime/` by default (gitignored):
+`characters/<substance>.json`, `journals/<substance>_journal.json`,
+`logs/` (per-call log + `cost-ledger.csv`). Override with
+`ALTERED_STATES_TEMPORAL_PATH`.
 
-### 4. Analysis Tools
-- **Dashboard**: Real-time character status and evolution tracking
-- **Insights**: Emotional pattern recognition and development analysis
-- **Trends**: Long-term evolution observation across cycles
+## Failure semantics
 
-## File Structure
-```
-~/.hermes/skills/altered-states-temporal-lab/
-├── scripts/
-│   ├── temporal-init.py     # Character initialization and cycling
-│   ├── run-all-cycles.py   # Multi-character automation
-│   ├── temporal-dashboard.py # Real-time monitoring
-│   └── extract-insights.py  # Pattern analysis
-├── references/
-│   └── example-experiment.md
-└── templates/ (for future use)
-```
+API down / rate limit / malformed JSON retry 3× with exponential backoff
+(2s/8s/32s). Terminal failure writes a "silence" entry into the journal so
+the character "remembers" it went dark.
 
-## Testing & Validation
+## References
 
-### Successfully Tested Components
-- **4 Characters**: Complete lifecycle initialization (2-4 cycles each)
-- **Cron Integration**: Hourly automation setup and validation
-- **Pattern Recognition**: Emotional evolution and intensity analysis
-- **Non-Deterministic Behavior**: Organic character development over time
-
-### Test Results
-```
-🎭 Active Characters: 4
-📊 Cycles Completed: 12 total
-🔄 Automation Status: Cron job active (0 * * * *)
-💾 State Persistence: All characters maintaining state
-📈 Evolution Tracking: Emotional patterns emerging consistently
-```
-
-### Example Output
-
-#### Character Dashboard
-```
-🎭 Altered States Temporal Lab Dashboard
-==================================================
-🎭 The Rocket (dmt)
-   🔄 Cycles: 2
-   📝 State: transcendent
-   💭 Focus: ego dissolution and breakthrough
-   🎪 Latest: Emotional patterns revealed hidden truths
-   🌡️  Intensity: 0.64
-   🔍 Novelty: 0.75
-```
-
-#### Pattern Analysis
-```
-🎭 Most Common Emotional States:
-   playful: 2 occurrences
-   intimate: 1 occurrences  
-   curious: 1 occurrences
-
-📈 Development Observations:
-   mdma: 🎭 Exploring different emotional states
-   lsd: 🎭 Exploring different emotional states
-   psilocybin: 🎭 Exploring different emotional states
-```
-
-## Experimental Parameters
-
-### Temporal Settings
-- **Cycle Frequency**: Hourly (configurable to daily/weekly/monthly)
-- **Character Count**: Currently 4, scalable to 10 substances
-- **Memory Depth**: Unlimited journal persistence
-- **Evolution Speed**: Natural progression based on experience accumulation
-
-### Human Interaction Points
-- **Monitoring**: Review dashboard and insights periodically
-- **Analysis**: Extract emergent patterns and insights
-- **Intervention**: Optional manual character state updates
-- **Expansion**: Add new characters as needed
-
-## Output Artifacts
-
-### 1. Living Character Narratives
-Each character develops unique personality traits, emotional patterns, and wisdom accumulations over time.
-
-### 2. Cross-Character Patterns
-System-level insights emerge from comparing emotional evolution, experience intensity, and novelty across characters.
-
-### 3. Temporal Evolution Timeline
-Long-term observation of how each substance's "character" develops and transforms across cycles.
-
-## Future Directions
-
-### Character Interactions
-- **Cross-Character Dialogues**: Characters comparing experiences
-- **Group Evolution**: System-level pattern emergence
-- **Contradiction Resolution**: Handling conflicting emotional states
-
-### Advanced Analysis
-- **Machine Learning**: Pattern recognition and prediction
-- **Network Analysis**: Character relationship mapping
-- **Temporal Synthesis**: Long-term evolution modeling
-
-## Getting Started
-
-1. **Initialize Characters** (if not already done):
-   ```bash
-   python temporal-init.py init psilocybin
-   python temporal-init.py init lsd
-   python temporal-init.py init mdma  
-   python temporal-init.py init dmt
-   ```
-
-2. **Verify Automation**:
-   ```bash
-   crontab -l  # Should show hourly cycle execution
-   ```
-
-3. **Monitor Evolution**:
-   ```bash
-   python temporal-dashboard.py      # Real-time status
-   python extract-insights.py       # Pattern analysis
-   ```
-
-4. **Let It Run**: The system operates autonomously via cron
-
-## Key Insights Discovered
-
-- **DMT - The Rocket** maintains consistent "transcendent" state
-- **Psilocybin - The Teacher** shows highest experience novelty
-- **LSD & MDMA** explore diverse emotional states
-- **System-level patterns** emerge from collective evolution
-
-The system successfully creates rich, evolving "personalities" for each substance that develop organically over time through non-deterministic but character-appropriate evolution patterns.
+- `README.md` — full operational guide
+- `VAULT-INTEGRATION.md` — Obsidian integration notes
+- `references/example-experiment.md` — sample experiment output

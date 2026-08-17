@@ -14,7 +14,7 @@ pip install -r requirements.txt
 
 # 2. Configure
 cp .env.example .env
-# edit .env, paste your DeepSeek key from https://platform.deepseek.com/api_keys
+# pick a provider block (free options included) and paste your key
 
 ## Quick Start
 
@@ -48,7 +48,7 @@ Every cycle is a real LLM call:
 
 1. The dispatcher selects characters whose per-substance cadence is due (see `cadence.py`)
 2. For each due character, the lab assembles a prompt: **full SKILL.md + current character state + last 3 journal entries**
-3. Sends to DeepSeek (default model: deepseek-v4-pro, override via `TEMPORAL_LAB_MODEL`)
+3. Sends to the configured LLM provider (see Models below — free options included)
 4. Parses a JSON response with `emotional_state`, `clarity`, `integration`, `experience.{description,intensity,novelty}`, `reflections[]`, `questions[]`
 5. Updates character state, appends to journal, logs cost
 
@@ -66,7 +66,8 @@ Cycle frequency loosely mirrors the *narrative spacing between trips* — not th
 | LSD, Ayahuasca, Mescaline | 12 hr | 4-14 hr |
 | Ibogaine | 24 hr | 12-24 hr |
 
-Daily cycle volume: ~99 calls. At deepseek-v4-pro (~$0.03/call) → ~$3/day, ~$90/month. Switch to deepseek-chat via `TEMPORAL_LAB_MODEL=deepseek-chat` to drop ~10×.
+Daily cycle volume: ~99 calls. Every option below handles that; the free
+ones cost $0. See `.env.example` for ready-to-use provider blocks.
 ## Cron
 
 Run the dispatcher every 15 min. The dispatcher decides which characters are actually due.
@@ -93,13 +94,20 @@ Override location with `ALTERED_STATES_TEMPORAL_PATH=~/.altered-states/temporal-
 
 ## Models
 
-DeepSeek model ID, set via `TEMPORAL_LAB_MODEL` in `.env` or `--model` flag:
+Provider-agnostic: set `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` in `.env`
+(any OpenAI-compatible endpoint). Legacy `DEEPSEEK_API_KEY` /
+`TEMPORAL_LAB_MODEL` still work. `LLM_JSON_MODE` toggles native
+`response_format` (default) vs. instruction-only JSON.
 
-| Model | Tier | Notes |
-|---|---|---|
-| `deepseek-v4-pro` | default | high quality, 8K max tokens |
-| `deepseek-reasoner` | reasoning | R1 — slower, deeper chain-of-thought |
-| `deepseek-chat` | budget | V3 — fast, cheap, voice varies |
+| Provider | Cost | Key at | Model |
+|---|---|---|---|
+| **OpenRouter `:free`** | $0 · 20 RPM, 50–1000 req/day | [openrouter.ai/keys](https://openrouter.ai/keys) | `google/gemma-4-31b:free` (strong prose) · `nvidia/nemotron-3-ultra:free` · `openai/gpt-oss-120b:free` — roster rotates |
+| **Groq free tier** | $0 · 30 RPM, 1,000 req/day | [console.groq.com](https://console.groq.com) | `llama-3.3-70b-versatile` — fast, reliable, native JSON |
+| **Google AI Studio** | $0 tier · ~250 req/day | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | `gemini-2.5-flash` — best prose quality of the free options |
+| **DeepSeek** (paid fallback) | ~$0.30–3/day at 99 calls | [platform.deepseek.com](https://platform.deepseek.com/api_keys) | `deepseek-chat` (budget) · `deepseek-v4-pro` (default) · `deepseek-reasoner` |
+
+Free tiers can 429 during peak hours — retries with backoff absorb that;
+terminal rate-limit exhaustion writes a "silence" journal entry and moves on.
 ## Dry run
 
 Set `TEMPORAL_LAB_DRY_RUN=1` to skip real API calls and return deterministic stubs. Useful for verifying wiring or testing cron without spending tokens.
@@ -119,7 +127,7 @@ experiments/temporal-lab/
 ├── scripts/
 │   ├── characters.py           # canonical 10-substance definitions
 │   ├── cadence.py              # per-substance cycle intervals + dispatcher
-│   ├── llm_invoke.py           # DeepSeek client + retry + parsing
+│   ├── llm_invoke.py           # OpenAI-compatible client + retry + parsing
 │   ├── logger.py               # per-call log + cost ledger
 │   ├── temporal_init.py        # CLI: init / list / run / costs
 │   ├── run-all-cycles.py       # cron target — runs only due characters
