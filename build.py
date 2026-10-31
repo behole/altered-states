@@ -15,6 +15,11 @@ the built page. Rebuilds regenerate it (`make build`); never hand-edit it.
 
 Usage:
   python3 build.py
+
+Log-event migration note (repo rule 3):
+  All high-signal output (WARN findings, the build summary, stage progress)
+  routes through ``altered_states.log_utils.log_event`` (JSON to stderr,
+  redacted). Surviving bare ``print()`` calls in this file: NONE.
 """
 
 import json
@@ -320,7 +325,7 @@ def load_experiments() -> list[dict[str, Any]]:
             if exp["substances"]:
                 experiments.append(exp)
         except Exception as e:
-            print(f"  WARN: failed to parse {fname}: {e}")
+            log_event("build.parse_failed", level="WARN", file=fname, error=str(e))
 
     # Sort newest first
     experiments.reverse()
@@ -465,15 +470,12 @@ def collect_site_data() -> tuple[dict[str, list[dict[str, Any]]], list[dict[str,
     journals = load_journals()
     total_cycles = count_cycles(journals)
     log_event("build.journals_loaded", cycles=total_cycles, personas=len(journals))
-    print(f"  {total_cycles} total cycles across {len(journals)} substances")
 
     experiments = load_experiments()
     log_event("build.experiments_loaded", experiments=len(experiments))
-    print(f"  {len(experiments)} experiments found")
 
     music = load_music()
     log_event("build.music_loaded", music_experiments=len(music))
-    print(f"  {len(music)} music experiments found")
 
     return journals, experiments, music, total_cycles
 
@@ -513,11 +515,11 @@ def build() -> None:
         try:
             journals, experiments, music, total_cycles = collect_site_data()
 
-            print("Syncing music audio...")
+            log_event("build.stage", stage="sync_music_audio")
             breadcrumb("build", "sync music audio")
             sync_music_audio()
 
-            print("Computing persona states...")
+            log_event("build.stage", stage="persona_states")
             states = get_persona_state(journals)
             persona_data = [{**persona, **states.get(persona["id"], {})} for persona in PERSONAS]
             journal_data = {
@@ -525,8 +527,7 @@ def build() -> None:
                 for sid, entries in journals.items()
             }
 
-            print("Reading template...")
-            print("Injecting data...")
+            log_event("build.stage", stage="render")
             html = render_page(persona_data, journal_data, experiments, music, total_cycles)
 
             with open(OUTPUT, "w") as f:
@@ -547,8 +548,14 @@ def build() -> None:
             REGISTRY.gauge("cycles_generated", total_cycles)
             record_content_metrics(persona_data, journal_data, experiments, music)
             flush_metrics()
-            print(f"Built: {OUTPUT} ({size:,} bytes)")
-            print("Done.")
+            log_event(
+                "build.summary",
+                output=OUTPUT,
+                size_bytes=size,
+                size_display=f"{size:,} bytes",
+                cycles=total_cycles,
+                status="done",
+            )
         except Exception as exc:
             capture_exception(exc)
             log_event("build.failed", level="ERROR", error=type(exc).__name__, message=str(exc))

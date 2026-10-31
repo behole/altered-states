@@ -8,6 +8,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 ### Changed
+- **Structured logging migration** — `build.py` and `watch.py` route all
+  high-signal output through `altered_states.log_utils.log_event()` (JSON,
+  redacted, on stderr) per the no-secrets-in-logs rule: build stage progress
+  and the build summary (`build.stage`, `build.summary`), WARN-level findings
+  (`build.parse_failed`, `watch.build_failed`, `watch.skipped`), the deploy
+  lifecycle (`watch.deploy_start`, `watch.deploy_failed`,
+  `watch.deploy_skipped`, `watch.deploy_complete`), and serve lifecycle
+  (`watch.serving` start/stop, `watch.build_summary`). Zero bare `print()`
+  calls remain in either file; each file's migration note at the top states
+  the surviving count.
 - **Docs reorganization** — the 9 eval-report files that lived under `tests/` plus the
   protocol cards (`eval-guide.md`, `quick-test-card.md`,
   `cross-model-test-protocol.md`, `safety-override-protocol.md`) moved to
