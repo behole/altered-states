@@ -17,6 +17,7 @@ import argparse
 import os
 import re
 import sys
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
@@ -283,7 +284,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--output",
         "-o",
         default=None,
-        help="Output directory (default: experiments/same-prompt/output/)",
+        help="Output directory (default: experiments/same-prompt/output/, or a fresh temp dir under --dry-run)",
     )
     parser.add_argument("--dry-run", action="store_true", help="Skip API calls, return stubs.")
     parser.add_argument("--temperature", type=float, default=0.85, help="Temperature (default: 0.85)")
@@ -302,9 +303,18 @@ def select_substances(requested: str | None) -> list[str] | None:
     return [requested]
 
 
-def output_path_for(prompt: str, output_dir: str | None) -> Path:
-    """Build the markdown output path from the prompt and run timestamp."""
-    directory = Path(output_dir) if output_dir else Path(__file__).resolve().parent / "output"
+def output_path_for(prompt: str, output_dir: str | None, dry_run: bool = False) -> Path:
+    """Build the markdown output path from the prompt and run timestamp.
+
+    Dry-run output is scratch by default: without an explicit ``--output`` it
+    goes to a fresh temp directory so the tracked data directory
+    (``experiments/same-prompt/output/``) is never modified. An explicit
+    ``--output`` is honored as-is in both dry and live runs.
+    """
+    if dry_run and output_dir is None:
+        directory = Path(tempfile.mkdtemp(prefix="run-ten-ways-dry-run-"))
+    else:
+        directory = Path(output_dir) if output_dir else Path(__file__).resolve().parent / "output"
     # Safe filename from prompt
     safe_prompt = re.sub(r"[^a-zA-Z0-9]+", "-", prompt.lower())[:MAX_FILENAME_STEM].strip("-")
     return directory / f"{safe_prompt}-{datetime.now().strftime('%Y%m%d-%H%M')}.md"
@@ -364,7 +374,7 @@ def main() -> int:
     if substances is None:
         return 1
 
-    output_file = output_path_for(args.prompt, args.output)
+    output_file = output_path_for(args.prompt, args.output, dry_run=args.dry_run)
 
     print(f'  Prompt: "{args.prompt}"')
     print(f"  Model: {args.model}")

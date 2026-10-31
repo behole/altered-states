@@ -7,6 +7,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 ## [Unreleased]
+### Changed
+- **Same-prompt dry-run writes to a temp dir by default** —
+  `experiments/same-prompt/run-ten-ways.py --dry-run` with no `--output`
+  now resolves the compiled markdown to a fresh temp directory (path
+  printed as `Output:`), so the tracked read-only data directory
+  `experiments/same-prompt/output/` is never touched by a dry run. An
+  explicit `--output` is honored as-is in dry and live runs.
 ### Removed
 - **Stale planning docs** — `docs/v1.2-implementation-plan.md`,
   `docs/v1.2-improvement-spec.md`, `docs/track-a-ayahuasca.md` (superseded
