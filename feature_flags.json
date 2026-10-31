@@ -1,5 +1,5 @@
 {
-  "_comment": "Runtime feature flags. Validated by `python3 bin/feature_flags.py check` (expired or unreferenced flags fail). Set expires_on to force a review date.",
+  "_comment": "Runtime feature flags. Validated by `python3 -m altered_states.feature_flags check` (expired or unreferenced flags fail). Set expires_on to force a review date.",
   "flags": [
     {
       "name": "site.music_section",

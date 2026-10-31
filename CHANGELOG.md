@@ -7,6 +7,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 ## [Unreleased]
+### Fixed
+- `feature_flags.json` `_comment` now names the real invocation
+  (`python3 -m altered_states.feature_flags check`) instead of the removed
+  `bin/feature_flags.py`.
+- `AGENTS.md` rule 5 no longer names a phantom root `requirements.txt`; it
+  points at the real dev/test pairs and per-dir files under `bin/` and
+  `experiments/`.
+- `docs/TODO.md` item #5 (slash skill vs embed) closed: README documents the
+  slash skill as the primary model with `GEMINI.md` embeds for Gemini CLI.
+
 
 ### Added
 - **`altered_states/` shared package** — structured JSON logging with `trace_id` correlation and secret redaction, a Prometheus textfile metrics registry, optional Sentry error tracking, and file-backed feature flags with deterministic rollout bucketing

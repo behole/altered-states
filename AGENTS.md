@@ -94,7 +94,10 @@ is declared but referenced nowhere, so a flag is never permanent by accident.
 
 ### 5. Dependencies are pinned and locked
 
-Edit `requirements.txt`, then `make lock`. `deptry` fails on an import that is
+Edit the matching requirements file, then run `make lock` (it recompiles every
+`.lock` pair in `bin/`, `experiments/music/`, `experiments/temporal-lab/`, and
+the root dev/test pairs `requirements-dev.txt` → `requirements-dev.lock` and
+`requirements-test.txt` → `requirements-test.lock`). `deptry` fails on an import that is
 not declared or a declared package that is never imported. `pip-audit` fails on
 a known CVE in the locked set. Do not add a dependency to avoid writing twenty
 lines of code.
