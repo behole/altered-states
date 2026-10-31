@@ -95,15 +95,43 @@ class TestNotes:
 
 class TestSnapshotFromGit:
     def test_committed_history_parses(self) -> None:
-        commits = release_notes.read_commits("HEAD~3..HEAD")
+        commits = release_notes.read_commits("HEAD")
         assert commits
         assert all(commit.sha for commit in commits)
+        assert all(commit.subject for commit in commits)
 
     def test_this_repository_uses_conventional_subjects(self) -> None:
-        """Most commits should parse; an unclassified one is a nudge, not a failure."""
-        commits = release_notes.read_commits("HEAD~10..HEAD")
+        """This repo's own history is the input `release.yml` parses on a tag.
+
+        Asserting the commit count matters: on a shallow clone `git log`
+        succeeds but returns nothing, and a version of this test without the
+        floor would pass while checking nothing at all.
+        """
+        commits = release_notes.read_commits("HEAD")
+        assert len(commits) >= 5, "checkout has no history; CI needs fetch-depth: 0"
         classified = [commit for commit in commits if commit.kind != "other"]
-        assert len(classified) >= len(commits) - 1
+        # The convention was adopted mid-history, so a handful of older subjects
+        # will never parse. The contract is that the overwhelming majority do —
+        # a regression in naming shows up as this ratio dropping.
+        assert len(classified) / len(commits) >= 0.95, (
+            f"{len(commits) - len(classified)} of {len(commits)} commits are not conventional"
+        )
+
+    def test_git_log_output_is_parsed_field_by_field(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """The record/field separators are unusual, so pin the exact format."""
+        sha = "0" * 40
+        raw = (
+            f"{sha}{release_notes.FIELD_SEPARATOR}feat(site): add a tab{release_notes.FIELD_SEPARATOR}"
+            f"Carries the tab.{release_notes.COMMIT_SEPARATOR}"
+        )
+        monkeypatch.setattr(release_notes, "git", lambda *args: raw)
+        (commit,) = release_notes.read_commits("HEAD")
+        assert (commit.sha, commit.kind, commit.scope, commit.summary) == (sha, "feat", "site", "add a tab")
+        assert "Carries the tab." in commit.body
+
+    def test_records_without_a_sha_are_dropped(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(release_notes, "git", lambda *args: release_notes.COMMIT_SEPARATOR.join(["", "oops"]))
+        assert release_notes.read_commits("HEAD") == []
 
     def test_bad_revision_yields_no_commits(self, capsys: pytest.CaptureFixture[str]) -> None:
         assert release_notes.read_commits("definitely-not-a-ref..HEAD") == []

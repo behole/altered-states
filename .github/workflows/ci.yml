@@ -76,6 +76,11 @@ jobs:
         python-version: ["3.10", "3.12"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Two tests read this repository's own commit history: one asserts
+          # commits follow the conventional format `release.yml` parses. A
+          # depth-1 checkout would leave them nothing to look at.
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -124,10 +129,19 @@ jobs:
       - name: Static analysis (bandit)
         run: bandit -c pyproject.toml -r build.py watch.py altered_states bin experiments -f json -o bandit.json
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.10.10"
+
+      # Audits exactly what the lockfiles pin. `python -m venv` is avoided
+      # deliberately: it seeds pip and setuptools into site-packages, so
+      # pip-audit reports CVEs in the venv's own bootstrap tooling — packages
+      # we do not ship and cannot pin. `uv venv` produces a bare environment.
       - name: Known vulnerabilities in pinned dependencies (pip-audit)
         run: |
-          python -m venv .audit-venv
-          .audit-venv/bin/python -m pip install -q \
+          uv venv .audit-venv --python 3.11
+          uv pip install --python .audit-venv/bin/python \
             -r bin/requirements.lock \
             -r experiments/music/requirements.lock \
             -r experiments/temporal-lab/requirements.lock
