@@ -18,8 +18,10 @@ import pytest
 
 pytestmark = pytest.mark.integration
 
-RUNNER = Path("experiments/same-prompt/run-ten-ways.py")
-DATA_DIR = Path("experiments/same-prompt/output")
+# Anchored to this file so pytest works from any working directory.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+RUNNER = REPO_ROOT / "experiments" / "same-prompt" / "run-ten-ways.py"
+DATA_DIR = REPO_ROOT / "experiments" / "same-prompt" / "output"
 
 
 def _snapshot_data_dir() -> set[str]:

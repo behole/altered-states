@@ -27,7 +27,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   flag gates the watch loop into build-only mode, with no code path to
   `deploy()` or its `wrangler` subprocess, plus a `--help` usage listing
   (`python3 watch.py --help`). Default (no-flag) behavior is unchanged.
-### Added
 - **Same-prompt offline dry-run integration test** —
   `tests/integration/test_same_prompt_dry_run.py` invokes
   `experiments/same-prompt/run-ten-ways.py --dry-run` as a subprocess and

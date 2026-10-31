@@ -226,6 +226,7 @@ altered-states/
                          not touched by build.py; committed and gated by the
                          site.experiment_wheel flag
   tests/
+    __init__.py                        Markers the whole tree as a package
     unit/                              Domain-logic tests
     integration/                       Whole-pipeline tests (offline)
     conftest.py                        Shared pytest fixtures
