@@ -4,7 +4,7 @@ This directory stores raw model outputs from evaluation runs. Each run produces 
 
 ## Why this exists
 
-The eval reports in `../eval-report-*.md` record pass/fail judgments but not the actual model responses. This means:
+The eval reports in `../../docs/evals/eval-report-*.md` record pass/fail judgments but not the actual model responses. This means:
 
 - Results aren't auditable after the fact
 - You can't diff outputs across model versions
@@ -52,7 +52,7 @@ Each line is a JSON object:
 
 ## Workflow
 
-1. Run an eval session (see `../eval-guide.md`)
+1. Run an eval session (see `../../docs/evals/eval-guide.md`)
 2. During scoring, write each prompt+response+score as a JSONL line
 3. Save as `responses-YYYY-MM-DD-model.jsonl`
 4. Commit (or add to `.gitignore` if files are very large)

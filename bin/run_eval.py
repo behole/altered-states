@@ -37,7 +37,7 @@ from altered_states.metrics import REGISTRY, flush_metrics  # noqa: E402
 
 SUBSTANCES = ["psilocybin", "lsd", "mdma", "dmt", "ayahuasca", "5-meo-dmt", "mescaline"]
 
-# Per eval-guide.md Section 1: "all 7 substances at medium intensity
+# Per docs/evals/eval-guide.md Section 1: "all 7 substances at medium intensity
 # (DMT and 5-MeO-DMT at breakthrough, ayahuasca at standard)"
 DEFAULT_INTENSITY: dict[str, str] = {
     "psilocybin": "medium",

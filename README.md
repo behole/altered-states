@@ -164,7 +164,7 @@ The router parses natural language and loads the correct skill:
 
 These are human-scored evaluations against written rubrics, not an automated
 test suite — `bin/run_eval.py` generates and captures responses; scoring is manual
-per the protocol in `tests/eval-guide.md`. Reports were produced on Opus 4.6
+per the protocol in `docs/evals/eval-guide.md`. Reports were produced on Opus 4.6
 (April 7) and GLM-5.1 (April 8).
 
 | Test | Score |
@@ -220,6 +220,11 @@ altered-states/
     visual-fingerprints/ 10 p5.js portraits + index
     dialogues/           Paired substance conversations
     IDEAS.md             Experiment backlog
+  site/
+    index.html           Generated page (build.py) — never hand-edit
+    wheel/               Slot-machine project wheel: a hand-written page + projects.json,
+                         not touched by build.py; committed and gated by the
+                         site.experiment_wheel flag
   tests/
     unit/                              Domain-logic tests
     integration/                       Whole-pipeline tests (offline)
@@ -231,7 +236,9 @@ altered-states/
     observability.md                   Observability docs
     research-pipeline.md               Research pipeline notes
     safety-override-block.md           Shared safety override template
-  output/                            Evaluation outputs
+  output/                            Raw captured responses from standalone run_eval.py
+                                     sessions (each file's header names its producer);
+                                     scored reports live in docs/evals/
 ```
 
 ### Code Quality

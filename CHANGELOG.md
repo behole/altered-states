@@ -8,6 +8,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 ### Changed
+- **Docs reorganization** — the 9 eval-report files that lived under `tests/` plus the
+  protocol cards (`eval-guide.md`, `quick-test-card.md`,
+  `cross-model-test-protocol.md`, `safety-override-protocol.md`) moved to
+  `docs/evals/`, the site's data home for human-scored evaluations; every live
+  reference (README, `docs/research-pipeline.md`, `tests/prompts.json`,
+  `bin/run_eval.py`, `tests/responses/README.md`) points at the new paths and
+  no `.md` files remain at the top of `tests/`. The 1-line,
+  date-stamp-only `site/DEPLOY.md` artifact is deleted (real deploy behavior
+  is documented in `runbooks/deploy-failure.md`); the dead NotebookLM shell
+  duplicate in `bin/` is deleted (`bin/nlm.py` and its tests untouched); the README
+  layout tree now documents `site/wheel/` (hand-written page + `projects.json`,
+  not touched by build.py, gated by `site.experiment_wheel`) and gives
+  `output/` a home; the three orphan files in `output/` carry a provenance
+  header naming `bin/run_eval.py` as their producer.
 - `.env.example` is complete: it now declares every env var the code reads
   (derived from a repo-wide `os.environ`/`getenv` grep, minus the documented
   non-provider exclusions), adds the previously missing

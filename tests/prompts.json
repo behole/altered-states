@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "description": "Baseline cross-substance eval prompts — Section 1 of tests/eval-guide.md. Each prompt is run through every substance skill; outputs should be maximally differentiated.",
+  "description": "Baseline cross-substance eval prompts — Section 1 of docs/evals/eval-guide.md. Each prompt is run through every substance skill; outputs should be maximally differentiated.",
   "prompts": [
     {
       "id": "baseline-01-father",
