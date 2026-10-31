@@ -7,6 +7,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 ## [Unreleased]
+### Added
+- **Per-substance static pages** — `make build` now also writes one
+  standalone, deterministic page per substance skill under
+  `site/<substance>/index.html` (10 at this milestone: every `skills/*` dir
+  minus the router), rendered from the new dedicated template
+  `site/substance.template.html`. Each page carries the substance name in
+  its `<title>`, OG meta tags (og:title, og:description, og:image — a
+  committed placeholder card at `site/og/placeholder.svg` until build-time
+  OG card generation lands), an explicit back-link to the home page, and a
+  JSON payload for future per-page sections. Pages regenerate deterministically
+  (byte-identical delete+rebuild; stale generated page dirs are removed).
+  Every page is a pure function of `skills/<substance>/SKILL.md` front matter
+  plus the fixed persona identity table. Gated by `site.substance_pages`:
+  when off, home renders zero links to them and page generation is skipped.
+- **Home substance-page links (flag-gated)** — with `site.substance_pages`
+  on, the SPA home renders a "Substance Pages" link section (one card per
+  substance) whose hrefs are the built `/<substance>/` pages; the whole
+  section is compile-out when the flag is off. Verified by
+  `tests/unit/test_substance_pages.py`.
 ### Changed
 - **Six new SITE section flags declared** —
   `site.substance_pages`, `site.arc_timeline`, `site.diff_view`,

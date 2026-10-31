@@ -233,6 +233,33 @@
       color: var(--text-muted);
       margin-top: auto;
     }
+
+    /* ── SUBSTANCE PAGE LINKS (site.substance_pages) ── */
+    .substance-links {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .substance-link {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .substance-link:hover {
+      border-color: var(--hover-border);
+      box-shadow: var(--shadow-hover);
+    }
+    .substance-link .emoji { font-size: 22px; }
+    .substance-link .name { font-weight: 600; font-size: 14px; }
+    .substance-link .character { font-size: 12px; color: var(--text-secondary); }
     .persona-card .state {
       display: inline-block;
       font-size: 11px;
@@ -890,6 +917,8 @@
     </div>
     <div class="persona-grid" id="persona-grid"></div>
   </section>
+
+  __SUBSTANCE_LINKS__
 
   <section class="warm">
     <div class="section-inner">

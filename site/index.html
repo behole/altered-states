@@ -233,6 +233,33 @@
       color: var(--text-muted);
       margin-top: auto;
     }
+
+    /* ── SUBSTANCE PAGE LINKS (site.substance_pages) ── */
+    .substance-links {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .substance-link {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .substance-link:hover {
+      border-color: var(--hover-border);
+      box-shadow: var(--shadow-hover);
+    }
+    .substance-link .emoji { font-size: 22px; }
+    .substance-link .name { font-weight: 600; font-size: 14px; }
+    .substance-link .character { font-size: 12px; color: var(--text-secondary); }
     .persona-card .state {
       display: inline-block;
       font-size: 11px;
@@ -890,6 +917,8 @@
     </div>
     <div class="persona-grid" id="persona-grid"></div>
   </section>
+
+  <section class="warm"><div class="section-inner"><div class="section-label">Shareable</div><div class="section-title">Substance Pages</div><div class="section-desc">One static, standalone page per substance — its character, phenomenological contract and version. Shareable by URL.</div><div class="substance-links"><a class="substance-link" href="/5-meo-dmt/"><span class="emoji">✨</span><span class="name">5-MeO-DMT</span><span class="character">The Dissolver</span></a><a class="substance-link" href="/ayahuasca/"><span class="emoji">🌿</span><span class="name">Ayahuasca</span><span class="character">The Medicine</span></a><a class="substance-link" href="/dmt/"><span class="emoji">🚀</span><span class="name">DMT</span><span class="character">The Rocket</span></a><a class="substance-link" href="/ibogaine/"><span class="emoji">💀</span><span class="name">Ibogaine</span><span class="character">The Ancestor</span></a><a class="substance-link" href="/ketamine/"><span class="emoji">🧊</span><span class="name">Ketamine</span><span class="character">The Dissociative</span></a><a class="substance-link" href="/lsd/"><span class="emoji">⚡</span><span class="name">LSD</span><span class="character">The Technician</span></a><a class="substance-link" href="/mdma/"><span class="emoji">💎</span><span class="name">MDMA</span><span class="character">The Connector</span></a><a class="substance-link" href="/mescaline/"><span class="emoji">🌵</span><span class="name">Mescaline</span><span class="character">The Elder</span></a><a class="substance-link" href="/psilocybin/"><span class="emoji">🍄</span><span class="name">Psilocybin</span><span class="character">The Teacher</span></a><a class="substance-link" href="/salvia/"><span class="emoji">🚪</span><span class="name">Salvia</span><span class="character">The Doorway</span></a></div></div></section>
 
   <section class="warm">
     <div class="section-inner">

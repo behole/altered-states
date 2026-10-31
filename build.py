@@ -22,6 +22,7 @@ Log-event migration note (repo rule 3):
   redacted). Surviving bare ``print()`` calls in this file: NONE.
 """
 
+import html
 import json
 import os
 import re
@@ -46,6 +47,11 @@ EXPERIMENTS_DIR = os.path.join(BASE, "experiments", "same-prompt", "output")
 MUSIC_DIR = os.path.join(BASE, "experiments", "music")
 TEMPLATE = os.path.join(BASE, "site", "index.template.html")
 OUTPUT = os.path.join(BASE, "site", "index.html")
+SKILLS_DIR = os.path.join(BASE, "skills")
+SUBSTANCE_TEMPLATE = os.path.join(BASE, "site", "substance.template.html")
+SITE_DIR = os.path.join(BASE, "site")
+# Skills dirs are substance sources EXCEPT the router, which is a dispatch skill.
+ROUTER_SLUG = "router"
 
 # Feature flags that gate a whole rendered section. Evaluated once per build and
 # emitted into the page as a FLAGS map, so a disabled section costs the client
@@ -435,6 +441,222 @@ def sync_music_audio() -> None:
                     shutil.copy2(src, dst)
 
 
+# Marker present in every generated per-substance page. Used to recognize
+# previously generated page dirs when cleaning stale ones (never a hand-made
+# directory that merely shares a name).
+SUBSTANCE_PAGE_MARKER = 'id="substance-payload"'
+SUBSTANCES_FLAG = "site.substance_pages"
+
+
+def _front_matter_scalar(key: str, value: str) -> tuple[str, Any]:
+    """Interpret a scalar ``key: value`` line: inline list or quoted string."""
+    if value.startswith("[") and value.endswith("]"):
+        return key, [item.strip() for item in value[1:-1].split(",") if item.strip()]
+    return key, value.strip('"')
+
+
+def _front_matter_kv(line: str) -> tuple[str, str]:
+    """Split one scalar front-matter line into ``key, value`` (validated).
+
+    Raises ValueError on the malformed shapes that would silently produce a
+    wrong payload: unexpected indentation or a line without a separator.
+    """
+    if line[:1].isspace():
+        raise ValueError(f"orphan indented front-matter line: {line!r}")
+    key, sep, value = line.partition(":")
+    if not sep or not key.strip():
+        raise ValueError(f"unparseable front-matter line: {line!r}")
+    return key.strip(), value.strip()
+
+
+def parse_skill_front_matter(text: str) -> dict[str, Any]:
+    """Parse the ``---``-delimited YAML front matter of a SKILL.md file.
+
+    Minimal stdlib parser covering the plain shapes the skills use: scalar
+    ``key: value`` lines, indented ``key: >`` block scalars folded into one
+    paragraph, and ``[a, b]`` inline lists. Anything else raises ValueError
+    (a malformed skill front matter should fail the build loudly).
+    """
+    match = re.match(r"\A---\s*\n(.*?)\n---\s*\n", text, re.DOTALL)
+    if not match:
+        raise ValueError("no YAML front matter block found")
+    data: dict[str, Any] = {}
+    block_key: str | None = None
+    block_lines: list[str] = []
+    for line in match.group(1).splitlines():
+        if not line.strip():
+            continue
+        if block_key is not None:
+            if line[:1].isspace():
+                block_lines.append(line.strip())
+                continue
+            data[block_key] = " ".join(block_lines)
+            block_key, block_lines = None, []
+        key, value = _front_matter_kv(line)
+        if value in (">", "|", ">-", "|-"):
+            block_key, block_lines = key, []
+        else:
+            data_key, data_value = _front_matter_scalar(key, value)
+            data[data_key] = data_value
+    if block_key is not None:
+        data[block_key] = " ".join(block_lines)
+    return data
+
+
+def load_substances() -> list[dict[str, Any]]:
+    """Derive the site's substance list from ``skills/<substance>/SKILL.md``.
+
+    Pure function of the skills directory plus the fixed PERSONAS identity
+    table: every substance skill dir (skills/* minus router) yields exactly one
+    entry. Personas supply display name/emoji/character; front matter supplies
+    description, version and tags. Slugs present on disk with no persona match
+    still produce a page (fallback identity), so a new skill never silently
+    misses its shareable URL.
+    """
+    substances: list[dict[str, Any]] = []
+    if not os.path.isdir(SKILLS_DIR):
+        return substances
+    for slug in sorted(os.listdir(SKILLS_DIR)):
+        skill_path = os.path.join(SKILLS_DIR, slug, "SKILL.md")
+        if slug == ROUTER_SLUG or not os.path.isfile(skill_path):
+            continue
+        persona = next((p for p in PERSONAS if p["id"] == slug), None)
+        with open(skill_path) as f:
+            front_matter = parse_skill_front_matter(f.read())
+        if persona is None:
+            log_event("build.substance_without_persona", level="WARN", slug=slug)
+            skill_name = str(front_matter.get("name", slug))
+            display_name = html.escape(skill_name.removesuffix("-altered-state").upper())
+            emoji, character = "🧪", ""
+        else:
+            display_name, emoji, character = persona["name"], persona["emoji"], persona["character"]
+        description = str(front_matter.get("description", ""))
+        tags = front_matter.get("tags", [])
+        substances.append(
+            {
+                "id": slug,
+                "name": display_name,
+                "emoji": emoji,
+                "character": character,
+                "description": description,
+                "tags": tags,
+                "version": str(front_matter.get("version", "")),
+                "href": f"/{slug}/",
+            }
+        )
+    log_event("build.substances_loaded", substances=len(substances))
+    return substances
+
+
+def render_substance_links(substances: list[dict[str, Any]], enabled: bool) -> str:
+    """Render the home-page substance-page link section.
+
+    Compiled out entirely when ``site.substance_pages`` is off: the returned
+    string is empty and nothing referencing the per-substance URLs appears in
+    the built home page.
+    """
+    if not enabled:
+        return ""
+    links = "".join(
+        '<a class="substance-link" href="{href}">'
+        '<span class="emoji">{emoji}</span><span class="name">{name}</span>'
+        '<span class="character">{character}</span></a>'.format(
+            href=html.escape(str(s["href"]), quote=True),
+            emoji=html.escape(str(s["emoji"])),
+            name=html.escape(str(s["name"])),
+            character=html.escape(str(s["character"])),
+        )
+        for s in substances
+    )
+    return (
+        '<section class="warm"><div class="section-inner">'
+        '<div class="section-label">Shareable</div>'
+        '<div class="section-title">Substance Pages</div>'
+        '<div class="section-desc">One static, standalone page per substance — its character, '
+        "phenomenological contract and version. Shareable by URL.</div>"
+        f'<div class="substance-links">{links}</div>'
+        "</div></section>"
+    )
+
+
+def render_substance_page(substance: dict[str, Any], template_html: str) -> str:
+    """Fill the substance-page template for one substance.
+
+    Deterministic: every placeholder derives from the substance dict itself;
+    no wall-clock values are baked in. Returns HTML for site/<slug>/index.html.
+    """
+    slug = str(substance["id"])
+    payload = json.dumps(substance, ensure_ascii=False, sort_keys=True)
+    meta_text = re.split(r"(?<=[.!?])\s", str(substance["description"]).strip(), maxsplit=1)[0].strip()
+    if not meta_text.endswith((".", "!", "?")):
+        meta_text += "."
+    replacements = {
+        "__SUBSTANCE_SLUG__": html.escape(slug, quote=True),
+        "__SUBSTANCE_NAME__": html.escape(str(substance["name"])),
+        "__SUBSTANCE_EMOJI__": html.escape(str(substance["emoji"])),
+        "__SUBSTANCE_CHARACTER__": html.escape(str(substance["character"])),
+        "__SUBSTANCE_DESCRIPTION__": html.escape(str(substance["description"])),
+        # Metadata description clamps down to the leading first sentence.
+        "__SUBSTANCE_META_DESCRIPTION__": html.escape(meta_text, quote=True),
+        "__SUBSTANCE_OG_DESCRIPTION__": html.escape(str(substance["description"]), quote=True),
+        "__SUBSTANCE_TAGS__": "".join(f'<span class="tag">{html.escape(str(tag))}</span>' for tag in substance["tags"]),
+        "__SUBSTANCE_VERSION__": html.escape(str(substance["version"])),
+        "__SUBSTANCE_JSON__": payload.replace("<", "\\u003c").replace(">", "\\u003e"),
+    }
+    page = template_html
+    for placeholder, value in replacements.items():
+        page = page.replace(placeholder, value)
+    return page
+
+
+def _remove_stale_substance_pages(active_slugs: set[str]) -> int:
+    """Delete generated substance-page dirs (by marker) no longer produced."""
+    removed = 0
+    if not os.path.isdir(SITE_DIR):
+        return removed
+    for entry in os.listdir(SITE_DIR):
+        page_path = os.path.join(SITE_DIR, entry, "index.html")
+        if not os.path.isfile(page_path) or entry in active_slugs:
+            continue
+        with open(page_path) as f:
+            page = f.read()
+        if SUBSTANCE_PAGE_MARKER not in page:
+            continue  # not a generated substance page; leave it alone
+        shutil.rmtree(os.path.join(SITE_DIR, entry))
+        removed += 1
+    return removed
+
+
+def write_substance_pages(substances: list[dict[str, Any]], enabled: bool) -> list[str]:
+    """(Re)write every per-substance static page under site/<slug>/.
+
+    Deterministic delete+rebuild: each page is freshly written from the
+    template, and generated page dirs whose slug is no longer derived (flag
+    off, or the skill dir gone) are removed, so consecutive builds converge to
+    the same tree state. Returns the list of pages written.
+    """
+    active_slugs = {str(s["id"]) for s in substances} if enabled else set()
+    pages: list[str] = []
+    if enabled:
+        with open(SUBSTANCE_TEMPLATE) as f:
+            template_html = f.read()
+        for substance in substances:
+            page_path = os.path.join(SITE_DIR, str(substance["id"]), "index.html")
+            os.makedirs(os.path.dirname(page_path), exist_ok=True)
+            page = render_substance_page(substance, template_html)
+            with open(page_path, "w") as f:
+                f.write(page)
+            pages.append(page_path)
+    stale_removed = _remove_stale_substance_pages(active_slugs)
+    log_event(
+        "build.substance_pages",
+        enabled=enabled,
+        pages=len(pages),
+        stale_removed=stale_removed,
+    )
+    return pages
+
+
 def count_cycles(journals: dict[str, list[dict[str, Any]]]) -> int:
     """Count unique successful cycles across all personas."""
     return sum(
@@ -453,6 +675,7 @@ def render_page(
     experiments: list[dict[str, Any]],
     music: list[dict[str, Any]],
     total_cycles: int,
+    substance_links: str = "",
 ) -> str:
     """Inject every data payload into the HTML template."""
     with open(TEMPLATE) as f:
@@ -468,6 +691,7 @@ def render_page(
         "__CYCLE_COUNT__": str(total_cycles),
         "__EXP_COUNT__": str(len(experiments)),
         "__MUSIC_COUNT__": str(total_songs),
+        "__SUBSTANCE_LINKS__": substance_links,
     }
     for placeholder, value in replacements.items():
         html = html.replace(placeholder, value)
@@ -537,10 +761,15 @@ def build() -> None:
             }
 
             log_event("build.stage", stage="render")
-            html = render_page(persona_data, journal_data, experiments, music, total_cycles)
+            substances = load_substances()
+            substance_links = render_substance_links(substances, enabled_section_flags().get(SUBSTANCES_FLAG, False))
+            html = render_page(persona_data, journal_data, experiments, music, total_cycles, substance_links)
 
             with open(OUTPUT, "w") as f:
                 f.write(html)
+
+            log_event("build.stage", stage="substance_pages")
+            substance_pages = write_substance_pages(substances, enabled_section_flags().get(SUBSTANCES_FLAG, False))
 
             size = os.path.getsize(OUTPUT)
             log_timed(
@@ -563,6 +792,7 @@ def build() -> None:
                 size_bytes=size,
                 size_display=f"{size:,} bytes",
                 cycles=total_cycles,
+                substance_pages=len(substance_pages),
                 status="done",
             )
         except Exception as exc:
