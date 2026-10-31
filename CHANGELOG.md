@@ -7,6 +7,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 ## [Unreleased]
+### Changed
+- `.env.example` is complete: it now declares every env var the code reads
+  (derived from a repo-wide `os.environ`/`getenv` grep, minus the documented
+  non-provider exclusions), adds the previously missing
+  `MUREKA_API_KEY` (music experiments), `ANTHROPIC_API_KEY`,
+  `SENTRY_TRACES_SAMPLE_RATE`, `GIT_SHA`, `ALTERED_STATES_TEMPORAL_PATH`,
+  `LLM_JSON_MODE`, and `TEMPORAL_LAB_MODEL`, and documents the repo-root
+  `.env` as the project-wide loading convention with DeepSeek as the primary
+  provider and OpenRouter/OpenAI labelled legacy fallback. Placeholder
+  values only.
 ### Fixed
 - `feature_flags.json` `_comment` now names the real invocation
   (`python3 -m altered_states.feature_flags check`) instead of the removed
