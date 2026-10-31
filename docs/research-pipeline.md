@@ -439,7 +439,7 @@ Use existing eval reports as templates.
 
 ### Quick Validation
 
-For a fast sanity check, use `tests/quick-test-card.md` (4 tests, ~5 minutes).
+For a fast sanity check, use `docs/evals/quick-test-card.md` (4 tests, ~5 minutes).
 
 ---
 

@@ -33,6 +33,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`bin/nlm.py`** — refuses to open a URL that is not http/https
 
 ### Fixed
+- **README drift** — the skills version table now matches each `skills/*/SKILL.md` front matter (`version: "1.5"`, 11 rows including the router, no stale `v1.4` claims), the `tests/` section of the Project Structure tree lists the real test tree instead of eval-report markdown files that are relocating to `docs/evals/`, and active docs now reference the eval reports and protocol cards at their `docs/evals/` home
 - **Secret redaction** no longer redacts `tokens_in` / `tokens_out` telemetry, only fields whose name implies a credential
 - **Metrics snapshots** name series consistently between the JSON log payload and the Prometheus textfile, so a value is traceable across both
 
@@ -99,7 +100,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Evaluation framework** (`tests/eval-guide.md`) — cross-substance baselines, inter-substance bleed tests, dimension checkpoints, anti-pattern flags, blind test protocol
 - **Router research doc** (`research/router/classification-rationale.md`) — phenomenological basis for routing heuristics
 - **8 evaluation reports** covering baselines, bleed, blind test, router, dose arcs, set/setting, intensity, edge cases, and extended conversations
-- **Quick test card** (`tests/quick-test-card.md`) and **cross-model test protocol** (`tests/cross-model-test-protocol.md`)
+- **Quick test card** (`docs/evals/quick-test-card.md`) and **cross-model test protocol** (`docs/evals/cross-model-test-protocol.md`)
 
 ### Changed
 - **LSD skill** — added sustained plateau mechanics, "trapped" safety valve, LSD vs psilocybin behavioral guide

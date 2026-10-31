@@ -192,7 +192,7 @@ If source count changes (from 4 to 8), update:
 
 ## Quick Validation
 
-Run `tests/quick-test-card.md` against ayahuasca skill to ensure updates don't break existing behavior.
+Run `docs/evals/quick-test-card.md` against ayahuasca skill to ensure updates don't break existing behavior.
 
 ---
 

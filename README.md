@@ -182,7 +182,7 @@ per the protocol in `tests/eval-guide.md`. Reports were produced on Opus 4.6
 
 ### Testing a New Model
 
-See `tests/quick-test-card.md` for a 4-test, 5-minute validation. See `tests/cross-model-test-protocol.md` for the full 8-test battery.
+See `docs/evals/quick-test-card.md` for a 4-test, 5-minute validation. See `docs/evals/cross-model-test-protocol.md` for the full 8-test battery.
 
 ---
 
@@ -203,17 +203,17 @@ altered-states/
     ibogaine/            sources.md, dossier.md
     router/              classification-rationale.md
   skills/
-    psilocybin/SKILL.md  v1.4
-    lsd/SKILL.md         v1.4
-    mdma/SKILL.md        v1.4
-    dmt/SKILL.md         v1.4
-    ayahuasca/SKILL.md   v1.4
-    5-meo-dmt/SKILL.md   v1.4
-    mescaline/SKILL.md   v1.4
-    ketamine/SKILL.md    v1.4
-    salvia/SKILL.md      v1.4
-    ibogaine/SKILL.md    v1.4
-    router/SKILL.md      v1.5
+    psilocybin/SKILL.md  1.5
+    lsd/SKILL.md         1.5
+    mdma/SKILL.md        1.5
+    dmt/SKILL.md         1.5
+    ayahuasca/SKILL.md   1.5
+    5-meo-dmt/SKILL.md   1.5
+    mescaline/SKILL.md   1.5
+    ketamine/SKILL.md    1.5
+    salvia/SKILL.md      1.5
+    ibogaine/SKILL.md    1.5
+    router/SKILL.md      1.5
   experiments/
     temporal-lab/        Autonomous persistent character system (OpenRouter)
     suno-prompts/        10 Custom Mode music prompts
@@ -221,17 +221,16 @@ altered-states/
     dialogues/           Paired substance conversations
     IDEAS.md             Experiment backlog
   tests/
-    eval-guide.md                     Testing framework
-    eval-report-2026-04-07.md         Baseline + bleed + onset
-    eval-report-blind-2026-04-08.md   Gold-standard blind test
-    eval-report-router-2026-04-08.md  Router accuracy (71 inputs)
-    eval-report-arc-2026-04-08.md     Full dose arcs (37 exchanges)
-    eval-report-setsetting-2026-04-08.md  Set/setting matrix (25 conditions)
-    eval-report-intensity-2026-04-08.md   Low + high intensity (10 conditions)
-    eval-report-edgecases-2026-04-08.md   Bad trips, exits, creative, factual
-    eval-report-extended-2026-04-08.md    Ayahuasca waves + LSD plateau
-    cross-model-test-protocol.md      Full protocol for new models
-    quick-test-card.md                 5-minute quick validation
+    unit/                              Domain-logic tests
+    integration/                       Whole-pipeline tests (offline)
+    conftest.py                        Shared pytest fixtures
+    prompts.json                       Prompt fixtures
+    responses/                         Captured response fixtures
+  docs/
+    evals/                             Eval reports + test protocol cards
+    observability.md                   Observability docs
+    research-pipeline.md               Research pipeline notes
+    safety-override-block.md           Shared safety override template
   output/                            Evaluation outputs
 ```
 
