@@ -1,0 +1,87 @@
+version: 2
+
+# Automated dependency updates. Dependabot opens a pull request whenever a
+# pinned version moves, and CI validates it like any other change.
+#
+# `cooldown` holds a new release back for a few days so a compromised or
+# immediately-yanked release does not reach main before the ecosystem notices.
+
+updates:
+  # Runtime SDKs declared per app.
+  - package-ecosystem: pip
+    directory: /bin
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(bin)"
+    labels: ["dependencies"]
+    groups:
+      bin-runtime:
+        patterns: ["*"]
+
+  - package-ecosystem: pip
+    directory: /experiments/temporal-lab
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(lab)"
+    labels: ["dependencies"]
+    groups:
+      lab-runtime:
+        patterns: ["*"]
+
+  # The quality toolchain, updated together so hooks, Makefile, and CI agree.
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "deps(dev)"
+    labels: ["dependencies"]
+    groups:
+      dev-toolchain:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "deps(actions)"
+    labels: ["dependencies"]
+    groups:
+      actions:
+        patterns: ["*"]

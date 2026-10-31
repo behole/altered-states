@@ -4,6 +4,7 @@
 import json
 import os
 import sys
+import urllib.parse
 import urllib.request
 from collections.abc import Callable
 from typing import Any
@@ -17,6 +18,18 @@ ARGV_TOOL_NAME = 2
 ARGV_TOOL_PAYLOAD = 3
 
 _req_id: list[int] = [0]
+
+# The helper only ever talks to the local MCP server; anything else is refused
+# so a poisoned BASE or a redirect cannot turn this into a local-file reader.
+ALLOWED_SCHEMES = ("http", "https")
+
+
+def _validated_url(url: str) -> str:
+    """Reject anything that is not a plain HTTP(S) URL."""
+    scheme = urllib.parse.urlsplit(url).scheme
+    if scheme not in ALLOWED_SCHEMES:
+        raise ValueError(f"refusing to open {url!r}: scheme {scheme!r} is not http/https")
+    return url
 
 
 def _load_sid() -> str | None:
@@ -47,8 +60,9 @@ def call(method: str, params: dict[str, Any] | None = None) -> Any:
     sid = _load_sid()
     if sid:
         headers["Mcp-Session-Id"] = sid
-    req = urllib.request.Request(BASE, data=json.dumps(body).encode(), headers=headers, method="POST")
-    with urllib.request.urlopen(req, timeout=180) as resp:
+    req = urllib.request.Request(_validated_url(BASE), data=json.dumps(body).encode(), headers=headers, method="POST")
+    # The scheme is constrained to http/https by _validated_url above.
+    with urllib.request.urlopen(req, timeout=180) as resp:  # nosec B310
         new_sid = resp.headers.get("Mcp-Session-Id")
         if new_sid:
             _save_sid(new_sid)

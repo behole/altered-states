@@ -38,3 +38,22 @@ bin/.nlm-session
 # Built site artifact — regenerate with build.py before deploy.
 # Kept out of git so cron rebuilds stop spamming auto-rebuild commits.
 site/index.html
+
+# Transient venv used by `make security` for pip-audit
+.audit-venv/
+
+# uv writes this implicitly when it runs a command in the repo; dependencies
+# are pinned by the pip-compile lockfiles instead.
+uv.lock
+
+# Coverage artifacts from `make coverage`
+.coverage
+.coverage.*
+coverage.xml
+coverage.json
+htmlcov/
+
+# Metrics snapshots are produced by each build or lab run, not committed.
+# The lab's journals and character state under
+# experiments/temporal-lab/runtime/ are data and stay untracked on purpose.
+runtime/

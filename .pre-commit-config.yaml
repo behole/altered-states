@@ -46,7 +46,9 @@ repos:
     hooks:
       - id: mypy
         args: ["--config-file=pyproject.toml"]
-        additional_dependencies: ["types-requests==2.33.0.20261030"]
+        additional_dependencies:
+          - "types-requests==2.33.0.20261030"
+          - "types-pyyaml==6.0.12.20261030"
 
   # Dead code and duplication are repo-wide checks, so they ignore the file
   # list pre-commit passes and read their config from pyproject.toml instead.

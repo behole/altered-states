@@ -1,16 +1,28 @@
-# Development tooling for the Python surfaces of this repo.
+# Development toolchain: quality gates, test runner, security scanners.
 #
 #   python3 -m pip install -r requirements-dev.txt
 #
-# Runtime dependencies for the apps themselves live in bin/requirements.txt and
-# experiments/temporal-lab/requirements.txt. This file is only the quality
-# toolchain (lint, format, types, dead code, duplication, git hooks).
-#
-# Versions are pinned so every contributor and agent runs identical checks.
+# Every pin matches requirements-dev.lock, .pre-commit-config.yaml, and the
+# versions referenced by the Makefile, so hooks and CI never disagree.
+# The dev toolchain needs Python 3.11+ (pre-commit); application code in
+# build.py and bin/ still targets Python 3.10 as declared by ruff/mypy.
 
+# --- lint, format, types, code health ---
 ruff==0.14.4
 mypy==1.18.2
 types-requests==2.33.0.20261030
+types-pyyaml==6.0.12.20261030
 vulture==2.16
 pylint==4.1.3
 pre-commit==4.7.0
+
+# --- tests: parallel, retried, coverage-gated ---
+pytest==9.2.0
+pytest-cov==7.1.0
+pytest-xdist==3.8.0
+pytest-rerunfailures==16.7
+
+# --- dependency + security scanners ---
+deptry==0.25.1
+bandit==1.9.4
+pip-audit==2.10.1

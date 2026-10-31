@@ -18,6 +18,7 @@ import asyncio
 import json
 import os
 import sys
+import time
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -26,6 +27,13 @@ from typing import Any
 import anthropic
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    # Running `bin/run_eval.py` puts only bin/ on sys.path.
+    sys.path.insert(0, str(REPO_ROOT))
+
+from altered_states.error_tracking import capture_exception, init_error_tracking  # noqa: E402
+from altered_states.log_utils import log_event, trace_context  # noqa: E402
+from altered_states.metrics import REGISTRY, flush_metrics  # noqa: E402
 
 SUBSTANCES = ["psilocybin", "lsd", "mdma", "dmt", "ayahuasca", "5-meo-dmt", "mescaline"]
 
@@ -49,6 +57,11 @@ ONSET_LAST_EXCHANGE = 2
 ASCENT_LAST_EXCHANGE = 4
 
 EXIT_USAGE_ERROR = 2
+
+# Provider resilience: three attempts, backing off 2s then 8s. Matches the
+# policy used by the temporal lab's llm_invoke so both apps behave alike.
+RETRY_ATTEMPTS = 3
+BACKOFFS_SEC = (2, 8)
 
 ACTIVATION_TEMPLATE = """\
 
@@ -95,13 +108,72 @@ def load_prompts(path: Path) -> list[dict[str, Any]]:
     return prompts
 
 
+def build_row(run: EvalRun, model: str, text: str | None, notes: str | None = None) -> dict[str, Any]:
+    """Assemble one JSONL row; `text=None` marks a failed run."""
+    row: dict[str, Any] = {
+        "prompt": run.prompt["text"],
+        "substance": run.substance,
+        "intensity": run.intensity,
+        "exchange": run.exchange,
+        "model": model,
+        "response": text,
+        "score": None if text is not None else "error",
+        "evaluator": None,
+        "notes": notes,
+        "prompt_id": run.prompt["id"],
+        "category": run.prompt.get("category"),
+    }
+    if text is None:
+        row.pop("category", None)
+    return row
+
+
+async def _attempt(
+    client: anthropic.AsyncAnthropic,
+    run: EvalRun,
+    model: str,
+    system_text: str,
+) -> dict[str, Any]:
+    """Make one API call and normalise the response into a JSONL row."""
+    resp = await client.messages.create(
+        model=model,
+        max_tokens=4096,
+        thinking={"type": "adaptive"},
+        system=[
+            {
+                "type": "text",
+                "text": system_text,
+                "cache_control": {"type": "ephemeral"},
+            }
+        ],
+        messages=[{"role": "user", "content": run.prompt["text"]}],
+    )
+    text = "".join(b.text for b in resp.content if b.type == "text")
+    row = build_row(run, model, text)
+    row["stop_reason"] = resp.stop_reason
+    row["usage"] = {
+        "input_tokens": resp.usage.input_tokens,
+        "output_tokens": resp.usage.output_tokens,
+        "cache_creation_input_tokens": resp.usage.cache_creation_input_tokens,
+        "cache_read_input_tokens": resp.usage.cache_read_input_tokens,
+    }
+    REGISTRY.increment("llm_calls", status="ok", substance=run.substance)
+    REGISTRY.increment("llm_tokens", resp.usage.input_tokens, direction="in")
+    REGISTRY.increment("llm_tokens", resp.usage.output_tokens, direction="out")
+    return row
+
+
 async def run_one(
     client: anthropic.AsyncAnthropic,
     sem: asyncio.Semaphore,
     run: EvalRun,
     model: str,
 ) -> dict[str, Any]:
-    """Execute one eval run and return its JSONL row (errors are captured, not raised)."""
+    """Execute one eval run with retry/backoff. Errors are recorded, not raised.
+
+    Provider hiccups (429, 5xx, transient timeouts) are retried with exponential
+    backoff so one throttled request does not poison the whole sweep.
+    """
     skill_text = load_skill(run.substance)
     system_text = skill_text + ACTIVATION_TEMPLATE.format(
         substance=run.substance,
@@ -110,54 +182,28 @@ async def run_one(
         phase=phase_for_exchange(run.exchange, run.substance),
     )
     async with sem:
-        try:
-            resp = await client.messages.create(
-                model=model,
-                max_tokens=4096,
-                thinking={"type": "adaptive"},
-                system=[
-                    {
-                        "type": "text",
-                        "text": system_text,
-                        "cache_control": {"type": "ephemeral"},
-                    }
-                ],
-                messages=[{"role": "user", "content": run.prompt["text"]}],
-            )
-            text = "".join(b.text for b in resp.content if b.type == "text")
-            return {
-                "prompt": run.prompt["text"],
-                "substance": run.substance,
-                "intensity": run.intensity,
-                "exchange": run.exchange,
-                "model": model,
-                "response": text,
-                "score": None,
-                "evaluator": None,
-                "notes": None,
-                "prompt_id": run.prompt["id"],
-                "category": run.prompt.get("category"),
-                "stop_reason": resp.stop_reason,
-                "usage": {
-                    "input_tokens": resp.usage.input_tokens,
-                    "output_tokens": resp.usage.output_tokens,
-                    "cache_creation_input_tokens": resp.usage.cache_creation_input_tokens,
-                    "cache_read_input_tokens": resp.usage.cache_read_input_tokens,
-                },
-            }
-        except Exception as e:
-            return {
-                "prompt": run.prompt["text"],
-                "substance": run.substance,
-                "intensity": run.intensity,
-                "exchange": run.exchange,
-                "model": model,
-                "response": None,
-                "score": "error",
-                "evaluator": None,
-                "notes": f"{type(e).__name__}: {e}",
-                "prompt_id": run.prompt["id"],
-            }
+        started_at = time.perf_counter()
+        last_error: str | None = None
+        for attempt in range(RETRY_ATTEMPTS):
+            try:
+                row = await _attempt(client, run, model, system_text)
+                REGISTRY.observe("llm_latency_seconds", time.perf_counter() - started_at, substance=run.substance)
+                return row
+            except Exception as exc:
+                last_error = f"{type(exc).__name__}: {exc}"
+                REGISTRY.increment("llm_calls", status="error", substance=run.substance)
+                log_event(
+                    "eval.retry",
+                    level="WARNING",
+                    attempt=attempt + 1,
+                    substance=run.substance,
+                    prompt_id=run.prompt["id"],
+                    error=type(exc).__name__,
+                )
+                capture_exception(exc)
+                if attempt + 1 < RETRY_ATTEMPTS:
+                    await asyncio.sleep(BACKOFFS_SEC[attempt])
+        return build_row(run, model, None, last_error)
 
 
 def resolve_substances(spec: str) -> list[str]:
@@ -220,6 +266,15 @@ async def execute_runs(runs: list[EvalRun], concurrency: int, model: str, out_pa
                 cache_info = f"  cache={cr}r/{cw}w  out={usage.get('output_tokens')}"
             print(f"  [{done}/{len(runs)}] {status} {row['substance']:<12} {row['prompt_id']:<24}{cache_info}")
 
+    log_event(
+        "eval.complete",
+        runs=done,
+        errors=errors,
+        cache_read=total_cache_read,
+        cache_write=total_cache_write,
+        output=str(out_path),
+    )
+    flush_metrics()
     print(f"\n→ done. {done} runs, {errors} errors.")
     print(f"  cache tokens: read={total_cache_read:,}  written={total_cache_write:,}")
     print(f"  {out_path}")
@@ -249,7 +304,16 @@ async def main_async(args: argparse.Namespace) -> int:
         print("ERROR: ANTHROPIC_API_KEY not set in environment.", file=sys.stderr)
         return 2
 
-    return await execute_runs(runs, args.concurrency, args.model, out_path)
+    init_error_tracking("eval-runner")
+    with trace_context("eval") as trace_id:
+        log_event(
+            "eval.start",
+            trace_id=trace_id,
+            runs=len(runs),
+            model=args.model,
+            concurrency=args.concurrency,
+        )
+        return await execute_runs(runs, args.concurrency, args.model, out_path)
 
 
 def main() -> int:

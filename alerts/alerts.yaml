@@ -1,0 +1,77 @@
+# Alert thresholds, as code.
+#
+# `python bin/check_alerts.py` evaluates these against a Prometheus textfile
+# snapshot and exits non-zero when a `critical` alert fires. The scheduled
+# `alerts` workflow runs it and, when `ALERT_WEBHOOK_URL` is configured, posts
+# the firing alerts to that webhook.
+#
+# Every alert names the signal it watches, the threshold, and the runbook to
+# read. An alert with no runbook is not allowed — the validator rejects it.
+
+# Defaults applied to every alert unless it overrides them.
+defaults:
+  comparison: ">"       # fire when the observed value is greater than the threshold
+  for_runs: 1           # consecutive evaluations that must fire before paging
+
+alerts:
+  # --- build health -------------------------------------------------------
+  - name: build-not-running
+    description: No successful site build recorded in the metrics snapshot.
+    signal: altered_states_build_runs
+    comparison: "<"
+    threshold: 1
+    severity: critical
+    runbook: runbooks/site-build-failure.md
+
+  - name: build-slow
+    description: The site build is taking far longer than usual, which usually precedes a timeout.
+    signal: altered_states_build_duration_seconds_sum
+    comparison: ">"
+    threshold: 30
+    severity: warning
+    runbook: runbooks/site-build-failure.md
+
+  - name: no-cycles-generated
+    description: The build produced a page with no temporal cycles, which means journals were not read.
+    signal: altered_states_cycles_generated
+    comparison: "<"
+    threshold: 1
+    severity: warning
+    runbook: runbooks/site-build-failure.md
+
+  # --- lab health ---------------------------------------------------------
+  - name: llm-errors
+    description: Model calls are failing. Check the provider status before the code.
+    signal: altered_states_llm_calls{status="error"}
+    comparison: ">"
+    threshold: 5
+    severity: warning
+    runbook: runbooks/lab-runtime-failure.md
+
+  - name: llm-latency
+    description: Model calls are taking longer than the 180 second client timeout allows in aggregate.
+    signal: altered_states_llm_latency_seconds_sum
+    comparison: ">"
+    threshold: 600
+    severity: warning
+    runbook: runbooks/lab-runtime-failure.md
+
+  # --- deploy health ------------------------------------------------------
+  - name: page-not-rebuilt
+    description: The deploy pipeline has not rebuilt the page since the last content change.
+    signal: altered_states_build_runs
+    comparison: "<"
+    threshold: 1
+    severity: critical
+    runbook: runbooks/deploy-failure.md
+
+  # --- security -----------------------------------------------------------
+  - name: credential-leak-detected
+    description: A secret-shaped string reached a log or ledger file. Rotate first.
+    # Summed across the `kind` label: whether the secret was caught by field name
+    # or by value shape, something reached the logs that should not have.
+    signal: altered_states_secret_redactions
+    comparison: ">"
+    threshold: 0
+    severity: critical
+    runbook: runbooks/credential-leak.md

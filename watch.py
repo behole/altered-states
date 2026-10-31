@@ -11,8 +11,12 @@ Usage:
 import contextlib
 import http.server
 import os
+import shutil
 import signal
-import subprocess
+
+# The watcher's entire job is to run two fixed local commands (build.py and
+# wrangler) with a literal argv and no shell.
+import subprocess  # nosec B404
 import sys
 import threading
 import time
@@ -37,26 +41,49 @@ POLL_INTERVAL = 2.0
 PREVIEW_CHANGE_COUNT = 5
 
 
-def deploy() -> bool:
-    """Deploy to Cloudflare Pages and return True on success."""
+def _run(argv: list[str], timeout: int) -> subprocess.CompletedProcess[str] | None:
+    """Run a fixed local command. Returns None when the executable is missing.
+
+    The only processes this repo starts are its own build script (via
+    ``sys.executable``) and the ``wrangler`` CLI, both with a literal argv and
+    no shell, so there is no interpolation of untrusted input here.
+    """
     try:
-        result = subprocess.run(
-            ["wrangler", "pages", "deploy", SITE_DIR, "--project-name", "altered-states", "--commit-dirty=true"],
+        # Fixed argv with a resolved executable path and no shell involved.
+        return subprocess.run(  # nosec B603
+            argv,
             capture_output=True,
             text=True,
-            timeout=60,
+            timeout=timeout,
             check=False,
         )
-        if result.returncode == 0:
-            for line in result.stdout.strip().split("\n"):
-                if "Success!" in line or "Deployment complete!" in line:
-                    print(f"  {line}")
-            return True
+    except FileNotFoundError:
+        print(f"  SKIPPED: {argv[0]} is not installed")
+        return None
+    except subprocess.TimeoutExpired:
+        print(f"  TIMEOUT: {argv[0]} ran longer than {timeout}s")
+        return None
+
+
+def deploy() -> bool:
+    """Deploy to Cloudflare Pages and return True on success."""
+    wrangler = shutil.which("wrangler")
+    if wrangler is None:
+        print("  SKIPPED: wrangler is not installed — site built, not deployed")
+        return False
+    result = _run(
+        [wrangler, "pages", "deploy", SITE_DIR, "--project-name", "altered-states", "--commit-dirty=true"],
+        timeout=60,
+    )
+    if result is None:
+        return False
+    if result.returncode != 0:
         print(f"  DEPLOY FAILED:\n{result.stderr}")
         return False
-    except Exception as e:
-        print(f"  DEPLOY ERROR: {e}")
-        return False
+    for line in result.stdout.strip().split("\n"):
+        if "Success!" in line or "Deployment complete!" in line:
+            print(f"  {line}")
+    return True
 
 
 def build_and_deploy() -> bool:
@@ -76,25 +103,16 @@ class SiteHandler(http.server.SimpleHTTPRequestHandler):
 
 def build() -> bool:
     """Run build.py and return True on success."""
-    build_script = os.path.join(BASE, "build.py")
-    try:
-        result = subprocess.run(
-            [sys.executable, build_script],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=False,
-        )
-        if result.returncode == 0:
-            for line in result.stdout.strip().split("\n"):
-                if "Built:" in line:
-                    print(f"  {line}")
-            return True
+    result = _run([sys.executable, os.path.join(BASE, "build.py")], timeout=30)
+    if result is None:
+        return False
+    if result.returncode != 0:
         print(f"  BUILD FAILED:\n{result.stderr}")
         return False
-    except Exception as e:
-        print(f"  BUILD ERROR: {e}")
-        return False
+    for line in result.stdout.strip().split("\n"):
+        if "Built:" in line:
+            print(f"  {line}")
+    return True
 
 
 def get_snapshot() -> dict[str, float]:

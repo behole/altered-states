@@ -283,6 +283,45 @@ whose keys are the camelCase contract read directly by
 Git hooks cover two large-file classes: everything outside the music experiment
 media is capped at 1 MB, and committed audio is capped at 12 MB.
 
+### Tests
+
+`tests/unit/` covers the domain logic; `tests/integration/` drives whole
+pipelines against temporary copies of the real data directories. Both run
+offline — model calls go through a dry-run path, and no test touches the network.
+
+```bash
+make test           # unit + integration, parallel
+make coverage       # adds the enforced coverage floor
+pytest tests/unit/test_metrics.py -n0 --reruns 0   # one file, no scheduler
+```
+
+`pyproject.toml` sets `--strict-markers`, so a typo in a marker fails the run
+instead of silently doing nothing.
+
+### Dependencies, security, and automation
+
+```bash
+make lock           # regenerate hash-pinned lockfiles after editing a requirements.txt
+make deps           # deptry: undeclared, unused, and transitive dependencies
+make security       # bandit (SARIF-ready) + pip-audit against the lockfiles
+make docs           # validate AGENTS.md against the repository
+make alerts         # validate the alert policy in alerts/alerts.yaml
+make labels         # dry-run the GitHub label taxonomy
+make verify         # all of the above plus the static checks and the tests
+```
+
+`dependabot.yml` opens grouped update pull requests with a cooldown, so a
+release that is yanked or compromised hours after publication does not reach
+`main`. CI runs the same gates on every pull request, CodeQL analyses the Python
+surfaces weekly, and `bin/review_pr.py` posts a deterministic first-pass review
+of each diff.
+
+### Operating it
+
+- `docs/observability.md` — logs, metrics, error tracking, and what the signals mean.
+- `runbooks/` — what to do when the build, the deploy, the lab, or a credential breaks.
+- `AGENTS.md` — the short version, for a human or an agent picking this up cold.
+
 ---
 
 ## By The Numbers

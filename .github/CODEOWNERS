@@ -1,0 +1,26 @@
+# Default owner for everything in this repository.
+# Review requests route to the maintainer who owns the deployed site.
+*                                   @behole
+
+# Quality gates and CI. Changes here change what "green" means, so they always
+# need an explicit review.
+/.github/                           @behole
+/Makefile                           @behole
+/pyproject.toml                     @behole
+/.pre-commit-config.yaml            @behole
+/requirements-dev.txt               @behole
+/requirements-dev.lock              @behole
+
+# Pinned runtime dependencies — reviewed for supply-chain impact.
+/bin/requirements.txt               @behole
+/bin/requirements.lock              @behole
+/experiments/temporal-lab/requirements.txt  @behole
+/experiments/temporal-lab/requirements.lock @behole
+
+# Feature flags and alert thresholds are operational controls.
+/feature_flags.json                 @behole
+/alerts/                            @behole
+/runbooks/                          @behole
+
+# Agent instructions drive every automated contribution.
+/AGENTS.md                          @behole

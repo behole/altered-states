@@ -1,0 +1,158 @@
+"""Unit tests for the error-tracking facade and the eval/grid helpers."""
+
+from __future__ import annotations
+
+import json
+from typing import Any
+
+import pytest
+
+from altered_states import error_tracking
+from altered_states.error_tracking import (
+    MAX_BREADCRUMB_VALUE_LENGTH,
+    ErrorTrackingSettings,
+    breadcrumb,
+    capture_exception,
+    init_error_tracking,
+    reset_state,
+    set_user_context,
+    settings_from_env,
+)
+from altered_states.log_utils import REDACTED
+
+
+class FakeSdk:
+    """Records the calls the facade makes, without a network or real SDK."""
+
+    def __init__(self) -> None:
+        self.init_kwargs: dict[str, Any] | None = None
+        self.breadcrumbs: list[dict[str, Any]] = []
+        self.tags: dict[str, str] = {}
+        self.users: list[dict[str, Any]] = []
+        self.captured: list[BaseException] = []
+
+    def init(self, **kwargs: Any) -> None:
+        self.init_kwargs = kwargs
+
+    def add_breadcrumb(self, **kwargs: Any) -> None:
+        self.breadcrumbs.append(kwargs)
+
+    def set_tag(self, key: str, value: str) -> None:
+        self.tags[key] = value
+
+    def set_user(self, user: dict[str, Any]) -> None:
+        self.users.append(user)
+
+    def capture_exception(self, exc: BaseException) -> None:
+        self.captured.append(exc)
+
+
+@pytest.fixture
+def sdk(monkeypatch: pytest.MonkeyPatch) -> FakeSdk:
+    fake = FakeSdk()
+    monkeypatch.setattr(error_tracking, "_load_sdk", lambda: fake)
+    reset_state()
+    return fake
+
+
+@pytest.fixture
+def settings() -> ErrorTrackingSettings:
+    return ErrorTrackingSettings(dsn="https://public@example.ingest.sentry.io/1", service="site-builder")
+
+
+class TestSettings:
+    def test_empty_dsn_means_disabled(self) -> None:
+        assert ErrorTrackingSettings(dsn="", service="x").enabled is False
+
+    def test_present_dsn_means_enabled(self, settings: ErrorTrackingSettings) -> None:
+        assert settings.enabled is True
+
+    def test_environment_defaults_to_production(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("APP_ENV", raising=False)
+        assert settings_from_env("svc").environment == "production"
+
+    def test_release_is_taken_from_app_release(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("APP_RELEASE", "v1.5.0")
+        assert settings_from_env("svc").release == "v1.5.0"
+
+    def test_release_falls_back_to_git_sha(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("APP_RELEASE", raising=False)
+        monkeypatch.setenv("GIT_SHA", "abc123")
+        assert settings_from_env("svc").release == "abc123"
+
+    def test_service_tag_is_always_present(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        assert settings_from_env("lab").tags["service"] == "lab"
+
+
+class TestInitialisation:
+    def test_no_dsn_leaves_tracking_disabled(self, sdk: FakeSdk) -> None:
+        assert init_error_tracking("svc", settings=ErrorTrackingSettings(dsn="", service="svc")) is False
+        assert sdk.init_kwargs is None
+
+    def test_dsn_initialises_the_sdk(self, sdk: FakeSdk, settings: ErrorTrackingSettings) -> None:
+        assert init_error_tracking("svc", settings=settings, sdk=sdk) is True
+        assert sdk.init_kwargs is not None
+        assert sdk.init_kwargs["dsn"] == settings.dsn
+
+    def test_service_tag_is_set_on_the_client(self, sdk: FakeSdk, settings: ErrorTrackingSettings) -> None:
+        init_error_tracking("svc", settings=settings, sdk=sdk)
+        assert sdk.tags["service"] == "site-builder"
+
+    def test_default_pii_collection_is_disabled(self, sdk: FakeSdk, settings: ErrorTrackingSettings) -> None:
+        init_error_tracking("svc", settings=settings, sdk=sdk)
+        assert sdk.init_kwargs is not None
+        assert sdk.init_kwargs["send_default_pii"] is False
+
+    def test_missing_sdk_is_handled_gracefully(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(error_tracking, "_load_sdk", lambda: None)
+        reset_state()
+        assert init_error_tracking("svc", settings=ErrorTrackingSettings(dsn="https://x@y/1", service="svc")) is False
+
+
+class TestBreadcrumbsAndCapture:
+    def test_breadcrumbs_are_ignored_before_initialisation(self, sdk: FakeSdk) -> None:
+        breadcrumb("build", "ignored")
+        assert sdk.breadcrumbs == []
+
+    def test_breadcrumb_records_category_and_message(self, sdk: FakeSdk, settings: ErrorTrackingSettings) -> None:
+        init_error_tracking("svc", settings=settings, sdk=sdk)
+        breadcrumb("build", "loading journals", {"count": 10})
+        assert sdk.breadcrumbs[0]["category"] == "build"
+        assert sdk.breadcrumbs[0]["message"] == "loading journals"
+        assert sdk.breadcrumbs[0]["data"]["count"] == 10
+
+    def test_breadcrumb_redacts_secrets(self, sdk: FakeSdk, settings: ErrorTrackingSettings) -> None:
+        init_error_tracking("svc", settings=settings, sdk=sdk)
+        breadcrumb("http", "calling provider", {"api_key": "sk-should-not-leak"})
+        assert "sk-should-not-leak" not in json.dumps(sdk.breadcrumbs[0])
+
+    def test_breadcrumb_values_are_truncated(self, sdk: FakeSdk, settings: ErrorTrackingSettings) -> None:
+        init_error_tracking("svc", settings=settings, sdk=sdk)
+        breadcrumb("build", "long", {"body": "x" * (MAX_BREADCRUMB_VALUE_LENGTH + 50)})
+        assert len(sdk.breadcrumbs[0]["data"]["body"]) == MAX_BREADCRUMB_VALUE_LENGTH + 1
+
+    def test_trace_id_is_attached_to_the_breadcrumb(self, sdk: FakeSdk, settings: ErrorTrackingSettings) -> None:
+        from altered_states.log_utils import trace_context
+
+        init_error_tracking("svc", settings=settings, sdk=sdk)
+        with trace_context("test") as trace_id:
+            breadcrumb("build", "step")
+        assert sdk.breadcrumbs[0]["data"]["trace_id"] == trace_id
+
+    def test_user_context_is_redacted(self, sdk: FakeSdk, settings: ErrorTrackingSettings) -> None:
+        init_error_tracking("svc", settings=settings, sdk=sdk)
+        set_user_context("cron", session_token="abc")
+        assert sdk.users[0]["id"] == "cron"
+        assert sdk.users[0]["session_token"] == REDACTED
+
+    def test_capture_before_initialisation_returns_false(self, sdk: FakeSdk) -> None:
+        assert capture_exception(ValueError("x")) is False
+        assert sdk.captured == []
+
+    def test_capture_after_initialisation_forwards_the_exception(
+        self, sdk: FakeSdk, settings: ErrorTrackingSettings
+    ) -> None:
+        init_error_tracking("svc", settings=settings, sdk=sdk)
+        error = ValueError("boom")
+        assert capture_exception(error) is True
+        assert sdk.captured == [error]

@@ -1,0 +1,55 @@
+name: Release
+
+# Tagging a commit publishes a GitHub release whose body is generated from the
+# conventional commits since the previous tag. `bin/release_notes.py` is the
+# generator; running it locally produces the same text:
+#
+#   python bin/release_notes.py --version v1.5.0
+#
+# Pushing a tag is the only manual step.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish release notes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The full history is required: the notes are computed from the commit
+          # range between the previous tag and this one.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate notes
+        run: |
+          python bin/release_notes.py \
+            --to "${{ github.ref_name }}" \
+            --version "${{ github.ref_name }}" \
+            --output notes.md
+          cat notes.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Guard against an empty release
+        run: |
+          if grep -q '^No user-visible changes in this range.$' notes.md; then
+            echo "::warning::This tag contains no user-visible commits."
+          fi
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "${{ github.ref_name }}" \
+            --notes-file notes.md \
+            --verify-tag

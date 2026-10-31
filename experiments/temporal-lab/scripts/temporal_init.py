@@ -89,7 +89,8 @@ class TemporalLab:
             "created": datetime.now().isoformat(),
             "cycle_count": 0,
             "current_state": {
-                "emotional": random.choice(char_info["emotional_range"]),
+                # Initial-state variety only; not used for any security decision.
+                "emotional": random.choice(char_info["emotional_range"]),  # nosec B311
                 "clarity": "moderate",
                 "integration": "low",
             },

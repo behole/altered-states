@@ -1017,6 +1017,14 @@ const PERSONAS = __PERSONAS__;
 const JOURNALS = __JOURNALS__;
 const EXPERIMENTS = __EXPERIMENTS__;
 const MUSIC = __MUSIC__;
+const FLAGS = __FLAGS__;
+
+// ═══ FEATURE FLAGS ═══
+// Evaluated at build time; a disabled section is not rendered at all rather
+// than hidden with CSS, so its payload never reaches the client.
+function flagOn(name) {
+  return FLAGS[name] === true;
+}
 
 // ═══ VIEW ROUTING ═══
 function showView(name) {
@@ -1594,13 +1602,22 @@ function scrollToChat() {
 renderPersonaGrid();
 renderRecentExcerpts();
 renderJournalTabs();
-renderExpTabs();
-renderMusicTabs();
-showExperiment(0);
-showMusic(0);
+if (flagOn('site.experiments_gallery')) {
+  renderExpTabs();
+  showExperiment(0);
+}
+if (flagOn('site.music_section')) {
+  renderMusicTabs();
+  showMusic(0);
+}
+if (flagOn('site.chat_personas')) {
+  renderChatSidebar();
+  loadChatSettings();
+}
+if (flagOn('site.experiment_wheel')) {
+  document.querySelectorAll('[data-flag="site.experiment_wheel"]').forEach(el => el.hidden = false);
+}
 showView('home');
-renderChatSidebar();
-loadChatSettings();
 </script>
 
 </body>

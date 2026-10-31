@@ -1,0 +1,73 @@
+name: Bug report
+description: Something is broken — the site, the build, or the lab runtime.
+title: "bug: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. The more of this you fill in, the faster this
+        gets fixed. Please do not paste API keys, tokens, or journal text you
+        would not publish.
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which surface?
+      options:
+        - Built site (site/index.html)
+        - Site build (build.py)
+        - Watch / deploy (watch.py, bin/rebuild-and-deploy.sh)
+        - Eval runner (bin/run_eval.py)
+        - Temporal lab (experiments/temporal-lab)
+        - Same-prompt experiment (experiments/same-prompt)
+        - Music experiment (experiments/music)
+        - CI or quality tooling
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead?
+      description: Include the exact error text. Redact any credentials.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `make build`
+        2. ...
+    validations:
+      required: true
+
+  - type: input
+    id: commit
+    attributes:
+      label: Commit or version
+      description: Output of `git rev-parse --short HEAD`, or the release tag.
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: |
+        Structured log lines (JSON with `ts`, `level`, `event`, `trace_id`) are
+        ideal. Redact anything sensitive — the log pipeline already redacts
+        known secret shapes, but do not rely on it here.
+      render: text
+    validations:
+      required: false
