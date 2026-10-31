@@ -7,6 +7,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 ## [Unreleased]
+### Removed
+- **Stale planning docs** — `docs/v1.2-implementation-plan.md`,
+  `docs/v1.2-improvement-spec.md`, `docs/track-a-ayahuasca.md` (superseded
+  Track-A research plan; the ayahuasca dossier lives in
+  `research/ayahuasca/`), and the `docs/superpowers/` slot-machine-wheel plan
+  + design spec (the experiment wheel is live; its docs are
+  `site/wheel/` and the `site.experiment_wheel` feature flag). Zero
+  references to the removed files remain in README, docs, code, or CI.
 ### Added
 - **`watch.py --serve-only`** — serve-and-watch mode that never deploys: the
   flag gates the watch loop into build-only mode, with no code path to
