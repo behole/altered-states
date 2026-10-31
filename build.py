@@ -9,6 +9,10 @@ Reads:
 Writes:
   - site/index.html                                    (complete static site)
 
+Note: site/index.html is committed to git deliberately — Cloudflare Pages
+deploys need a committed artifact to publish, and git tracking lets audits diff
+the built page. Rebuilds regenerate it (`make build`); never hand-edit it.
+
 Usage:
   python3 build.py
 """
