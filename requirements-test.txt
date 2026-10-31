@@ -1,0 +1,14 @@
+# Test runner and plugins — the minimum needed to execute tests/ on any
+# supported interpreter (3.10 through 3.12).
+#
+# Split out from requirements-dev.txt on purpose. The dev toolchain includes
+# pre-commit, which needs 3.11+, and coverage releases that require 3.11+.
+# The test matrix installs this file instead, so a 3.10 job resolves to a
+# coverage that actually exists for 3.10 rather than failing at install time.
+#
+#   make lock              # regenerate requirements-test.lock after editing
+
+pytest==9.2.0
+pytest-cov==7.1.0
+pytest-xdist==3.8.0
+pytest-rerunfailures==16.7

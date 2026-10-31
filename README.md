@@ -250,7 +250,10 @@ the root scripts (`build.py`, `watch.py`, `bin/`, `experiments/*.py`) and
 | Duplicate code | pylint | `[tool.pylint.similarities]` | `uvx pylint@4.1.3 --disable=all --enable=duplicate-code build.py watch.py bin experiments` |
 | Large-file guard + file hygiene | pre-commit | `.pre-commit-config.yaml` | `pre-commit run --all-files` |
 
-Install the dev toolchain once with `python3 -m pip install -r requirements-dev.txt`.
+Install the dev toolchain once with `python3 -m pip install -r requirements-dev.txt`
+(Python 3.11+, because pre-commit and current coverage require it). The test
+matrix uses `requirements-test.txt` instead, which resolves on 3.10 through
+3.12 — the two files are locked separately for exactly that reason.
 Run every check at once with:
 
 ```bash
@@ -303,7 +306,7 @@ instead of silently doing nothing.
 ```bash
 make lock           # regenerate hash-pinned lockfiles after editing a requirements.txt
 make deps           # deptry: undeclared, unused, and transitive dependencies
-make security       # bandit (SARIF-ready) + pip-audit against the lockfiles
+make security       # bandit + pip-audit against the lockfiles
 make docs           # validate AGENTS.md against the repository
 make alerts         # validate the alert policy in alerts/alerts.yaml
 make labels         # dry-run the GitHub label taxonomy

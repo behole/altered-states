@@ -53,6 +53,9 @@ IRREPLACEABLE = (
 
 TEST_PREFIX = "tests/"
 
+# `requirements.txt`, `requirements-dev.txt`, `bin/requirements.lock`'s source…
+REQUIREMENTS_NAME = re.compile(r"^requirements.*\.txt$")
+
 # Same shapes the logging layer redacts; catching them before merge is cheaper.
 # Ordered most- to least-specific, and the trailing class includes `-` so an
 # `sk-or-v1-…` key matches whole instead of being truncated at its first hyphen.
@@ -173,7 +176,13 @@ def _touches_tests(changes: list[FileChange]) -> bool:
 
 
 def _requirement_files(changes: list[FileChange]) -> set[str]:
-    return {change.path for change in changes if Path(change.path).name in {"requirements.txt", "requirements-dev.txt"}}
+    """Every `requirements*.txt`, wherever it lives.
+
+    Matching the names rather than a fixed list means a new requirement file
+    (there are four now) is covered by the lockfile rule the day it is added
+    instead of the day someone remembers to extend this set.
+    """
+    return {change.path for change in changes if REQUIREMENTS_NAME.match(Path(change.path).name)}
 
 
 def review(changes: list[FileChange], flag_names: set[str] | None = None) -> list[Finding]:

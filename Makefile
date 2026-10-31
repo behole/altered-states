@@ -122,3 +122,5 @@ lock:
 		--python-version 3.10 --universal --generate-hashes --quiet
 	$(UVX) uv pip compile requirements-dev.txt -o requirements-dev.lock \
 		--python-version 3.11 --universal --generate-hashes --quiet
+	$(UVX) uv pip compile requirements-test.txt -o requirements-test.lock \
+		--python-version 3.10 --universal --generate-hashes --quiet

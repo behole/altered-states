@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 import review_pr
-from review_pr import ADVISORY, BLOCKING, FileChange, parse_diff, render, review
+from review_pr import ADVISORY, BLOCKING, FileChange, lock_for, parse_diff, render, review
 
 
 def make_diff(*files: str) -> str:
@@ -110,6 +110,15 @@ class TestDependencyRules:
         findings = review(parse_diff(file_diff("bin/requirements.txt", ["anthropic==2.3.0"])))
         assert findings[0].severity == BLOCKING
         assert "bin/requirements.lock" in findings[0].message
+
+    @pytest.mark.parametrize(
+        "path",
+        ["requirements.txt", "requirements-dev.txt", "requirements-test.txt", "bin/requirements.txt"],
+    )
+    def test_every_requirement_file_is_covered(self, path: str) -> None:
+        findings = review(parse_diff(file_diff(path, ["x==1.0"])))
+        assert [finding.severity for finding in findings] == [BLOCKING]
+        assert lock_for(path) in findings[0].message
 
     def test_requirements_change_with_lock_is_clean(self) -> None:
         findings = review(

@@ -20,6 +20,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`bin/check_agents_md.py`, `AGENTS.md`, `runbooks/`, `docs/observability.md`** — instructions and incident procedures that are validated against the repository
 - **`.devcontainer/`, `.env.example`** — reproducible environment and a documented variable surface
 - **Hash-pinned lockfiles** for every requirements file, plus a per-app requirements file for the music experiment
+- **`requirements-test.txt` / `requirements-test.lock`** — the test-only toolchain, locked separately from `requirements-dev` because `pre-commit` and current `coverage` need 3.11+, so the 3.10 job in the test matrix has a resolvable set
 
 ### Changed
 - **`build.py`** — split into `count_cycles`, `enabled_section_flags`, `render_page`, `collect_site_data`, and `record_content_metrics`; emits structured logs, build metrics, and content gauges the alert policy reads
