@@ -26,6 +26,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Tool caches
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
 # Local tool session tokens
 bin/.nlm-session
 .env

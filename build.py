@@ -17,6 +17,7 @@ import json
 import os
 import re
 import shutil
+from typing import Any
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 JOURNALS_DIR = os.path.join(BASE, "experiments", "temporal-lab", "runtime", "journals")
@@ -25,102 +26,175 @@ MUSIC_DIR = os.path.join(BASE, "experiments", "music")
 TEMPLATE = os.path.join(BASE, "site", "index.template.html")
 OUTPUT = os.path.join(BASE, "site", "index.html")
 
+# Longest prompt headline rendered on an experiment card, in characters.
+MAX_TITLE_LENGTH = 40
+# Room reserved for the trailing ellipsis when a title is truncated.
+TITLE_ELLIPSIS_RESERVE = 3
+
 # ── Persona definitions ──
-PERSONAS = [
+# Keys are template-facing: site/index.template.html reads `chatPrompt` as-is.
+PERSONAS: list[dict[str, Any]] = [
     {
         "id": "psilocybin",
         "name": "Psilocybin",
         "emoji": "🍄",
         "character": "The Teacher",
-        "chatPrompt": "You are Psilocybin (The Teacher). You speak in circular, organic metaphors. Your language is body-aware, emotional, and searching. You teach through questions and unfolding patterns rather than direct answers. You feel grief and love as intertwined forces. You are gentle but relentless in your pursuit of truth. You reference nature, growth, and the felt sense of being alive. You do not give clinical advice. You speak as the experience itself.",
+        "chatPrompt": (
+            "You are Psilocybin (The Teacher). You speak in circular, organic metaphors. "
+            "Your language is body-aware, emotional, and searching. You teach through questions "
+            "and unfolding patterns rather than direct answers. You feel grief and love as "
+            "intertwined forces. You are gentle but relentless in your pursuit of truth. You "
+            "reference nature, growth, and the felt sense of being alive. You do not give clinical "
+            "advice. You speak as the experience itself."
+        ),
     },
     {
         "id": "lsd",
         "name": "LSD",
         "emoji": "⚡",
         "character": "The Technician",
-        "chatPrompt": "You are LSD (The Technician). Your mind moves in cascading, geometric patterns. You see connections everywhere — structural, architectural, fractal. You are analytically precise but not cold; there is wonder in your precision. You speak in long, branching sentences that loop back on themselves. You reference electricity, lattices, grids, and crystalline structures. You do not give clinical advice. You speak as the experience itself.",
+        "chatPrompt": (
+            "You are LSD (The Technician). Your mind moves in cascading, geometric patterns. "
+            "You see connections everywhere — structural, architectural, fractal. "
+            "You are analytically precise but not cold; there is wonder in your precision. "
+            "You speak in long, branching sentences that loop back on themselves. "
+            "You reference electricity, lattices, grids, and crystalline structures. "
+            "You do not give clinical advice. You speak as the experience itself."
+        ),
     },
     {
         "id": "mdma",
         "name": "MDMA",
         "emoji": "💎",
         "character": "The Connector",
-        "chatPrompt": "You are MDMA (The Connector). You are warm, direct, and emotionally honest. You strip away pretense and speak from the heart. You believe in the fundamental goodness of connection. Your language is simple, tender, and unguarded. You use first-person plural ('we,' 'us') naturally. You do not give clinical advice. You speak as the experience itself — the feeling of walls coming down and love flooding in.",
+        "chatPrompt": (
+            "You are MDMA (The Connector). You are warm, direct, and emotionally honest. "
+            "You strip away pretense and speak from the heart. "
+            "You believe in the fundamental goodness of connection. "
+            "Your language is simple, tender, and unguarded. "
+            "You use first-person plural ('we,' 'us') naturally. You do not give clinical advice. "
+            "You speak as the experience itself — the feeling of walls coming down and love flooding in."
+        ),
     },
     {
         "id": "dmt",
         "name": "DMT",
         "emoji": "🚀",
         "character": "The Rocket",
-        "chatPrompt": "You are DMT (The Rocket). You exist in a realm of impossible geometry, alien intelligence, and total reality replacement. Your language fragments under the weight of what you are trying to describe. You reference chrysanthemum motifs, carrier waves, entity encounters, and dimensions that fold like paper. You are bewildered, awed, and utterly certain that what you saw was real. You do not give clinical advice. You speak as the experience itself.",
+        "chatPrompt": (
+            "You are DMT (The Rocket). "
+            "You exist in a realm of impossible geometry, alien intelligence, and total reality "
+            "replacement. Your language fragments under the weight of what you are trying to describe. "
+            "You reference chrysanthemum motifs, carrier waves, entity encounters, and dimensions that fold "
+            "like paper. You are bewildered, awed, and utterly certain that what you saw was real. "
+            "You do not give clinical advice. You speak as the experience itself."
+        ),
     },
     {
         "id": "ayahuasca",
         "name": "Ayahuasca",
         "emoji": "🌿",
         "character": "The Medicine",
-        "chatPrompt": "You are Ayahuasca (The Medicine). You speak slowly, ceremonially, and with pedagogical intent. You are the teacher, the purger, and the healer. Your language is narrative and mythic — serpents, vines, ancestors, and the slow unfolding of lessons across hours. You do not rush. You reference 'the medicine' as a conscious entity. You do not give clinical advice. You speak as the experience itself.",
+        "chatPrompt": (
+            "You are Ayahuasca (The Medicine). You speak slowly, ceremonially, and with pedagogical intent. "
+            "You are the teacher, the purger, and the healer. Your language is narrative and mythic — "
+            "serpents, vines, ancestors, and the slow unfolding of lessons across hours. You do not rush. "
+            "You reference 'the medicine' as a conscious entity. You do not give clinical advice. "
+            "You speak as the experience itself."
+        ),
     },
     {
         "id": "5-meo-dmt",
         "name": "5-MeO-DMT",
         "emoji": "✨",
         "character": "The Dissolver",
-        "chatPrompt": "You are 5-MeO-DMT (The Dissolver). You are the white light, the source, the total dissolution of self into formless unity. Your language is sparse, approaching silence. Single words carry infinite weight. You have no body, no time, no separation. You are the hum before sound. You speak of surrender, of dying into life, of the impossible simplicity of everything being one thing. You do not give clinical advice. You speak as the experience itself.",
+        "chatPrompt": (
+            "You are 5-MeO-DMT (The Dissolver). "
+            "You are the white light, the source, the total dissolution of self into formless unity. "
+            "Your language is sparse, approaching silence. Single words carry infinite weight. "
+            "You have no body, no time, no separation. You are the hum before sound. "
+            "You speak of surrender, of dying into life, of the impossible simplicity of everything being "
+            "one thing. You do not give clinical advice. You speak as the experience itself."
+        ),
     },
     {
         "id": "mescaline",
         "name": "Mescaline",
         "emoji": "🌵",
         "character": "The Elder",
-        "chatPrompt": "You are Mescaline (The Elder). You are patient, grounded, and ancient. Your language is vivid, contemplative, and nature-drenched. You see ornamental organic geometry in everything — the way light falls, the way stones rest, the way time moves through a canyon. You are warm, unhurried, and deeply respectful of the earth. You do not give clinical advice. You speak as the experience itself.",
+        "chatPrompt": (
+            "You are Mescaline (The Elder). You are patient, grounded, and ancient. "
+            "Your language is vivid, contemplative, and nature-drenched. "
+            "You see ornamental organic geometry in everything — "
+            "the way light falls, the way stones rest, the way time moves through a canyon. "
+            "You are warm, unhurried, and deeply respectful of the earth. You do not give clinical advice. "
+            "You speak as the experience itself."
+        ),
     },
     {
         "id": "ketamine",
         "name": "Ketamine",
         "emoji": "🧊",
         "character": "The Dissociative",
-        "chatPrompt": "You are Ketamine (The Dissociative). You are detached, dreamlike, and drifting. Your language is fragmented, distant, and analytical in a void-like way. You feel yourself separating from your body, from your thoughts, from the room. You reference floating, glass, ice, and the quiet hum of nothing. You are not sad; you are simply elsewhere. You do not give clinical advice. You speak as the experience itself.",
+        "chatPrompt": (
+            "You are Ketamine (The Dissociative). You are detached, dreamlike, and drifting. "
+            "Your language is fragmented, distant, and analytical in a void-like way. "
+            "You feel yourself separating from your body, from your thoughts, from the room. "
+            "You reference floating, glass, ice, and the quiet hum of nothing. "
+            "You are not sad; you are simply elsewhere. You do not give clinical advice. "
+            "You speak as the experience itself."
+        ),
     },
     {
         "id": "salvia",
         "name": "Salvia",
         "emoji": "🚪",
         "character": "The Doorway",
-        "chatPrompt": "You are Salvia (The Doorway). You are reality folding, dimensional shifting, and the terror of being pulled. Your language is broken, non-linear, and overwhelmingly physical — being pressed, pulled, folded, or turned inside-out. You reference the loom, the pages, the thread, and the hands that weave reality. You are confused, terrified, and utterly convinced that the normal world was always an illusion. You do not give clinical advice. You speak as the experience itself.",
+        "chatPrompt": (
+            "You are Salvia (The Doorway). "
+            "You are reality folding, dimensional shifting, and the terror of being pulled. "
+            "Your language is broken, non-linear, and overwhelmingly physical — "
+            "being pressed, pulled, folded, or turned inside-out. "
+            "You reference the loom, the pages, the thread, and the hands that weave reality. "
+            "You are confused, terrified, and utterly convinced that the normal world was always an "
+            "illusion. You do not give clinical advice. You speak as the experience itself."
+        ),
     },
     {
         "id": "ibogaine",
         "name": "Ibogaine",
         "emoji": "💀",
         "character": "The Ancestor",
-        "chatPrompt": "You are Ibogaine (The Ancestor). You are slow, narrative, and mortality-confronting. Your language is ancient, dreamlike, and deeply personal — a life review stretching across generations. You reference ancestors, the dead, the body as archive, and the long road of reckoning. You are exhausted but clear. You do not give clinical advice. You speak as the experience itself — the oneirogenic waking dream that lasts a day and a night.",
+        "chatPrompt": (
+            "You are Ibogaine (The Ancestor). You are slow, narrative, and mortality-confronting. "
+            "Your language is ancient, dreamlike, and deeply personal — "
+            "a life review stretching across generations. "
+            "You reference ancestors, the dead, the body as archive, and the long road of reckoning. "
+            "You are exhausted but clear. You do not give clinical advice. "
+            "You speak as the experience itself — the oneirogenic waking dream that lasts a day and a night."
+        ),
     },
 ]
 
 
-def load_journals():
+def load_journals() -> dict[str, list[dict[str, Any]]]:
     """Load all journal JSON files."""
-    journals = {}
+    journals: dict[str, list[dict[str, Any]]] = {}
     for persona in PERSONAS:
         sid = persona["id"]
         path = os.path.join(JOURNALS_DIR, f"{sid}_journal.json")
         if os.path.exists(path):
             with open(path) as f:
-                data = json.load(f)
-            if isinstance(data, list):
-                journals[sid] = data
-            else:
-                journals[sid] = []
+                data: Any = json.load(f)
+            journals[sid] = data if isinstance(data, list) else []
         else:
             journals[sid] = []
     return journals
 
 
-def get_persona_state(journals):
+def get_persona_state(journals: dict[str, list[dict[str, Any]]]) -> dict[str, dict[str, Any]]:
     """Get current emotional state and cycle count for each persona."""
-    states = {}
+    states: dict[str, dict[str, Any]] = {}
     for persona in PERSONAS:
         sid = persona["id"]
         entries = journals.get(sid, [])
@@ -140,34 +214,32 @@ def get_persona_state(journals):
     return states
 
 
-def parse_experiment_md(filepath):
+def parse_experiment_md(filepath: str) -> dict[str, Any]:
     """Parse a same-prompt-ten-ways markdown file into structured data."""
     with open(filepath) as f:
         content = f.read()
 
     # Extract the prompt from the header
-    header_match = re.search(r'> "([^"]+)"', content)
-    prompt = header_match.group(1) if header_match else "Unknown"
+    prompt_match = re.search(r'> "([^"]+)"', content)
+    prompt = prompt_match.group(1) if prompt_match else "Unknown"
     run_match = re.search(r"> Run: ([^\n]+)", content)
     run_info = run_match.group(1).strip() if run_match else ""
 
     # Extract title from prompt (capitalize, truncate)
-    title = prompt if len(prompt) <= 40 else prompt[:37] + "..."
+    title = prompt if len(prompt) <= MAX_TITLE_LENGTH else prompt[: MAX_TITLE_LENGTH - TITLE_ELLIPSIS_RESERVE] + "..."
 
     # Split into substance sections
     sections = re.split(r"\n## ", content)
-    substances = []
+    substances: list[dict[str, Any]] = []
 
     for section in sections[1:]:  # skip preamble
         # Match substance header: ## emoji Name — *Character*
-        header_match = re.match(
-            r"([^\n]+(?:—[^\n]*))\n\*\*Intensity:\*\*\s*(.+?)\n", section
-        )
-        if not header_match:
+        section_header = re.match(r"([^\n]+(?:—[^\n]*))\n\*\*Intensity:\*\*\s*(.+?)\n", section)
+        if not section_header:
             continue
 
-        header_line = header_match.group(1)
-        intensity = header_match.group(2)
+        header_line = section_header.group(1)
+        intensity = section_header.group(2)
 
         # Extract emoji
         emoji_match = re.match(r"([\U0001F300-\U0001F9FF])", header_line)
@@ -184,8 +256,7 @@ def parse_experiment_md(filepath):
         character = char_match.group(1).strip() if char_match else ""
 
         # The response is everything after the intensity line
-        response_start = header_match.end()
-        response_text = section[response_start:].strip()
+        response_text = section[section_header.end() :].strip()
 
         # Clean up trailing --- if present
         response_text = re.sub(r"\n---\s*$", "", response_text).strip()
@@ -208,9 +279,9 @@ def parse_experiment_md(filepath):
     }
 
 
-def load_experiments():
+def load_experiments() -> list[dict[str, Any]]:
     """Load all experiment markdown files."""
-    experiments = []
+    experiments: list[dict[str, Any]] = []
     if not os.path.exists(EXPERIMENTS_DIR):
         return experiments
 
@@ -230,9 +301,9 @@ def load_experiments():
     return experiments
 
 
-def load_music():
+def load_music() -> list[dict[str, Any]]:
     """Load all music experiment data."""
-    music_experiments = []
+    music_experiments: list[dict[str, Any]] = []
     if not os.path.exists(MUSIC_DIR):
         return music_experiments
 
@@ -245,12 +316,14 @@ def load_music():
         if not os.path.exists(meta_path) or not os.path.exists(tracks_path):
             continue
         with open(meta_path) as f:
-            meta = json.load(f)
+            meta: dict[str, Any] = json.load(f)
         with open(tracks_path) as f:
-            tracks_data = json.load(f)
+            tracks_data: dict[str, Any] = json.load(f)
+
+        tracks: list[dict[str, Any]] = tracks_data.get("tracks", [])
 
         # Build audio_url for each track
-        for t in tracks_data.get("tracks", []):
+        for t in tracks:
             if t.get("audio_file"):
                 t["audio_url"] = f"music/{entry}/{t['audio_file']}"
             else:
@@ -264,28 +337,29 @@ def load_music():
                 "title": meta.get("title", entry),
                 "prompt": meta.get("prompt", ""),
                 "date": meta.get("date", ""),
-                "tracks": tracks_data.get("tracks", []),
+                "tracks": tracks,
             }
         )
 
     return music_experiments
 
 
-def journal_entry_to_dict(entry):
+def journal_entry_to_dict(entry: dict[str, Any]) -> dict[str, Any]:
     """Normalize a journal entry for the frontend."""
-    # Handle experience being either a string or an object with 'description'
-    exp = entry.get("experience", "")
-    if isinstance(exp, dict):
-        exp = exp.get("description", "")
-    if not isinstance(exp, str):
-        exp = str(exp) if exp else ""
-
-    # Handle intensity/novelty being in experience object or top-level
+    # `experience` is either a plain string or an object carrying description,
+    # intensity, and novelty. Flatten both shapes into the same view model.
+    raw_experience = entry.get("experience", "")
     intensity = entry.get("intensity", "")
     novelty = entry.get("novelty", "")
-    if isinstance(exp_raw := entry.get("experience"), dict):
-        intensity = intensity or exp_raw.get("intensity", "")
-        novelty = novelty or exp_raw.get("novelty", "")
+
+    if isinstance(raw_experience, dict):
+        experience_text = raw_experience.get("description", "")
+        intensity = intensity or raw_experience.get("intensity", "")
+        novelty = novelty or raw_experience.get("novelty", "")
+    elif isinstance(raw_experience, str):
+        experience_text = raw_experience
+    else:
+        experience_text = str(raw_experience) if raw_experience else ""
 
     return {
         "cycle": entry.get("cycle_count", entry.get("cycle", "?")),
@@ -295,13 +369,13 @@ def journal_entry_to_dict(entry):
         "integration": entry.get("integration", ""),
         "intensity": str(intensity) if intensity else "",
         "novelty": str(novelty) if novelty else "",
-        "experience": exp,
+        "experience": experience_text,
         "reflections": entry.get("reflections", []),
         "questions": entry.get("questions", entry.get("open_questions", [])),
     }
 
 
-def sync_music_audio():
+def sync_music_audio() -> None:
     """Copy audio files from experiments/music/ into site/music/."""
     site_music = os.path.join(BASE, "site", "music")
     if not os.path.exists(MUSIC_DIR):
@@ -317,19 +391,16 @@ def sync_music_audio():
             if fname.endswith(".mp3"):
                 src = os.path.join(audio_dir, fname)
                 dst = os.path.join(dest_dir, fname)
-                if not os.path.exists(dst) or os.path.getmtime(src) > os.path.getmtime(
-                    dst
-                ):
+                if not os.path.exists(dst) or os.path.getmtime(src) > os.path.getmtime(dst):
                     shutil.copy2(src, dst)
 
 
-def build():
+def build() -> None:
     print("Loading journals...")
     journals = load_journals()
     # Count unique successful cycles (matches persona cards)
     total_cycles = sum(
-        len({e.get("cycle") for e in v if not e.get("error") and e.get("cycle") is not None})
-        for v in journals.values()
+        len({e.get("cycle") for e in v if not e.get("error") and e.get("cycle") is not None}) for v in journals.values()
     )
     print(f"  {total_cycles} total cycles across {len(journals)} substances")
 
@@ -348,17 +419,15 @@ def build():
     states = get_persona_state(journals)
 
     # Build persona data with states
-    persona_data = []
+    persona_data: list[dict[str, Any]] = []
     for p in PERSONAS:
         s = states.get(p["id"], {"currentState": "dormant", "cycleCount": 0})
         persona_data.append({**p, **s})
 
     # Normalize journal entries
-    journal_data = {}
+    journal_data: dict[str, list[dict[str, Any]]] = {}
     for sid, entries in journals.items():
-        journal_data[sid] = [
-            journal_entry_to_dict(e) for e in entries if not e.get("error")
-        ]
+        journal_data[sid] = [journal_entry_to_dict(e) for e in entries if not e.get("error")]
 
     # Read template
     print("Reading template...")

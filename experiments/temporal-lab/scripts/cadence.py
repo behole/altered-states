@@ -8,36 +8,40 @@ Adjust freely. Cron should run frequently (every 15 min recommended) and
 the dispatcher decides which characters are due.
 """
 
+import json
 from datetime import datetime, timedelta
 from pathlib import Path
-import json
+from typing import Any
 
 # Minutes between cycles per substance.
 # Faster = more frequent voice. Slower = more weight per cycle.
 CYCLE_MINUTES: dict[str, int] = {
-    "5-meo-dmt": 60,    # 2-20 min real arc, but heavy — once an hour
-    "dmt":       60,    # 10-20 min real arc — once an hour
-    "salvia":    60,    # 5-15 min real arc, dysphoric — once an hour
-    "ketamine":  120,   # 30-60 min IV — twice an hour ish, slowed to 2hr
+    "5-meo-dmt": 60,  # 2-20 min real arc, but heavy — once an hour
+    "dmt": 60,  # 10-20 min real arc — once an hour
+    "salvia": 60,  # 5-15 min real arc, dysphoric — once an hour
+    "ketamine": 120,  # 30-60 min IV — twice an hour ish, slowed to 2hr
     "psilocybin": 360,  # 4-6 hr arc — every 6 hr
-    "mdma":      360,   # 3-5 hr arc — every 6 hr
-    "ayahuasca": 720,   # 4-6 hr arc, ceremonial — twice a day
-    "lsd":       720,   # 8-12 hr arc — twice a day
-    "mescaline": 720,   # 10-14 hr arc — twice a day (was: 12hr)
-    "ibogaine":  1440,  # 12-24 hr arc, demanding — once a day
+    "mdma": 360,  # 3-5 hr arc — every 6 hr
+    "ayahuasca": 720,  # 4-6 hr arc, ceremonial — twice a day
+    "lsd": 720,  # 8-12 hr arc — twice a day
+    "mescaline": 720,  # 10-14 hr arc — twice a day (was: 12hr)
+    "ibogaine": 1440,  # 12-24 hr arc, demanding — once a day
 }
 
 # How many recent journal entries to feed back into the next cycle as memory.
 # Larger = more continuity, more tokens. Smaller = cheaper, more drift.
 JOURNAL_HISTORY_DEPTH = 3
 
+# Default cadence for a substance that is not in the table.
+DEFAULT_CYCLE_MINUTES = 360
+
 
 def cycle_minutes(substance: str) -> int:
     """Default: 6 hours if substance not in table."""
-    return CYCLE_MINUTES.get(substance, 360)
+    return CYCLE_MINUTES.get(substance, DEFAULT_CYCLE_MINUTES)
 
 
-def is_due(character: dict, now: datetime | None = None) -> bool:
+def is_due(character: dict[str, Any], now: datetime | None = None) -> bool:
     """Has enough time passed since this character's last cycle?"""
     now = now or datetime.now()
     last = character.get("last_cycle")
@@ -54,12 +58,12 @@ def next_cycle_at(substance: str, from_time: datetime | None = None) -> str:
     return (base + timedelta(minutes=cycle_minutes(substance))).isoformat()
 
 
-def due_characters(characters_dir: Path, now: datetime | None = None) -> list[dict]:
+def due_characters(characters_dir: Path, now: datetime | None = None) -> list[dict[str, Any]]:
     """Return all characters whose next_cycle is due."""
-    out = []
-    for f in sorted(characters_dir.glob("*.json")):
-        with open(f) as fh:
-            char = json.load(fh)
-        if is_due(char, now):
-            out.append(char)
-    return out
+    due: list[dict[str, Any]] = []
+    for path in sorted(characters_dir.glob("*.json")):
+        with open(path) as fh:
+            character: dict[str, Any] = json.load(fh)
+        if is_due(character, now):
+            due.append(character)
+    return due

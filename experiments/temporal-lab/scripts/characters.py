@@ -10,7 +10,7 @@ history before commit 26c6f51.
 
 import os
 from pathlib import Path
-
+from typing import TypedDict
 
 # ---------------------------------------------------------------------------
 # Base path resolution
@@ -31,10 +31,22 @@ def resolve_base_path(explicit: str | None = None) -> Path:
 # ---------------------------------------------------------------------------
 # Character definitions
 # ---------------------------------------------------------------------------
+
+
+class CharacterProfile(TypedDict):
+    """Static character sheet for one substance."""
+
+    name: str
+    core_traits: list[str]
+    emotional_range: list[str]
+    expression_style: str
+    learning_focus: str
+
+
 # Names match the canonical altered-states README. emotional_range is the
 # allowed set the LLM must pick from each cycle.
 
-SUBSTANCES: dict[str, dict] = {
+SUBSTANCES: dict[str, CharacterProfile] = {
     "psilocybin": {
         "name": "The Teacher",
         "core_traits": ["authoritative", "wise", "structured", "patient"],
@@ -112,13 +124,28 @@ SUBSTANCES: dict[str, dict] = {
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def available_substances() -> list[str]:
     """Canonical ordering, matching the project's README tables."""
     return [
-        "psilocybin", "lsd", "mdma", "dmt", "ayahuasca",
-        "5-meo-dmt", "mescaline", "ketamine", "salvia", "ibogaine",
+        "psilocybin",
+        "lsd",
+        "mdma",
+        "dmt",
+        "ayahuasca",
+        "5-meo-dmt",
+        "mescaline",
+        "ketamine",
+        "salvia",
+        "ibogaine",
     ]
 
 
-def substance_characteristics(substance: str) -> dict:
-    return SUBSTANCES.get(substance, {})
+def substance_characteristics(substance: str) -> CharacterProfile:
+    """Return the character sheet for a substance.
+
+    Raises KeyError for an unknown substance. Callers either validate against
+    `available_substances()` first or come from a journal/character file that
+    was written by this module, so an unknown name is a programming error.
+    """
+    return SUBSTANCES[substance]

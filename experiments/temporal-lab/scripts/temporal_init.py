@@ -13,7 +13,7 @@ import os
 import random
 import sys
 from datetime import datetime
-from pathlib import Path
+from typing import Any
 
 from cadence import cycle_minutes, next_cycle_at
 from characters import (
@@ -24,9 +24,40 @@ from characters import (
 from llm_invoke import generate_cycle
 from logger import daily_cost_summary, lifetime_cost_summary
 
+# Unicode section rule used in the plain-text journal mirror.
+SECTION_RULE = "=" * 50
+
+# argv layout: <script> <command> [args...]
+MIN_ARGV_WITH_COMMAND = 2
+
+
+def _experience_lines(entry: dict[str, Any]) -> list[str]:
+    """Render the `experience` block of a journal entry."""
+    if "experience" not in entry:
+        return []
+
+    experience = entry["experience"]
+    lines = [""]
+    if isinstance(experience, dict):
+        intensity = experience.get("intensity", 0)
+        novelty = experience.get("novelty", 0)
+        description = experience.get("description", "")
+        lines.append(f"Experience (intensity: {intensity:.2f}, novelty: {novelty:.2f}):")
+        lines.append(f"  {description}")
+    else:
+        lines.append(f"Experience: {experience}")
+    return lines
+
+
+def _bulleted_section(items: Any, heading: str, bullet: str) -> list[str]:
+    """Render an optional bulleted section of a journal entry."""
+    if not items:
+        return []
+    return ["", f"{heading}:", *(f"  {bullet} {item}" for item in items)]
+
 
 class TemporalLab:
-    def __init__(self, base_path: str | None = None):
+    def __init__(self, base_path: str | None = None) -> None:
         self.base_path = resolve_base_path(base_path)
         self.characters_path = self.base_path / "characters"
         self.journals_path = self.base_path / "journals"
@@ -50,7 +81,7 @@ class TemporalLab:
         if cycle_duration == "auto":
             cycle_duration = f"{cycle_minutes(substance)}m"
 
-        character_state = {
+        character_state: dict[str, Any] = {
             "substance": substance,
             "name": char_info["name"],
             "cycle_duration": cycle_duration,
@@ -81,8 +112,8 @@ class TemporalLab:
         print(f"🗓️  Next cycle: {character_state['next_cycle']}")
         return True
 
-    def _create_initial_journal_entry(self, substance: str, character_state: dict) -> None:
-        entry = {
+    def _create_initial_journal_entry(self, substance: str, character_state: dict[str, Any]) -> None:
+        entry: dict[str, Any] = {
             "timestamp": datetime.now().isoformat(),
             "cycle": character_state["cycle_count"],
             "emotional_state": character_state["current_state"]["emotional"],
@@ -97,9 +128,9 @@ class TemporalLab:
         }
         self._append_journal(substance, entry)
 
-    def _append_journal(self, substance: str, entry: dict) -> None:
+    def _append_journal(self, substance: str, entry: dict[str, Any]) -> None:
         journal_file = self.journals_path / f"{substance}_journal.json"
-        journal = []
+        journal: list[dict[str, Any]] = []
         if journal_file.exists():
             with open(journal_file) as f:
                 journal = json.load(f)
@@ -110,69 +141,43 @@ class TemporalLab:
         # Plain text mirror
         self._write_plain_text_entry(substance, entry)
 
-    def _write_plain_text_entry(self, substance: str, entry: dict) -> None:
+    def _write_plain_text_entry(self, substance: str, entry: dict[str, Any]) -> None:
         """Append a human-readable entry to <substance>_journal.txt."""
         txt_file = self.journals_path / f"{substance}_journal.txt"
 
-        ts = entry.get("timestamp", "?")
+        timestamp = entry.get("timestamp", "?")
         cycle = entry.get("cycle", 0)
-        emotional = entry.get("emotional_state", "unknown")
-        clarity = entry.get("clarity", "")
-        integration = entry.get("integration", "")
+        lines = [
+            SECTION_RULE,
+            f"{substance.upper()} — Cycle {cycle}",
+            f"Timestamp: {timestamp}",
+            SECTION_RULE,
+            f"Emotional State: {entry.get('emotional_state', 'unknown')}",
+        ]
 
-        lines = []
-        lines.append("=" * 50)
-        lines.append(f"{substance.upper()} — Cycle {cycle}")
-        lines.append(f"Timestamp: {ts}")
-        lines.append("=" * 50)
-        lines.append(f"Emotional State: {emotional}")
+        clarity = entry.get("clarity", "")
         if clarity:
             lines.append(f"Clarity: {clarity}")
+        integration = entry.get("integration", "")
         if integration:
             lines.append(f"Integration: {integration}")
 
-        if "experience" in entry:
-            exp = entry["experience"]
-            lines.append("")
-            if isinstance(exp, dict):
-                intensity = exp.get("intensity", 0)
-                novelty = exp.get("novelty", 0)
-                desc = exp.get("description", "")
-                lines.append(f"Experience (intensity: {intensity:.2f}, novelty: {novelty:.2f}):")
-                lines.append(f"  {desc}")
-            else:
-                lines.append(f"Experience: {exp}")
-
-        if entry.get("reflections"):
-            lines.append("")
-            lines.append("Reflections:")
-            for r in entry["reflections"]:
-                lines.append(f"  — {r}")
-
-        if entry.get("evolution_notes"):
-            lines.append("")
-            lines.append("Evolution Notes:")
-            for n in entry["evolution_notes"]:
-                lines.append(f"  * {n}")
-
-        if entry.get("questions"):
-            lines.append("")
-            lines.append("Open Questions:")
-            for q in entry["questions"]:
-                lines.append(f"  ? {q}")
-
-        lines.append("")
-        lines.append("")
+        lines.extend(_experience_lines(entry))
+        lines.extend(_bulleted_section(entry.get("reflections"), "Reflections", "—"))
+        lines.extend(_bulleted_section(entry.get("evolution_notes"), "Evolution Notes", "*"))
+        lines.extend(_bulleted_section(entry.get("questions"), "Open Questions", "?"))
+        lines.extend(["", ""])
 
         with open(txt_file, "a") as f:
             f.write("\n".join(lines))
 
-    def _load_journal(self, substance: str) -> list[dict]:
+    def _load_journal(self, substance: str) -> list[dict[str, Any]]:
         journal_file = self.journals_path / f"{substance}_journal.json"
         if not journal_file.exists():
             return []
         with open(journal_file) as f:
-            return json.load(f)
+            journal: list[dict[str, Any]] = json.load(f)
+        return journal
 
     def run_cycle(self, substance: str, model: str | None = None) -> bool:
         char_file = self.characters_path / f"{substance}.json"
@@ -181,7 +186,7 @@ class TemporalLab:
             return False
 
         with open(char_file) as f:
-            character = json.load(f)
+            character: dict[str, Any] = json.load(f)
 
         char_info = substance_characteristics(substance)
         journal = self._load_journal(substance)
@@ -192,21 +197,24 @@ class TemporalLab:
         except Exception as e:
             print(f"❌ Cycle failed for {substance}: {e}")
             # Record the silence in the journal so the character "remembers" it went dark
-            self._append_journal(substance, {
-                "timestamp": datetime.now().isoformat(),
-                "cycle": character["cycle_count"] + 1,
-                "emotional_state": character["current_state"]["emotional"],
-                "clarity": character["current_state"]["clarity"],
-                "integration": character["current_state"]["integration"],
-                "experience": {
-                    "description": f"[silence — model invocation failed: {type(e).__name__}]",
-                    "intensity": 0.0,
-                    "novelty": 0.0,
+            self._append_journal(
+                substance,
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "cycle": character["cycle_count"] + 1,
+                    "emotional_state": character["current_state"]["emotional"],
+                    "clarity": character["current_state"]["clarity"],
+                    "integration": character["current_state"]["integration"],
+                    "experience": {
+                        "description": f"[silence — model invocation failed: {type(e).__name__}]",
+                        "intensity": 0.0,
+                        "novelty": 0.0,
+                    },
+                    "reflections": ["I went somewhere and did not come back with words."],
+                    "questions": ["What did I miss?"],
+                    "error": str(e),
                 },
-                "reflections": ["I went somewhere and did not come back with words."],
-                "questions": ["What did I miss?"],
-                "error": str(e),
-            })
+            )
             return False
 
         # Update character state from the LLM response
@@ -221,23 +229,26 @@ class TemporalLab:
             json.dump(character, f, indent=2)
 
         # Persist the cycle entry
-        self._append_journal(substance, {
-            "timestamp": datetime.now().isoformat(),
-            "cycle": character["cycle_count"],
-            "emotional_state": cycle["emotional_state"],
-            "clarity": cycle["clarity"],
-            "integration": cycle["integration"],
-            "experience": cycle["experience"],
-            "reflections": cycle["reflections"],
-            "questions": cycle["questions"],
-        })
+        self._append_journal(
+            substance,
+            {
+                "timestamp": datetime.now().isoformat(),
+                "cycle": character["cycle_count"],
+                "emotional_state": cycle["emotional_state"],
+                "clarity": cycle["clarity"],
+                "integration": cycle["integration"],
+                "experience": cycle["experience"],
+                "reflections": cycle["reflections"],
+                "questions": cycle["questions"],
+            },
+        )
 
         print(f"✅ Cycle {character['cycle_count']} complete — felt: {cycle['emotional_state']}")
         print(f"   💭 {cycle['experience']['description']}")
         return True
 
-    def list_characters(self) -> list[dict]:
-        characters = []
+    def list_characters(self) -> list[dict[str, Any]]:
+        characters: list[dict[str, Any]] = []
         for file in sorted(self.characters_path.glob("*.json")):
             with open(file) as f:
                 characters.append(json.load(f))
@@ -246,7 +257,10 @@ class TemporalLab:
             return characters
         print("🎭 Active Temporal Characters:")
         for char in characters:
-            print(f"  • {char['name']:20s} ({char['substance']:12s}) cycle {char['cycle_count']:3d}  next: {char.get('next_cycle','?')}")
+            print(
+                f"  • {char['name']:20s} ({char['substance']:12s}) "
+                f"cycle {char['cycle_count']:3d}  next: {char.get('next_cycle', '?')}"
+            )
         return characters
 
 
@@ -259,61 +273,72 @@ def _print_usage() -> None:
     print("\nSubstances: " + ", ".join(available_substances()))
     print("\nStorage path (override with ALTERED_STATES_TEMPORAL_PATH):")
     print(f"  {resolve_base_path()}")
-    model = (
-        os.environ.get("LLM_MODEL")
-        or os.environ.get("TEMPORAL_LAB_MODEL", "deepseek-v4-pro (default)")
-    )
+    model = os.environ.get("LLM_MODEL") or os.environ.get("TEMPORAL_LAB_MODEL", "deepseek-v4-pro (default)")
     print(f"\nModel: {model}")
     if os.environ.get("TEMPORAL_LAB_DRY_RUN"):
         print("⚠️  TEMPORAL_LAB_DRY_RUN is set — calls will return stubs.")
 
 
+def _cmd_init(lab: TemporalLab, args: list[str]) -> int:
+    if not args:
+        print("❌ Specify a substance")
+        return 1
+    duration = args[1] if len(args) > 1 else "auto"
+    return 0 if lab.initialize_character(args[0], duration) else 1
+
+
+def _cmd_list(lab: TemporalLab, _args: list[str]) -> int:
+    lab.list_characters()
+    return 0
+
+
+def _cmd_run(lab: TemporalLab, args: list[str]) -> int:
+    if not args:
+        print("❌ Specify a substance")
+        return 1
+    model = None
+    if "--model" in args:
+        model_index = args.index("--model")
+        if model_index + 1 < len(args):
+            model = args[model_index + 1]
+    return 0 if lab.run_cycle(args[0], model=model) else 1
+
+
+def _cmd_costs(_lab: TemporalLab, _args: list[str]) -> int:
+    today = daily_cost_summary()
+    lifetime = lifetime_cost_summary()
+    print(
+        f"📊 Today ({today['date']}): {today['calls']} calls, "
+        f"{today['tokens_in']:,}→{today['tokens_out']:,} tokens, "
+        f"${today['cost_usd']:.4f}"
+    )
+    print(f"📊 Lifetime: {lifetime['calls']} calls, ${lifetime['cost_usd']:.4f}")
+    if lifetime["by_model"]:
+        print("   By model:")
+        for model, stats in sorted(lifetime["by_model"].items()):
+            print(f"     {model:40s} {stats['calls']:5d} calls  ${stats['cost_usd']:.4f}")
+    return 0
+
+
 def main() -> int:
-    if len(sys.argv) < 2:
+    if len(sys.argv) < MIN_ARGV_WITH_COMMAND:
         _print_usage()
         return 1
 
     lab = TemporalLab()
     command = sys.argv[1]
-
-    if command == "init":
-        if len(sys.argv) < 3:
-            print("❌ Specify a substance")
-            return 1
-        substance = sys.argv[2]
-        duration = sys.argv[3] if len(sys.argv) > 3 else "auto"
-        return 0 if lab.initialize_character(substance, duration) else 1
-
-    if command == "list":
-        lab.list_characters()
-        return 0
-
-    if command == "run":
-        if len(sys.argv) < 3:
-            print("❌ Specify a substance")
-            return 1
-        substance = sys.argv[2]
-        model = None
-        if "--model" in sys.argv:
-            model = sys.argv[sys.argv.index("--model") + 1]
-        return 0 if lab.run_cycle(substance, model=model) else 1
-
-    if command == "costs":
-        today = daily_cost_summary()
-        lifetime = lifetime_cost_summary()
-        print(f"📊 Today ({today['date']}): {today['calls']} calls, "
-              f"{today['tokens_in']:,}→{today['tokens_out']:,} tokens, "
-              f"${today['cost_usd']:.4f}")
-        print(f"📊 Lifetime: {lifetime['calls']} calls, ${lifetime['cost_usd']:.4f}")
-        if lifetime["by_model"]:
-            print("   By model:")
-            for m, stats in sorted(lifetime["by_model"].items()):
-                print(f"     {m:40s} {stats['calls']:5d} calls  ${stats['cost_usd']:.4f}")
-        return 0
-
-    print(f"❌ Unknown command: {command}")
-    _print_usage()
-    return 1
+    handlers = {
+        "init": _cmd_init,
+        "list": _cmd_list,
+        "run": _cmd_run,
+        "costs": _cmd_costs,
+    }
+    handler = handlers.get(command)
+    if handler is None:
+        print(f"❌ Unknown command: {command}")
+        _print_usage()
+        return 1
+    return handler(lab, sys.argv[2:])
 
 
 if __name__ == "__main__":

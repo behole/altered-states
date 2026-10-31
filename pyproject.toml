@@ -1,0 +1,133 @@
+# Tooling config for the whole repository.
+#
+# The repo has two Python surfaces:
+#   * the root app      — build.py, watch.py, bin/*.py, experiments/*.py
+#   * experiments/temporal-lab — a standalone lab under scripts/
+# One config at the root drives both, so `ruff check .`, `mypy`, `vulture`,
+# and `pylint --enable=duplicate-code` each check the whole repository.
+#
+# Run everything at once with `make check` (or `pre-commit run --all-files`).
+
+# ---------------------------------------------------------------------------
+# Ruff — lint + format
+# ---------------------------------------------------------------------------
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+# Generated output, binary assets, and captured model output are not lint
+# targets. `experiments/same-prompt/output` holds generated markdown.
+extend-exclude = [
+    "site",
+    "experiments/music/*/audio",
+    "experiments/same-prompt/output",
+    "tests/responses",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes (unused imports/variables, undefined names)
+    "I",   # import sorting
+    "B",   # bugbear (likely bugs: mutable defaults, bare except patterns, etc.)
+    "UP",  # pyupgrade
+    "SIM", # simplify
+    "C4",  # comprehensions
+    "PIE", # misc lints
+    "RUF", # ruff-specific
+    "N",   # pep8-naming: enforces snake_case functions, PascalCase classes
+    "C90", # mccabe cyclomatic complexity
+    "PL",  # pylint rules: statement counts, argument counts, magic values
+]
+
+# Typographic characters are intentional in the prose this project emits
+# (grid sizes, em dashes, arrows). They are not confusable identifiers.
+allowed-confusables = ["×", "—", "→", "…"]
+
+[tool.ruff.lint.mccabe]
+# Keeps individual functions reviewable and testable by an agent.
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 6
+max-statements = 50
+max-returns = 6
+max-branches = 12
+
+[tool.ruff.lint.per-file-ignores]
+# These modules embed long-form prompt templates as triple-quoted strings.
+# Reflowing those paragraphs would change the exact text sent to the model,
+# which is behavioural, not cosmetic — so line length is not enforced inside
+# them. Every other rule still applies to these files.
+"bin/run_eval.py" = ["E501"]
+"experiments/same-prompt/run-ten-ways.py" = ["E501"]
+"experiments/temporal-lab/scripts/llm_invoke.py" = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# ---------------------------------------------------------------------------
+# mypy — static types, strict mode
+# ---------------------------------------------------------------------------
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unreachable = true
+warn_unused_configs = true
+ignore_missing_imports = true
+files = [
+    "build.py",
+    "watch.py",
+    "bin",
+    "experiments/music/generate.py",
+    "experiments/same-prompt/run-ten-ways.py",
+    "experiments/temporal-lab/scripts",
+]
+exclude = ["^site/", "^tests/responses/"]
+
+# Third-party SDKs ship without usable annotations here; the calls into them
+# are thin adapters (one request per function), so we don't model their
+# surface. Everything we own is still checked under strict mode.
+[[tool.mypy.overrides]]
+module = ["anthropic.*", "openai.*", "dotenv.*", "requests.*"]
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------------------
+# Vulture — dead code detection
+# ---------------------------------------------------------------------------
+
+[tool.vulture]
+min_confidence = 80
+paths = [
+    "build.py",
+    "watch.py",
+    "bin",
+    "experiments/music",
+    "experiments/same-prompt",
+    "experiments/temporal-lab/scripts",
+]
+exclude = ["site", "tests/responses", "__pycache__"]
+# Web-framework and dataclass-style hooks that legitimately look unused.
+ignore_names = ["visit_*", "do_*", "setup", "teardown"]
+
+# ---------------------------------------------------------------------------
+# Pylint — duplicate code (CPD-style) detection only
+# ---------------------------------------------------------------------------
+# Run it as: pylint --disable=all --enable=duplicate-code <paths>
+# Similarity is measured on logic, ignoring imports, docstrings, and comments.
+
+[tool.pylint.main]
+py-version = "3.10"
+jobs = 0
+ignore-paths = ["^site/", "^tests/responses/", "__pycache__"]
+
+[tool.pylint.similarities]
+min-similarity-lines = 12
+ignore-comments = "yes"
+ignore-docstrings = "yes"
+ignore-imports = "yes"
+ignore-signatures = "yes"

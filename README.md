@@ -235,6 +235,54 @@ altered-states/
   output/                            Evaluation outputs
 ```
 
+### Code Quality
+
+One config in `pyproject.toml` drives the whole Python toolchain, covering both
+the root scripts (`build.py`, `watch.py`, `bin/`, `experiments/*.py`) and
+`experiments/temporal-lab/scripts/`.
+
+| Check | Tool | Config | Command |
+|---|---|---|---|
+| Lint (style, bugs, naming, complexity) | ruff | `[tool.ruff]` | `uvx ruff@0.14.4 check .` |
+| Format | ruff-format | `[tool.ruff.format]` | `uvx ruff@0.14.4 format --check .` |
+| Types (strict) | mypy | `[tool.mypy]` | `uvx --with types-requests --from mypy@1.18.2 mypy` |
+| Dead code | vulture | `[tool.vulture]` | `uvx vulture@2.16` |
+| Duplicate code | pylint | `[tool.pylint.similarities]` | `uvx pylint@4.1.3 --disable=all --enable=duplicate-code build.py watch.py bin experiments` |
+| Large-file guard + file hygiene | pre-commit | `.pre-commit-config.yaml` | `pre-commit run --all-files` |
+
+Install the dev toolchain once with `python3 -m pip install -r requirements-dev.txt`.
+Run every check at once with:
+
+```bash
+make check          # lint, format check, strict types, dead code, duplication
+make install-hooks  # run the same checks automatically on each commit
+make build          # regenerate site/index.html
+```
+
+Static-analysis settings that are deliberate, not defaults:
+
+- **mypy runs in `strict` mode.** Every function in the checked paths is fully
+  annotated, so a new annotation gap fails the build instead of drifting.
+- **ruff enforces naming and complexity**, not just style: `N` (pep8-naming),
+  `C90` (mccabe, `max-complexity = 10`), and `PL` (pylint) with
+  `max-statements = 50`, `max-args = 6`, and `max-returns = 6`. Functions that
+  outgrow those limits are split, and numeric thresholds live in named module
+  constants rather than inline magic numbers.
+- **vulture runs at 80% confidence.** A finding means unreachable code — delete
+  it or wire it up.
+- **pylint duplicate-code** uses a 12-line similarity floor, ignoring imports,
+  docstrings, and comments.
+
+Naming conventions (enforced by ruff `N` rules): `snake_case` for functions,
+modules, and variables; `PascalCase` for classes and `TypedDict`s;
+`UPPER_SNAKE_CASE` for module constants; a leading underscore for
+module-private helpers. The one exception is `build.py`'s persona payloads,
+whose keys are the camelCase contract read directly by
+`site/index.template.html`.
+
+Git hooks cover two large-file classes: everything outside the music experiment
+media is capped at 1 MB, and committed audio is capped at 12 MB.
+
 ---
 
 ## By The Numbers
