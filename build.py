@@ -1066,6 +1066,292 @@ def render_arc_view(arc_payload: list[dict[str, Any]], enabled: bool) -> str:
     return view
 
 
+# ── Substance diff view (site.diff_view) ────────────────────────────────────
+#
+# The diff view lets a visitor pick any two substances and compare them across
+# the seven phenomenological dimensions (the deprivation-matrix names the
+# skills use: Perceptual, Temporal, Cognitive, Emotional, Self/Ego, Mystical,
+# Somatic) plus duration, language pattern, and ego behavior. Every value is
+# DERIVED from skills/<sub>/SKILL.md — either lifted verbatim from a skill's
+# own 7-dimension table where one exists (psilocybin, ayahuasca, mescaline) or
+# taken as the first skill line describing a dimension. Nothing hand-typed:
+# the payload's substance set is exactly skills/* minus router.
+
+DIFF_FLAG = "site.diff_view"
+DIFF_TEMPLATE = os.path.join(BASE, "site", "diff.template.html")
+
+# Canonical dimension key order for the diff table; the display names are the
+# deprivation-matrix row names the skills use.
+DIFF_DIMENSIONS: tuple[str, ...] = (
+    "perceptual",
+    "temporal",
+    "cognitive",
+    "emotional",
+    "ego",
+    "mystical",
+    "somatic",
+)
+DIFF_DIMENSION_LABELS: dict[str, str] = {
+    "perceptual": "Perceptual",
+    "temporal": "Temporal",
+    "cognitive": "Cognitive",
+    "emotional": "Emotional",
+    "ego": "Self / Ego",
+    "mystical": "Mystical",
+    "somatic": "Somatic",
+}
+DIFF_EXTRA_ROWS: tuple[tuple[str, str], ...] = (
+    ("language", "Language pattern"),
+    ("duration_label", "Duration"),
+    ("ego_behavior", "Ego behavior"),
+)
+# Titles whose body carries the Linguistic Fingerprint on the three skills
+# that state one explicitly.
+_DIFF_LANGUAGE_HEADING = re.compile(r"linguistic\s+fingerprint", re.IGNORECASE)
+
+# Keyword stems used to lift a dimension line from skills that carry no
+# dimension table. First skill body line matching any stem wins; the limits
+# keep long intensity-profile paragraphs readable while remaining a verbatim
+# skill-text substring after whitespace collapse.
+_DIMENSION_KEYWORDS: dict[str, tuple[str, ...]] = {
+    "perceptual": ("percept", "visual", "geometr", "synesthe", "color", "reality"),
+    "temporal": ("temporal", "time dilation", "timeless", "duration", "onset", "arc", "hours"),
+    "cognitive": ("cognit", "thought", "thinking", "analysis", "cascad", "idea"),
+    "emotional": ("emotional", "emotion", "feel", "love", "grief", "awe"),
+    "ego": ("ego", "self"),
+    "mystical": ("mystic", "sacred", "spiritual", "unity", "entity", "ancestor", "cosmic", "archetypal"),
+    "somatic": ("somatic", "body", "nausea", "physical"),
+}
+# Dimension-table row names that map onto the canonical keys ("Relational" on
+# ayahuasca/mescaline is the Mystical dimension under another name).
+_DIMENSION_ROW_ALIASES: dict[str, str] = {
+    "perceptual": "perceptual",
+    "perception": "perceptual",
+    "temporal": "temporal",
+    "cognitive": "cognitive",
+    "cognition": "cognitive",
+    "emotional": "emotional",
+    "self/ego": "ego",
+    "self / ego": "ego",
+    "ego": "ego",
+    "mystical": "mystical",
+    "relational": "mystical",
+    "somatic": "somatic",
+}
+# Values longer than this get a deterministic tail cut for readability; the
+# kept text stays a substring of the skill's own line.
+_DIFF_VALUE_LIMIT = 240
+
+
+def _diff_body(text: str) -> str:
+    """The skill text after the Safety Override block, where the substance's
+    own phenomenology lives. Front matter and the safety copy are shared
+    boilerplate and never describe a substance's dimensions."""
+    lines = text.splitlines()
+    started = False
+    start = 0
+    for i, line in enumerate(lines):
+        if line.startswith("## "):
+            if line.startswith("## Safety Override"):
+                started = True
+            elif started:
+                start = i
+                break
+    return "\n".join(lines[start:])
+
+
+def _clean_skill_line(line: str) -> str:
+    """Strip markdown emphasis/list prefixes and table pipes from a skill
+    line, keeping the literal words so the value stays a plaintext substring
+    of the skill. Table rows keep their most informative cell (the longest)."""
+    cleaned = line.strip()
+    cleaned = re.sub(r"^(?:[-*+]\s+|\d+\.\s+|>\s*)+", "", cleaned)
+    cleaned = cleaned.replace("**", "").replace("`", "").replace("*", "")
+    if "|" in cleaned:
+        # e.g. "| 5 | Self/Ego | Gradual softening... |": quote the longest
+        # cell so prose beats the tiny row label.
+        parts = [p.strip() for p in cleaned.split("|") if p.strip()]
+        cleaned = max(parts, key=len) if parts else cleaned.replace("|", " ")
+    return " ".join(cleaned.split())
+
+
+def _keyword_line(body: str, keywords: tuple[str, ...], excluded: set[str] | None = None) -> str:
+    """First clean skill line whose lowercase text contains any keyword stem
+    and is not already quoted by another row. Returns "" (never invents text)
+    when no line matches."""
+    forbidden = excluded or set()
+    for stem in keywords:
+        search_from = 0
+        while True:
+            found = body.lower().find(stem, search_from)
+            if found < 0:
+                break
+            line_start = body.rfind("\n", 0, found) + 1
+            line_end = body.find("\n", found)
+            if line_end < 0:
+                line_end = len(body)
+            raw_line = body[line_start:line_end]
+            if raw_line.lstrip().startswith("#"):
+                search_from = found + len(stem)
+                continue  # a markdown heading is not a dimension description
+            cleaned = _clean_skill_line(raw_line)
+            if cleaned and cleaned.lower() not in forbidden:
+                if len(cleaned) > _DIFF_VALUE_LIMIT:
+                    cleaned = cleaned[: _DIFF_VALUE_LIMIT - 1].rstrip() + "…"
+                return cleaned
+            search_from = found + len(stem)
+    return ""
+
+
+def _dimension_table(body: str) -> dict[str, str]:
+    """Parse a skill's own 7-dimension table (``| # | Dimension | Character |``
+    or ``| # | Dimension | Low | Medium | High |``) into canonical key →
+    text. The Medium column is chosen when intensities are present since the
+    diff view compares at standard intensity. Returns {} when the skill has
+    no such table."""
+    cells_by_row = [
+        [c.strip().replace("**", "").strip() for c in line.strip().strip("|").split("|")]
+        for line in body.splitlines()
+        if line.strip().startswith("|")
+    ]
+    header = next((r for r in cells_by_row if r and "dimension" in r[1].lower()), None)
+    if header is None:
+        return {}
+    # 5-column header = an intensity table (Low/Medium/High): the diff compares
+    # at Medium. 3-column header = a single Character cell per dimension.
+    intensity_table_columns = 5
+    value_index = 3 if len(header) == intensity_table_columns else 2
+    result: dict[str, str] = {}
+    for row in cells_by_row:
+        if len(row) < value_index + 1 or not row[0].strip().isdigit():
+            continue
+        name = _DIMENSION_ROW_ALIASES.get(row[1].lower())
+        value = " ".join(row[value_index].split())
+        if name and value:
+            result.setdefault(name, value[:_DIFF_VALUE_LIMIT])
+    return result
+
+
+def extract_diff_dimensions(skill_text: str) -> dict[str, str]:
+    """Seven canonical dimension values derived from one SKILL.md.
+
+    Dimension-table skills contribute verbatim table cells; everything else
+    lifts the first skill line describing each dimension. Each value is a
+    plaintext substring of the skill (after whitespace/bold collapse), so the
+    payload can be audited straight back to the skill file.
+    """
+    body = _diff_body(skill_text)
+    table = _dimension_table(body)
+    dims: dict[str, str] = {}
+    quoted: set[str] = set()  # lines other dimension rows already quote
+    for key in DIFF_DIMENSIONS:
+        value = table.get(key, "")
+        if not value:
+            value = _keyword_line(body, _DIMENSION_KEYWORDS[key], excluded=quoted)
+        dims[key] = value
+        if value:
+            quoted.add(value.lower())
+    return dims
+
+
+def _language_pattern(skill_text: str) -> str:
+    """Language pattern: the skill's own Linguistic Fingerprint section when
+    it states one, else the first skill line about language."""
+    body = _diff_body(skill_text)
+    lines = body.splitlines()
+    for i, line in enumerate(lines):
+        if _DIFF_LANGUAGE_HEADING.search(line):
+            chunk: list[str] = []
+            for following in lines[i + 1 : i + 6]:
+                stripped = following.strip()
+                if stripped.startswith("#") or stripped == "---":
+                    break
+                if stripped:
+                    chunk.append(_clean_skill_line(stripped))
+            text = " ".join(chunk)
+            if text:
+                if len(text) > _DIFF_VALUE_LIMIT:
+                    text = text[: _DIFF_VALUE_LIMIT - 1].rstrip() + "…"
+                return text
+    fallback = _keyword_line(body, ("language", "linguistic", "speech", "speak"))
+    return fallback or _keyword_line(body, ("voice",))
+
+
+def extract_diff_ego_behavior(skill_text: str, dimension_ego: str) -> str:
+    """Ego behavior on its own row: derived from the skill's own narrative
+    about the self (ego/identity lines), preferring a line the Self/Ego
+    dimension row does not already quote. Falls back to the dimension value
+    when the skill keeps a single statement."""
+    body = _diff_body(skill_text)
+    candidates = _keyword_line(body, ("ego",), excluded={dimension_ego.lower()})
+    if not candidates and len(dimension_ego) > _DIFF_VALUE_LIMIT:
+        return dimension_ego
+    return candidates or dimension_ego
+
+
+def build_diff_payload(substances: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Diff payload for every substance, keyed off the same substance list the
+    arc payload and substance pages use, so all three surfaces agree on the
+    set. Duration comes from the same arc extraction the timeline shows."""
+    payload: list[dict[str, Any]] = []
+    for substance in substances:
+        slug = str(substance["id"])
+        skill_path = os.path.join(SKILLS_DIR, slug, "SKILL.md")
+        with open(skill_path) as f:
+            text = f.read()
+        arc = extract_substance_arc(text, slug)
+        dimensions = extract_diff_dimensions(text)
+        ego_behavior = extract_diff_ego_behavior(text, dimensions["ego"])
+        payload.append(
+            {
+                "id": slug,
+                "name": substance["name"],
+                "emoji": substance["emoji"],
+                "href": substance["href"],
+                "dimensions": dimensions,
+                "language": _language_pattern(text),
+                "duration_label": arc["duration_label"],
+                "ego_behavior": ego_behavior,
+            }
+        )
+    log_event("build.diff_payload", substances=len(payload))
+    return payload
+
+
+DIFF_SECTION_LABEL = "Compare"
+DIFF_SECTION_TITLE = "Substance Diff"
+DIFF_SECTION_DESC = (
+    "Pick any two and compare across the seven phenomenological dimensions, duration, "
+    "language, and ego behavior — every value lifted from that substance's skill."
+)
+
+
+def render_diff_nav(enabled: bool) -> str:
+    """The nav link for the diff view; compiled out when the flag is off."""
+    if not enabled:
+        return ""
+    return '<a href="#" data-view="diff" onclick="showView(\'diff\'); closeMobileNav(); return false;">Compare</a>'
+
+
+def render_diff_view(diff_payload: list[dict[str, Any]], enabled: bool) -> str:
+    """The full diff view markup plus its embedded payload; empty string when
+    ``site.diff_view`` is off, so nothing (not even the JSON) reaches the
+    built page."""
+    if not enabled:
+        return ""
+    with open(DIFF_TEMPLATE) as f:
+        template_html = f.read()
+    json_payload = json.dumps({"substances": diff_payload}, ensure_ascii=False, sort_keys=True)
+    json_payload = json_payload.replace("<", "\\u003c").replace(">", "\\u003e")
+    return template_html.replace("__DIFF_DATA__", json_payload)
+
+
+def _diff_row_keys() -> tuple[str, ...]:
+    """The ten comparison rows the view renders: seven dimensions plus
+    language, duration, ego behavior."""
+    return DIFF_DIMENSIONS + tuple(extra[0] for extra in DIFF_EXTRA_ROWS)
+
+
 def count_cycles(journals: dict[str, list[dict[str, Any]]]) -> int:
     """Count unique successful cycles across all personas."""
     return sum(
@@ -1187,13 +1473,26 @@ def build() -> None:
             arc_nav = render_arc_nav(arc_enabled)
             arc_view = render_arc_view(arc_payload, arc_enabled)
 
+            log_event("build.stage", stage="diff_payload")
+            diff_payload = build_diff_payload(substances)
+            diff_enabled = section_flags.get(DIFF_FLAG, False)
+            log_event("build.stage", stage="diff_render", enabled=diff_enabled)
+            diff_nav = render_diff_nav(diff_enabled)
+            diff_view = render_diff_view(diff_payload, diff_enabled)
+
             html = render_page(
                 persona_data,
                 journal_data,
                 experiments,
                 music,
                 total_cycles,
-                sections={"substance_links": substance_links, "arc_nav": arc_nav, "arc_view": arc_view},
+                sections={
+                    "substance_links": substance_links,
+                    "arc_nav": arc_nav,
+                    "arc_view": arc_view,
+                    "diff_nav": diff_nav,
+                    "diff_view": diff_view,
+                },
             )
 
             with open(OUTPUT, "w") as f:
