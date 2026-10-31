@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import ast
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -146,3 +149,49 @@ class TestSnapshotAndFlush:
     def test_default_textfile_path_is_relative(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv("METRICS_TEXTFILE_PATH", raising=False)
         assert not metrics.textfile_path().is_absolute()
+
+
+class TestLayering:
+    """`registry` is the bottom of the package; nothing below it may look up.
+
+    A cycle between `log_utils` and `metrics` was once possible here — logging
+    needed a counter and metrics needed the logger. These tests pin the
+    one-way layering so it cannot come back unnoticed.
+    """
+
+    def test_metrics_reexports_the_one_registry(self) -> None:
+        from altered_states import registry
+
+        assert metrics.REGISTRY is registry.REGISTRY
+        assert metrics.Registry is registry.Registry
+
+    @staticmethod
+    def _intra_package_imports(module_name: str) -> set[str]:
+        source = (Path(__file__).parents[2] / "altered_states" / f"{module_name}.py").read_text()
+        imported: set[str] = set()
+        for node in ast.walk(ast.parse(source)):
+            if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("altered_states"):
+                imported.add(node.module.split(".")[1])
+            elif isinstance(node, ast.Import):
+                imported.update(
+                    alias.name.split(".")[1] for alias in node.names if alias.name.startswith("altered_states")
+                )
+        return imported
+
+    def test_registry_imports_nothing_from_this_package(self) -> None:
+        assert self._intra_package_imports("registry") == set()
+
+    def test_log_utils_depends_only_on_the_registry(self) -> None:
+        assert self._intra_package_imports("log_utils") == {"registry"}
+
+    def test_importing_either_module_first_works(self) -> None:
+        """A cycle shows up in practice as failure that depends on import order."""
+        for first in ("altered_states.log_utils", "altered_states.metrics"):
+            result = subprocess.run(
+                [sys.executable, "-c", f"import {first}; import altered_states.metrics"],
+                capture_output=True,
+                text=True,
+                check=False,
+                cwd=Path(__file__).parents[2],
+            )
+            assert result.returncode == 0, result.stderr

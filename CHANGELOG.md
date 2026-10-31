@@ -23,6 +23,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`requirements-test.txt` / `requirements-test.lock`** — the test-only toolchain, locked separately from `requirements-dev` because `pre-commit` and current `coverage` need 3.11+, so the 3.10 job in the test matrix has a resolvable set
 
 ### Changed
+- **`altered_states/registry.py`** — the counter/gauge/histogram registry moved out of `metrics.py` so logging can increment a counter without importing the module that writes textfiles and emits log lines. The dependency now runs one way only (`registry` ← `log_utils` ← `metrics`); CodeQL flagged the mutual import as a cycle. `metrics` re-exports `Registry` and `REGISTRY`, so existing imports are unchanged
 - **`build.py`** — split into `count_cycles`, `enabled_section_flags`, `render_page`, `collect_site_data`, and `record_content_metrics`; emits structured logs, build metrics, and content gauges the alert policy reads
 - **`watch.py`** — subprocess use centralised in one helper that resolves executables, reports a missing `wrangler` clearly, and handles timeouts without swallowing them
 - **`bin/run_eval.py`** — retry with exponential backoff on provider errors, per-call metrics, and error events instead of a bare traceback

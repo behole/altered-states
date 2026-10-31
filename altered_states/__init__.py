@@ -3,6 +3,7 @@
 Both applications import from here:
 
 * ``log_utils``        — structured JSON logging, secret redaction, trace ids
+* ``registry``         — the dependency-free counters every other module uses
 * ``metrics``          — in-process metrics registry + Prometheus textfile
 * ``error_tracking``   — optional Sentry integration (off without SENTRY_DSN)
 * ``feature_flags``    — file-backed flags with percentage rollout + staleness

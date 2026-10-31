@@ -150,7 +150,7 @@ class TestExecuteRuns:
         return code, out, rows
 
     def test_all_runs_are_written_as_jsonl(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr("run_eval.anthropic.AsyncAnthropic", lambda: FakeClient())
+        monkeypatch.setattr("run_eval.anthropic.AsyncAnthropic", FakeClient)
         code, out_path, rows = self._run(tmp_path)
         assert code == 0
         assert out_path.exists()
@@ -166,7 +166,7 @@ class TestExecuteRuns:
     def test_completion_is_logged_with_totals(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        monkeypatch.setattr("run_eval.anthropic.AsyncAnthropic", lambda: FakeClient())
+        monkeypatch.setattr("run_eval.anthropic.AsyncAnthropic", FakeClient)
         self._run(tmp_path)
         events = [json.loads(line) for line in capsys.readouterr().err.splitlines() if line.startswith("{")]
         complete = next(event for event in events if event["event"] == "eval.complete")

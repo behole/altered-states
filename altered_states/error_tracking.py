@@ -41,17 +41,27 @@ MAX_BREADCRUMB_VALUE_LENGTH = 300
 
 
 class SentrySdk(Protocol):
-    """The slice of the Sentry SDK surface this module uses."""
+    """The slice of the Sentry SDK surface this module uses.
 
-    def init(self, **kwargs: Any) -> None: ...
+    Bodies raise rather than elide with ``...``: the methods are never called
+    on this type, and an explicit raise keeps static analysis from reading the
+    stub as a statement with no effect.
+    """
 
-    def add_breadcrumb(self, **kwargs: Any) -> None: ...
+    def init(self, **kwargs: Any) -> None:
+        raise NotImplementedError
 
-    def set_tag(self, key: str, value: str) -> None: ...
+    def add_breadcrumb(self, **kwargs: Any) -> None:
+        raise NotImplementedError
 
-    def set_user(self, user: dict[str, Any]) -> None: ...
+    def set_tag(self, key: str, value: str) -> None:
+        raise NotImplementedError
 
-    def capture_exception(self, exc: BaseException) -> Any: ...
+    def set_user(self, user: dict[str, Any]) -> None:
+        raise NotImplementedError
+
+    def capture_exception(self, exc: BaseException) -> Any:
+        raise NotImplementedError
 
 
 @dataclass(frozen=True)

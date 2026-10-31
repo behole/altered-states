@@ -187,7 +187,7 @@ class TestSecretRules:
 
 class TestFlagRules:
     def test_reference_to_an_undeclared_flag_is_blocking(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(review_pr, "_declared_flags", lambda: set())
+        monkeypatch.setattr(review_pr, "_declared_flags", set)
         findings = review(
             parse_diff(
                 make_diff(
@@ -212,7 +212,7 @@ class TestFlagRules:
         assert findings == []
 
     def test_flag_added_in_the_same_pr_is_accepted(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(review_pr, "_declared_flags", lambda: set())
+        monkeypatch.setattr(review_pr, "_declared_flags", set)
         findings = review(
             parse_diff(
                 make_diff(

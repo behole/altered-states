@@ -40,7 +40,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from altered_states.metrics import REGISTRY
+from altered_states.registry import REGISTRY
 
 SERVICE = os.environ.get("APP_SERVICE", "altered-states")
 DEFAULT_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
