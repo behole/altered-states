@@ -55,6 +55,15 @@ SECTION_FLAGS = (
     "site.chat_personas",
     "site.experiments_gallery",
     "site.experiment_wheel",
+    # Milestone-2 groundwork: the sections these gate land in later features.
+    # Declared and injected now so a disabled section render/compile-out path
+    # exists the moment a section is added.
+    "site.substance_pages",
+    "site.arc_timeline",
+    "site.diff_view",
+    "site.quiz_game",
+    "site.journal_dashboards",
+    "site.eval_grids",
 )
 
 # Longest prompt headline rendered on an experiment card, in characters.

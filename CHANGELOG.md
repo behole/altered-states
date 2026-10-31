@@ -8,6 +8,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 ### Changed
+- **Six new SITE section flags declared** —
+  `site.substance_pages`, `site.arc_timeline`, `site.diff_view`,
+  `site.quiz_game`, `site.journal_dashboards`, and `site.eval_grids` are
+  now declared in `feature_flags.json` (owner `site`, roll-out 100,
+  expiry `2027-06-30`) and routed through build's `__FLAGS__` payload.
+  The gated sections themselves land in later milestone-2 features;
+  these declarations make the render-when-on / compile-out-when-off
+  gate exist from the moment each section is added. Verified by
+  `tests/unit/test_section_flag_lifecycle.py`.
 - **Same-prompt dry-run writes to a temp dir by default** —
   `experiments/same-prompt/run-ten-ways.py --dry-run` with no `--output`
   now resolves the compiled markdown to a fresh temp directory (path
