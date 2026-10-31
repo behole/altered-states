@@ -1,0 +1,6 @@
+# Dependencies for experiments/music/generate.py.
+#
+# Pinned exactly; transitive versions are locked in requirements.lock.
+# Regenerate with:  make lock
+
+requests==2.33.0

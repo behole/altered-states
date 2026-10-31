@@ -1,0 +1,60 @@
+name: Feature request
+description: Propose a new capability, page, experiment, or piece of infrastructure.
+title: "feat: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project is deliberately small and one maintainer reviews everything.
+        Proposals that name the smallest useful version get built; proposals
+        that describe a platform usually do not.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation today, not the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Smallest version that would be useful
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Site content or design
+        - Site build or deploy
+        - Observability (logs, metrics, errors, alerts)
+        - Tests or quality tooling
+        - Temporal lab
+        - Eval / same-prompt experiment
+        - Music experiment
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What else did you consider?
+      description: Including "do nothing" — sometimes the answer is a doc page.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: flags
+    attributes:
+      label: Rollout
+      options:
+        - label: This should ship behind a flag in `feature_flags.json`
+        - label: This changes a public URL or an existing page's behaviour
+        - label: This adds a dependency

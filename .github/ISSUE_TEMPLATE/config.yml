@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Safer-use question
+    url: https://github.com/behole/altered-states/blob/main/SAFETY.md
+    about: Read SAFETY.md first — it covers what this project is and is not.
+  - name: How the pipeline works
+    url: https://github.com/behole/altered-states/blob/main/docs/research-pipeline.md
+    about: Architecture and data flow for the journal, build, and lab surfaces.

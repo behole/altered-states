@@ -1,1 +1,14 @@
-anthropic>=0.45.0
+# Runtime dependencies for the root app (bin/*.py, build.py, watch.py).
+#
+# Pinned exactly; transitive versions are locked in requirements.lock.
+# Regenerate both with:  make lock
+
+# Model provider SDK — used by bin/run_eval.py.
+anthropic==2.3.0
+
+# Optional error reporting — imported lazily, a no-op without SENTRY_DSN.
+sentry-sdk==2.44.0
+
+# Reads the repository's YAML manifests (alerts/alerts.yaml,
+# .github/labels.yml) in bin/check_alerts.py and bin/sync_labels.py.
+pyyaml==6.0.2

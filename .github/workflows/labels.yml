@@ -1,0 +1,59 @@
+name: Labels
+
+# Keeps the repository's labels identical to `.github/labels.yml`.
+# Runs when the taxonomy changes, and can be triggered by hand after a fork or
+# an accidental deletion.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/labels.yml"
+      - "bin/sync_labels.py"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print the plan without changing anything"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    name: Reconcile labels
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-dev.lock
+
+      - name: Install tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.lock
+          python -m pip install -r bin/requirements.lock
+
+      - name: Apply the taxonomy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python bin/sync_labels.py ${{ inputs.dry_run && '--dry-run' || '' }} \
+            | tee labels.txt
+
+      - name: Summarize
+        if: always()
+        run: |
+          {
+            echo "## Label sync"
+            echo '```'
+            cat labels.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

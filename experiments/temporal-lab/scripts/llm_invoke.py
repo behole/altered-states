@@ -236,7 +236,8 @@ def _estimate_cost(model: str, tokens_in: int, tokens_out: int) -> float:
 def _stub_response(substance: str, char_info: CharacterProfile) -> Cycle:
     """Deterministic-ish stub for offline wiring verification."""
     return {
-        "emotional_state": random.choice(char_info["emotional_range"]),
+        # Variety in a offline dry-run stub; nothing here is security-sensitive.
+        "emotional_state": random.choice(char_info["emotional_range"]),  # nosec B311
         "clarity": "moderate",
         "integration": "low",
         "experience": {

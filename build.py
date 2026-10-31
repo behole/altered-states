@@ -17,14 +17,36 @@ import json
 import os
 import re
 import shutil
+import sys
+import time
 from typing import Any
 
 BASE = os.path.dirname(os.path.abspath(__file__))
+if BASE not in sys.path:
+    # Running `python3 build.py` puts BASE on sys.path already; this keeps the
+    # package importable when the module is imported from elsewhere (tests).
+    sys.path.insert(0, BASE)
+
+from altered_states.error_tracking import breadcrumb, capture_exception, init_error_tracking  # noqa: E402
+from altered_states.feature_flags import flags  # noqa: E402
+from altered_states.log_utils import log_event, log_timed, trace_context  # noqa: E402
+from altered_states.metrics import REGISTRY, flush_metrics  # noqa: E402
+
 JOURNALS_DIR = os.path.join(BASE, "experiments", "temporal-lab", "runtime", "journals")
 EXPERIMENTS_DIR = os.path.join(BASE, "experiments", "same-prompt", "output")
 MUSIC_DIR = os.path.join(BASE, "experiments", "music")
 TEMPLATE = os.path.join(BASE, "site", "index.template.html")
 OUTPUT = os.path.join(BASE, "site", "index.html")
+
+# Feature flags that gate a whole rendered section. Evaluated once per build and
+# emitted into the page as a FLAGS map, so a disabled section costs the client
+# nothing.
+SECTION_FLAGS = (
+    "site.music_section",
+    "site.chat_personas",
+    "site.experiments_gallery",
+    "site.experiment_wheel",
+)
 
 # Longest prompt headline rendered on an experiment card, in characters.
 MAX_TITLE_LENGTH = 40
@@ -395,65 +417,138 @@ def sync_music_audio() -> None:
                     shutil.copy2(src, dst)
 
 
-def build() -> None:
-    print("Loading journals...")
-    journals = load_journals()
-    # Count unique successful cycles (matches persona cards)
-    total_cycles = sum(
+def count_cycles(journals: dict[str, list[dict[str, Any]]]) -> int:
+    """Count unique successful cycles across all personas."""
+    return sum(
         len({e.get("cycle") for e in v if not e.get("error") and e.get("cycle") is not None}) for v in journals.values()
     )
-    print(f"  {total_cycles} total cycles across {len(journals)} substances")
 
-    print("Loading experiments...")
-    experiments = load_experiments()
-    print(f"  {len(experiments)} experiments found")
 
-    print("Loading music experiments...")
-    music = load_music()
-    print(f"  {len(music)} music experiments found")
+def enabled_section_flags() -> dict[str, bool]:
+    """Evaluate the flags that gate whole page sections."""
+    return {name: flags.is_enabled(name) for name in SECTION_FLAGS}
 
-    print("Syncing music audio...")
-    sync_music_audio()
 
-    print("Computing persona states...")
-    states = get_persona_state(journals)
-
-    # Build persona data with states
-    persona_data: list[dict[str, Any]] = []
-    for p in PERSONAS:
-        s = states.get(p["id"], {"currentState": "dormant", "cycleCount": 0})
-        persona_data.append({**p, **s})
-
-    # Normalize journal entries
-    journal_data: dict[str, list[dict[str, Any]]] = {}
-    for sid, entries in journals.items():
-        journal_data[sid] = [journal_entry_to_dict(e) for e in entries if not e.get("error")]
-
-    # Read template
-    print("Reading template...")
+def render_page(
+    persona_data: list[dict[str, Any]],
+    journal_data: dict[str, list[dict[str, Any]]],
+    experiments: list[dict[str, Any]],
+    music: list[dict[str, Any]],
+    total_cycles: int,
+) -> str:
+    """Inject every data payload into the HTML template."""
     with open(TEMPLATE) as f:
         html = f.read()
 
-    # Inject data
-    print("Injecting data...")
-    html = html.replace("__PERSONAS__", json.dumps(persona_data, ensure_ascii=False))
-    html = html.replace("__JOURNALS__", json.dumps(journal_data, ensure_ascii=False))
-    html = html.replace("__EXPERIMENTS__", json.dumps(experiments, ensure_ascii=False))
-    html = html.replace("__MUSIC__", json.dumps(music, ensure_ascii=False))
-
-    # Update cycle count tag
-    html = html.replace("__CYCLE_COUNT__", str(total_cycles))
-    html = html.replace("__EXP_COUNT__", str(len(experiments)))
     total_songs = sum(len(exp.get("tracks", [])) for exp in music)
-    html = html.replace("__MUSIC_COUNT__", str(total_songs))
+    replacements = {
+        "__PERSONAS__": json.dumps(persona_data, ensure_ascii=False),
+        "__JOURNALS__": json.dumps(journal_data, ensure_ascii=False),
+        "__EXPERIMENTS__": json.dumps(experiments, ensure_ascii=False),
+        "__MUSIC__": json.dumps(music, ensure_ascii=False),
+        "__FLAGS__": json.dumps(enabled_section_flags()),
+        "__CYCLE_COUNT__": str(total_cycles),
+        "__EXP_COUNT__": str(len(experiments)),
+        "__MUSIC_COUNT__": str(total_songs),
+    }
+    for placeholder, value in replacements.items():
+        html = html.replace(placeholder, value)
+    return html
 
-    # Write output
-    with open(OUTPUT, "w") as f:
-        f.write(html)
 
-    size = os.path.getsize(OUTPUT)
-    print(f"Built: {OUTPUT} ({size:,} bytes)")
-    print("Done.")
+def collect_site_data() -> tuple[dict[str, list[dict[str, Any]]], list[dict[str, Any]], list[dict[str, Any]], int]:
+    """Load journals, experiments, and music, and count cycles."""
+    journals = load_journals()
+    total_cycles = count_cycles(journals)
+    log_event("build.journals_loaded", cycles=total_cycles, personas=len(journals))
+    print(f"  {total_cycles} total cycles across {len(journals)} substances")
+
+    experiments = load_experiments()
+    log_event("build.experiments_loaded", experiments=len(experiments))
+    print(f"  {len(experiments)} experiments found")
+
+    music = load_music()
+    log_event("build.music_loaded", music_experiments=len(music))
+    print(f"  {len(music)} music experiments found")
+
+    return journals, experiments, music, total_cycles
+
+
+def record_content_metrics(
+    persona_data: list[dict[str, Any]],
+    journal_data: dict[str, list[dict[str, Any]]],
+    experiments: list[dict[str, Any]],
+    music: list[dict[str, Any]],
+) -> None:
+    """Record what the published page actually contains.
+
+    This is the product signal for a static site with no visitors to measure: it
+    answers "did the thing that ships get richer, or did a section silently go
+    empty?" without any client-side tracking.
+    """
+    active = sum(1 for entries in journal_data.values() if entries)
+    REGISTRY.gauge("personas_with_cycles", active)
+    REGISTRY.gauge("personas_total", len(persona_data))
+    REGISTRY.gauge("journal_entries_published", sum(len(entries) for entries in journal_data.values()))
+    REGISTRY.gauge("experiments_published", len(experiments))
+    REGISTRY.gauge("music_tracks_published", sum(len(item.get("tracks") or []) for item in music))
+
+    sections = enabled_section_flags()
+    REGISTRY.gauge("sections_enabled", sum(1 for enabled in sections.values() if enabled))
+    for name, enabled in sections.items():
+        REGISTRY.gauge("section_enabled", 1 if enabled else 0, section=name)
+
+
+def build() -> None:
+    """Build site/index.html. Raises on failure and reports it to the tracker."""
+    started_at = time.perf_counter()
+    init_error_tracking("site-builder")
+
+    with trace_context("build") as trace_id:
+        log_event("build.start", trace_id=trace_id, output=OUTPUT)
+        try:
+            journals, experiments, music, total_cycles = collect_site_data()
+
+            print("Syncing music audio...")
+            breadcrumb("build", "sync music audio")
+            sync_music_audio()
+
+            print("Computing persona states...")
+            states = get_persona_state(journals)
+            persona_data = [{**persona, **states.get(persona["id"], {})} for persona in PERSONAS]
+            journal_data = {
+                sid: [journal_entry_to_dict(entry) for entry in entries if not entry.get("error")]
+                for sid, entries in journals.items()
+            }
+
+            print("Reading template...")
+            print("Injecting data...")
+            html = render_page(persona_data, journal_data, experiments, music, total_cycles)
+
+            with open(OUTPUT, "w") as f:
+                f.write(html)
+
+            size = os.path.getsize(OUTPUT)
+            log_timed(
+                "build.complete",
+                started_at,
+                output=OUTPUT,
+                size_bytes=size,
+                cycles=total_cycles,
+                experiments=len(experiments),
+                music_experiments=len(music),
+            )
+            REGISTRY.increment("build_runs")
+            REGISTRY.observe("build_duration_seconds", time.perf_counter() - started_at)
+            REGISTRY.gauge("cycles_generated", total_cycles)
+            record_content_metrics(persona_data, journal_data, experiments, music)
+            flush_metrics()
+            print(f"Built: {OUTPUT} ({size:,} bytes)")
+            print("Done.")
+        except Exception as exc:
+            capture_exception(exc)
+            log_event("build.failed", level="ERROR", error=type(exc).__name__, message=str(exc))
+            raise
 
 
 if __name__ == "__main__":

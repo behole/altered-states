@@ -1,0 +1,186 @@
+name: CI
+
+# One workflow, four jobs. Every job is fast enough to give feedback on a pull
+# request in a couple of minutes; the test matrix is the slowest part.
+#
+# Local parity: `make verify` runs the same commands outside Actions.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A new push to the same branch cancels the previous run: stale results are
+# worse than no results.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUNBUFFERED: "1"
+  # Deterministic hashing/ordering so CI and local runs agree.
+  PYTHONHASHSEED: "0"
+
+jobs:
+  quality:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-dev.lock
+
+      - name: Install dev toolchain
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.lock
+
+      # Each gate is its own step so the failing check is named in the UI.
+      - name: Lint (ruff)
+        run: ruff check --output-format=github .
+
+      - name: Format (ruff format --check)
+        run: ruff format --check --diff .
+
+      - name: Types (mypy --strict)
+        run: mypy
+
+      - name: Dead code (vulture)
+        run: vulture
+
+      - name: Duplicate code (pylint)
+        run: pylint --disable=all --enable=duplicate-code build.py watch.py bin experiments
+
+      - name: Unused or undeclared dependencies (deptry)
+        run: deptry .
+
+      - name: Feature flags (expired or unreferenced)
+        run: python -m altered_states.feature_flags check
+
+  test:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.10 is what the application targets; 3.12 is the newest interpreter
+        # the runtime SDKs support. Both must stay green.
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Two tests read this repository's own commit history: one asserts
+          # commits follow the conventional format `release.yml` parses. A
+          # depth-1 checkout would leave them nothing to look at.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements-test.lock
+            bin/requirements.lock
+
+      - name: Install test toolchain and runtime SDKs
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-test.lock
+          python -m pip install -r bin/requirements.lock
+
+      - name: Run unit and integration tests with coverage
+        run: pytest --cov --cov-report=term-missing --cov-report=xml --durations=25
+
+      - name: Upload coverage report
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.xml
+          retention-days: 14
+
+  security:
+    name: Security scanners
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-dev.lock
+
+      - name: Install dev toolchain
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.lock
+
+      - name: Static analysis (bandit)
+        run: bandit -c pyproject.toml -r build.py watch.py altered_states bin experiments -f json -o bandit.json
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.10.10"
+
+      # Audits exactly what the lockfiles pin. `python -m venv` is avoided
+      # deliberately: it seeds pip and setuptools into site-packages, so
+      # pip-audit reports CVEs in the venv's own bootstrap tooling — packages
+      # we do not ship and cannot pin. `uv venv` produces a bare environment.
+      - name: Known vulnerabilities in pinned dependencies (pip-audit)
+        run: |
+          uv venv .audit-venv --python 3.11
+          uv pip install --python .audit-venv/bin/python \
+            -r bin/requirements.lock \
+            -r experiments/music/requirements.lock \
+            -r experiments/temporal-lab/requirements.lock
+          pip-audit --path "$(.audit-venv/bin/python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
+
+      - name: Upload bandit findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: bandit.json
+          retention-days: 14
+
+  docs:
+    name: Docs and site build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Agent instructions are accurate
+        run: python bin/check_agents_md.py
+
+      - name: Site builds
+        run: |
+          python -c "import sys; sys.version_info >= (3, 10) or sys.exit('need 3.10+')"
+          python build.py
+
+      - name: Build produced a complete document
+        run: |
+          test -s site/index.html
+          grep -q '</html>' site/index.html
+          ! grep -q '__PERSONAS__\|__JOURNALS__\|__EXPERIMENTS__\|__FLAGS__' site/index.html
+
+      - name: Emitted metrics textfile
+        run: |
+          test -f runtime/metrics/altered-states.prom
+          grep -q 'altered_states_build_runs' runtime/metrics/altered-states.prom

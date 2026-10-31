@@ -6,6 +6,37 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [Unreleased]
+
+### Added
+- **`altered_states/` shared package** — structured JSON logging with `trace_id` correlation and secret redaction, a Prometheus textfile metrics registry, optional Sentry error tracking, and file-backed feature flags with deterministic rollout bucketing
+- **`feature_flags.json`** — four section flags (`site.music_section`, `site.chat_personas`, `site.experiments_gallery`, `site.experiment_wheel`), gated at build time so a disabled section's payload never reaches the client. `python -m altered_states.feature_flags check` fails on an expired or unreferenced flag
+- **Test suites** — `tests/unit/` and `tests/integration/`, offline, with an enforced coverage floor. `make test`, `make coverage`
+- **CI** — `.github/workflows/ci.yml` (static analysis, test matrix on 3.10 and 3.12, security scanners, docs and site build), `codeql.yml`, `release.yml`, `alerts.yml`, `labels.yml`, `pr-review.yml`
+- **`bin/review_pr.py`** — deterministic pull-request review: missing tests, hand-edited generated files, dependency changes without a lockfile refresh, undeclared flags, credential-shaped strings, and deletions of irreplaceable journal data
+- **`bin/check_alerts.py` + `alerts/alerts.yaml`** — alert thresholds as code, with a required runbook per alert, consecutive-fire state, and a critical alert that files a triage issue
+- **`bin/release_notes.py`** — release notes generated from conventional commits on tag push
+- **`bin/sync_labels.py` + `.github/labels.yml`** — declarative label taxonomy, reconciled on every change
+- **`bin/check_agents_md.py`, `AGENTS.md`, `runbooks/`, `docs/observability.md`** — instructions and incident procedures that are validated against the repository
+- **`.devcontainer/`, `.env.example`** — reproducible environment and a documented variable surface
+- **Hash-pinned lockfiles** for every requirements file, plus a per-app requirements file for the music experiment
+- **`requirements-test.txt` / `requirements-test.lock`** — the test-only toolchain, locked separately from `requirements-dev` because `pre-commit` and current `coverage` need 3.11+, so the 3.10 job in the test matrix has a resolvable set
+
+### Changed
+- **`altered_states/registry.py`** — the counter/gauge/histogram registry moved out of `metrics.py` so logging can increment a counter without importing the module that writes textfiles and emits log lines. The dependency now runs one way only (`registry` ← `log_utils` ← `metrics`); CodeQL flagged the mutual import as a cycle. `metrics` re-exports `Registry` and `REGISTRY`, so existing imports are unchanged
+- **`build.py`** — split into `count_cycles`, `enabled_section_flags`, `render_page`, `collect_site_data`, and `record_content_metrics`; emits structured logs, build metrics, and content gauges the alert policy reads
+- **`watch.py`** — subprocess use centralised in one helper that resolves executables, reports a missing `wrangler` clearly, and handles timeouts without swallowing them
+- **`bin/run_eval.py`** — retry with exponential backoff on provider errors, per-call metrics, and error events instead of a bare traceback
+- **`experiments/temporal-lab/scripts/logger.py`** — ledger records carry `trace_id` and are redacted; cost summaries read the ledger through one helper
+- **`Makefile`** — `verify`, `test`, `coverage`, `security`, `deps`, `flags`, `docs`, `alerts`, `labels`, `lock` targets
+- **`bin/nlm.py`** — refuses to open a URL that is not http/https
+
+### Fixed
+- **Secret redaction** no longer redacts `tokens_in` / `tokens_out` telemetry, only fields whose name implies a credential
+- **Metrics snapshots** name series consistently between the JSON log payload and the Prometheus textfile, so a value is traceable across both
+
+---
+
 ## [1.5] — 2026-04-19
 
 ### Added

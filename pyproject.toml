@@ -65,6 +65,12 @@ max-branches = 12
 "experiments/same-prompt/run-ten-ways.py" = ["E501"]
 "experiments/temporal-lab/scripts/llm_invoke.py" = ["E501"]
 
+# Tests compare against literal expected values on purpose: naming every `2`
+# would hide what the assertion is about. Local imports are also deliberate —
+# a test imports a module inside a fixture or function so the `sys.path`
+# bootstrap in conftest, or the monkeypatched environment, is in place first.
+"tests/**" = ["PLR2004", "PLC0415"]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
@@ -82,10 +88,12 @@ ignore_missing_imports = true
 files = [
     "build.py",
     "watch.py",
+    "altered_states",
     "bin",
     "experiments/music/generate.py",
     "experiments/same-prompt/run-ten-ways.py",
     "experiments/temporal-lab/scripts",
+    "tests",
 ]
 exclude = ["^site/", "^tests/responses/"]
 
@@ -96,6 +104,16 @@ exclude = ["^site/", "^tests/responses/"]
 module = ["anthropic.*", "openai.*", "dotenv.*", "requests.*"]
 ignore_missing_imports = true
 
+# pytest's decorators (`fixture`, `mark.parametrize`) are dynamically typed by
+# design — the marker system builds them at import time — so strict mode's
+# `disallow_untyped_decorators` produces a false positive on every decorated
+# test. Everything else in the suite is still fully annotated and checked.
+[[tool.mypy.overrides]]
+# `tests/` is a package (it has `__init__.py`), so test modules resolve to
+# `tests.unit.test_x` and `tests.conftest`.
+module = ["tests.*", "tests.*.*"]
+disallow_untyped_decorators = false
+
 # ---------------------------------------------------------------------------
 # Vulture — dead code detection
 # ---------------------------------------------------------------------------
@@ -105,10 +123,12 @@ min_confidence = 80
 paths = [
     "build.py",
     "watch.py",
+    "altered_states",
     "bin",
     "experiments/music",
     "experiments/same-prompt",
     "experiments/temporal-lab/scripts",
+    "tests",
 ]
 exclude = ["site", "tests/responses", "__pycache__"]
 # Web-framework and dataclass-style hooks that legitimately look unused.
@@ -131,3 +151,105 @@ ignore-comments = "yes"
 ignore-docstrings = "yes"
 ignore-imports = "yes"
 ignore-signatures = "yes"
+
+# ---------------------------------------------------------------------------
+# pytest — unit + integration suites
+# ---------------------------------------------------------------------------
+# Run the fast suite with `make test`, the gated suite with `make coverage`.
+# Naming is enforced: only test_*.py / test_* functions are collected.
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests/unit", "tests/integration"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+# Parallel by module (`loadscope`) keeps file-level fixtures isolated while
+# still using every core. `--reruns` absorbs the rare timing flake.
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--durations=15",
+    "-n",
+    "auto",
+    "--dist",
+    "loadscope",
+    "--reruns",
+    "1",
+    "--reruns-delay",
+    "0.5",
+]
+markers = [
+    "integration: exercises a whole pipeline end to end (still offline/dry-run)",
+    "slow: takes more than a second",
+]
+filterwarnings = ["error::DeprecationWarning:bin.*"]
+
+# ---------------------------------------------------------------------------
+# Coverage — enforced floor, checked by `make coverage` and CI
+# ---------------------------------------------------------------------------
+
+[tool.coverage.run]
+branch = true
+source = ["altered_states", "build.py", "watch.py", "bin", "experiments/temporal-lab/scripts", "experiments/music"]
+omit = ["*/tests/*", "*/site/*"]
+
+[tool.coverage.report]
+fail_under = 75
+show_missing = true
+skip_covered = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "\\s*\\.\\.\\.",
+]
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+# ---------------------------------------------------------------------------
+# deptry — unused / missing / transitive dependency detection
+# ---------------------------------------------------------------------------
+# Both apps declare dependencies in their own requirements.txt; deptry is told
+# about them explicitly and skips the optional SDKs that are imported lazily
+# behind try/except so offline dry-runs still work.
+
+[tool.deptry]
+extend_exclude = ["site", "tests", "experiments/same-prompt"]
+# One requirements file per app, because each app is installed independently.
+# requirements-dev.txt is deliberately absent: those packages are invoked as
+# CLIs by the Makefile, never imported, so they would all read as unused.
+requirements_files = [
+    "bin/requirements.txt",
+    "experiments/music/requirements.txt",
+    "experiments/temporal-lab/requirements.txt",
+]
+known_first_party = [
+    "altered_states",
+    "build",
+    "bin",
+    "characters",
+    "cadence",
+    "extract_insights",
+    "logger",
+    "llm_invoke",
+    "temporal_init",
+]
+# Sentry is an optional runtime integration, imported lazily.
+per_rule_ignores = { DEP002 = ["sentry-sdk"] }
+
+[tool.deptry.package_module_name_map]
+python-dotenv = "dotenv"
+pyyaml = "yaml"
+
+# ---------------------------------------------------------------------------
+# bandit — static security analysis
+# ---------------------------------------------------------------------------
+
+[tool.bandit]
+# Run with `make security` (bandit -c pyproject.toml -r ...). Tests are
+# excluded because `assert` is the assertion mechanism pytest rewrites.
+exclude_dirs = ["tests", "site", "experiments/same-prompt/output"]
+# No rule skips: every remaining finding was fixed rather than suppressed.

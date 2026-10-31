@@ -1,0 +1,120 @@
+# Issue and pull-request label taxonomy.
+#
+# Applied by `make labels` (which runs `python bin/sync_labels.py`) and by the
+# `labels` workflow on push to main. The script is declarative: labels here are
+# created or updated, and any label of the same prefixes that is *not* listed
+# here is deleted, so the taxonomy cannot silently drift.
+#
+# Groups:
+#   bare type words   — what kind of change or report this is
+#   priority:<level>  — exactly one per issue
+#   area:<surface>    — which part of the repo is affected
+#   state words       — workflow position, mostly set by automation
+#
+# `keep` lists labels that must never be deleted even though this file does not
+# declare them: GitHub seeds a few on every new repository.
+
+keep:
+  - "good first issue"
+  - "help wanted"
+
+# Only labels under these prefixes are considered owned by this file and
+# eligible for deletion. Anything else (e.g. a one-off label someone made) is
+# left alone.
+managed_prefixes:
+  - "area:"
+  - "priority:"
+
+managed_names:
+  - bug
+  - enhancement
+  - documentation
+  - refactor
+  - tests
+  - security
+  - dependencies
+  - observability
+  - needs-triage
+  - blocked
+  - ready
+
+labels:
+  # --- type ---------------------------------------------------------------
+  - name: bug
+    color: d73a4a
+    description: Something is broken
+  - name: enhancement
+    color: a2eeef
+    description: New capability
+  - name: documentation
+    color: 0075ca
+    description: Documentation only
+  - name: refactor
+    color: c5def5
+    description: No behaviour change
+  - name: tests
+    color: 5319e7
+    description: Tests or fixtures
+  - name: security
+    color: b60205
+    description: Security fix or hardening
+  - name: dependencies
+    color: 0366d6
+    description: Dependency or lockfile change
+  - name: observability
+    color: 1d76db
+    description: Logs, metrics, traces, alerts
+
+  # --- priority -----------------------------------------------------------
+  - name: "priority:critical"
+    color: b60205
+    description: Site down, data loss, or a leaked secret
+  - name: "priority:high"
+    color: d93f0b
+    description: Blocks the next release
+  - name: "priority:medium"
+    color: fbca04
+    description: Should be fixed soon
+  - name: "priority:low"
+    color: c2e0c6
+    description: Nice to have
+
+  # --- area ---------------------------------------------------------------
+  - name: "area:site"
+    color: bfd4f2
+    description: Generated site and its template
+  - name: "area:build"
+    color: bfd4f2
+    description: build.py and watch.py
+  - name: "area:deploy"
+    color: bfd4f2
+    description: Cloudflare Pages and the cron rebuild
+  - name: "area:eval"
+    color: bfd4f2
+    description: bin/run_eval.py and the same-prompt experiment
+  - name: "area:temporal-lab"
+    color: bfd4f2
+    description: experiments/temporal-lab
+  - name: "area:music"
+    color: bfd4f2
+    description: experiments/music
+  - name: "area:ci"
+    color: bfd4f2
+    description: Workflows and automation
+  - name: "area:quality"
+    color: bfd4f2
+    description: Lint, types, tests, coverage
+  - name: "area:docs"
+    color: bfd4f2
+    description: README, AGENTS.md, runbooks, docs/
+
+  # --- state --------------------------------------------------------------
+  - name: needs-triage
+    color: ededed
+    description: Not yet assessed by the maintainer
+  - name: blocked
+    color: ededed
+    description: Waiting on something else
+  - name: ready
+    color: 0e8a16
+    description: Scoped and ready to pick up
