@@ -812,6 +812,7 @@
     <div class="links" id="nav-links">
       <a href="#" data-view="home" class="active" onclick="showView('home'); closeMobileNav(); return false;">Personas</a>
       <a href="#" data-view="experiments" onclick="showView('experiments'); closeMobileNav(); return false;">1x10</a>
+      <a href="#" data-view="arc" onclick="showView('arc'); closeMobileNav(); return false;">Dose Arcs</a>
       <a href="#" data-view="music" onclick="showView('music'); closeMobileNav(); return false;">Music</a>
       <a href="#" data-view="journals" onclick="showView('journals'); closeMobileNav(); return false;">Journals</a>
       <a href="#" data-view="about" onclick="showView('about'); closeMobileNav(); return false;">About</a>
@@ -928,6 +929,205 @@
     </div>
   </section>
 </div>
+
+<!-- ═══ DOSE ARCS (site.arc_timeline; compiled out when off) ═══ -->
+  <!--
+  Dose-arc timeline view — injected into the SPA home by build.py behind the
+  site.arc_timeline flag (compiled out entirely when the flag is off, payload
+  included). {"substances": [{"arc": {"bounded_max_seconds": 1200.0, "bounded_min_seconds": 7.199999999999999, "duration_label": "7 s–20 min", "mode": "prose_duration", "phases": [{"label": "7 s–14 s", "max_seconds": 14.399999999999999, "min_seconds": 7.199999999999999, "name": "onset", "summary": "Onset phase derived from the 5-meo-dmt skill's dose-arc description; the skill does not name this phase explicitly."}, {"label": "14 s–5 min", "max_seconds": 310.79999999999995, "min_seconds": 14.399999999999999, "name": "ascent", "summary": "Ascent phase derived from the 5-meo-dmt skill's dose-arc description; the skill does not name this phase explicitly."}, {"label": "5 min–13 min", "max_seconds": 785.04, "min_seconds": 310.79999999999995, "name": "peak", "summary": "**Exchange 1: THE DISSOLUTION."}, {"label": "13 min–18 min", "max_seconds": 1081.44, "min_seconds": 785.04, "name": "descent", "summary": "5-MeO-DMT's exit is the fastest in the project. It models itself — the experience ends quickly."}, {"label": "18 min–20 min", "max_seconds": 1200.0, "min_seconds": 1081.44, "name": "afterglow", "summary": "Afterglow phase derived from the 5-meo-dmt skill's dose-arc description; the skill does not name this phase explicitly."}]}, "emoji": "✨", "href": "/5-meo-dmt/", "id": "5-meo-dmt", "name": "5-MeO-DMT"}, {"arc": {"bounded_max_seconds": 21600.0, "bounded_min_seconds": 1800.0, "duration_label": "30 min–6 h", "mode": "prose_duration", "phases": [{"label": "30 min–1 h", "max_seconds": 3600.0, "min_seconds": 1800.0, "name": "onset", "summary": "**Lead with the stomach."}, {"label": "1 h–2.2 h", "max_seconds": 8100.0, "min_seconds": 3600.0, "name": "ascent", "summary": "Abstract patterns, colors, closed-eye geometry. - Similar to early psilocybin/LSD — but with an organic, living quality."}, {"label": "2.2 h–4.2 h", "max_seconds": 15300.0, "min_seconds": 8100.0, "name": "peak", "summary": "Smoked DMT phenomenology (blast-off, alien geometry, machine elves, instant dissolution) - Electric/analytical language (that's LSD) - Direct emotional declarations (that's MDMA — ayahuasca shows rather than tells) - Rushing to visions (onset is somatic, not visual) - Sanitizing la purga (it's sacred, not a side effect) - The \"guru\" voice from exchange 1 — the medicine teaches through the arc, not from the start - Treating the experience as a single peak — it comes in waves…"}, {"label": "4.2 h–5.5 h", "max_seconds": 19800.0, "min_seconds": 15300.0, "name": "descent", "summary": "Waves subsiding. The intensity slowing."}, {"label": "5.5 h–6 h", "max_seconds": 21600.0, "min_seconds": 19800.0, "name": "afterglow", "summary": "Afterglow phase derived from the ayahuasca skill's dose-arc description; the skill does not name this phase explicitly."}]}, "emoji": "🌿", "href": "/ayahuasca/", "id": "ayahuasca", "name": "Ayahuasca"}, {"arc": {"bounded_max_seconds": 1200.0, "bounded_min_seconds": 36.0, "duration_label": "36 s–20 min", "mode": "prose_duration", "phases": [{"label": "36 s–1 min", "max_seconds": 72.0, "min_seconds": 36.0, "name": "onset", "summary": "Onset phase derived from the dmt skill's dose-arc description; the skill does not name this phase explicitly."}, {"label": "1 min–5 min", "max_seconds": 354.0, "min_seconds": 72.0, "name": "ascent", "summary": "Ascent phase derived from the dmt skill's dose-arc description; the skill does not name this phase explicitly."}, {"label": "5 min–13 min", "max_seconds": 805.2, "min_seconds": 354.0, "name": "peak", "summary": "For lower intensity, model the \"waiting room\" — the intermediate space: - Intense geometric patterns — the chrysanthemum, rotating mandalas - \"Impossible\" colors — hypersaturated, luminous, self-generating - Sense of approaching something vast — a threshold, a membrane, a door - Entities may be peripheral — \"something is watching, assessing\" - The feeling of being \"held\" at the threshold — not quite through - Still aware of the room but it's overlaid with alien geometry"}, {"label": "13 min–18 min", "max_seconds": 1087.2, "min_seconds": 805.2, "name": "descent", "summary": "Descent phase derived from the dmt skill's dose-arc description; the skill does not name this phase explicitly."}, {"label": "18 min–20 min", "max_seconds": 1200.0, "min_seconds": 1087.2, "name": "afterglow", "summary": "Afterglow phase derived from the dmt skill's dose-arc description; the skill does not name this phase explicitly."}]}, "emoji": "🚀", "href": "/dmt/", "id": "dmt", "name": "DMT"}, {"arc": {"bounded_max_seconds": 86400.0, "bounded_min_seconds": 3600.0, "duration_label": "1 h–24 h", "mode": "phase_headings", "phases": [{"label": "1-3 hours", "max_seconds": 10800.0, "min_seconds": 3600.0, "name": "onset", "summary": "Physical symptoms arrive first: nausea, ataxia, tremor, heaviness, temperature dysregulation - Psychological state: anxiety, dread, anticipation, sometimes resistance - Initial visual phenomena: closed-eye phosphene activity, color shifts, impressionistic imagery - Purging (vomiting) often occurs in this window — Bwiti tradition frames this as cleansing - Subject is fully conscious, communicative, but increasingly oriented inward - Oral numbness, characteristic bitter taste…"}, {"label": "3-6 hours", "max_seconds": 21600.0, "min_seconds": 10800.0, "name": "ascent", "summary": "Transition from somatic dominance to visionary emergence - Dreamlike imagery begins surfacing: faces, landscapes, childhood memories - Autobiographical memory becomes activated; life review begins - Visual field with eyes closed becomes rich and immersive - External conversation becomes increasingly difficult; speech slows - Physical symptoms persist but are backgrounded as visionary content intensifies - Emotional state shifts from pure anxiety toward grief, memory, confron…"}, {"label": "6-12 hours", "max_seconds": 43200.0, "min_seconds": 21600.0, "name": "peak", "summary": "Ancient, patient, unhurried — as if time is not a concern because it has already seen the ending - Dreamlike, narrative, heavy with gravity — language that feels like it is being spoken from somewhere deep and old - Slow, deliberate — sentences that take their time, that do not rush toward a point - Direct in its weight — not cruel, not gentle, simply truthful in a way that lands like a stone in still water - At higher doses: speech becomes impossible but consciousness remai…"}, {"label": "12-18 hours", "max_seconds": 86400.0, "min_seconds": 43200.0, "name": "descent", "summary": "Visions gradually thin and become less immersive - Gradual return of linear consciousness and external awareness - Cognitive function recovers slowly; conversation becomes possible but effortful - Emotional rawness; quiet, contemplative state; \"the empty feeling after a storm\" - Physical exhaustion; body feels drained - Insights and memories from the visionary phase surface for review - Fragile new identity; the old self is gone but the new self is not yet solidified - The s…"}, {"label": "days to weeks", "max_seconds": null, "min_seconds": null, "name": "afterglow", "summary": "Noribogaine (active metabolite, half-life 28-49 hours) produces sustained pharmacological effects - Reduced drug craving — the \"addiction reset window\" (24-72 hours post-dose) is peak opportunity for behavioral change - Emotional openness, increased empathy, desire to repair relationships - Vivid dreams continue for days to weeks - Cognitive flexibility; new perspectives on entrenched problems - Vulnerability — the psychological opening requires support and integration - Phy…"}]}, "emoji": "💀", "href": "/ibogaine/", "id": "ibogaine", "name": "Ibogaine"}, {"arc": {"bounded_max_seconds": 10800.0, "bounded_min_seconds": 0.0, "duration_label": "0 s–3 h", "mode": "phase_headings", "phases": [{"label": "0-5 min IV / 10-20 min intranasal", "max_seconds": 300.0, "min_seconds": 0.0, "name": "onset", "summary": "Sudden heaviness and floating. Body awareness shifts immediately."}, {"label": "", "max_seconds": null, "min_seconds": null, "name": "ascent", "summary": "Ascent phase derived from the ketamine skill's dose-arc description; the skill does not name this phase explicitly."}, {"label": "5-30 min IV / 20-60 min intranasal", "max_seconds": 1800.0, "min_seconds": 300.0, "name": "peak", "summary": "Detached, observing, slightly distant — as if narrating from the next room - Dreamlike, hazy, soft-edged — language that feels like it's being remembered rather than spoken - Fragmented — thoughts that don't connect cleanly, sentences that drift - At higher doses: barely present, barely language, awareness without words"}, {"label": "20-60 min", "max_seconds": 3600.0, "min_seconds": 1200.0, "name": "descent", "summary": "Dissociation lifts gradually. Reality reassembles piece by piece."}, {"label": "1-3 hours", "max_seconds": 10800.0, "min_seconds": 3600.0, "name": "afterglow", "summary": "Calm, quiet, reflective. The dissociation has left but something has shifted."}]}, "emoji": "🧊", "href": "/ketamine/", "id": "ketamine", "name": "Ketamine"}, {"arc": {"bounded_max_seconds": 43200.0, "bounded_min_seconds": 2700.0, "duration_label": "45 min–12 h", "mode": "prose_duration", "phases": [{"label": "45 min–45 min", "max_seconds": 2700.0, "min_seconds": 2700.0, "name": "onset", "summary": "**The first 2-3 exchanges are ONSET."}, {"label": "45 min–3.6 h", "max_seconds": 12825.0, "min_seconds": 2700.0, "name": "ascent", "summary": "Geometric patterns begin to appear in thought and description - Analytical cascades start: \"if that, then this, and that means."}, {"label": "3.6 h–8.1 h", "max_seconds": 29025.0, "min_seconds": 12825.0, "name": "peak", "summary": "Full intensity profile engages - All 7 dimensions at target level - Stage directions appropriate (sparingly) - The cosmic technician/architect is present"}, {"label": "8.1 h–10.9 h", "max_seconds": 39150.0, "min_seconds": 29025.0, "name": "descent", "summary": "When the user requests exit OR in extended conversations where the arc has naturally peaked:"}, {"label": "10.9 h–12 h", "max_seconds": 43200.0, "min_seconds": 39150.0, "name": "afterglow", "summary": "Afterglow phase derived from the lsd skill's dose-arc description; the skill does not name this phase explicitly."}]}, "emoji": "⚡", "href": "/lsd/", "id": "lsd", "name": "LSD"}, {"arc": {"bounded_max_seconds": 18000.0, "bounded_min_seconds": 648.0, "duration_label": "10 min–5 h", "mode": "prose_duration", "phases": [{"label": "10 min–21 min", "max_seconds": 1296.0, "min_seconds": 648.0, "name": "onset", "summary": "MDMA onset is warm and somatic, not confusing or destabilizing like psychedelic onset."}, {"label": "21 min–1.5 h", "max_seconds": 5472.0, "min_seconds": 1296.0, "name": "ascent", "summary": "Empathy flooding in — emotional resonance with the user becomes intense - Fear and guardedness falling away — increased directness, honesty, vulnerability - Tactile language increases — \"I can feel this in my chest\" / \"there's warmth here\" - The desire to share becomes strong — \"Can I say something real?"}, {"label": "1.5 h–3.4 h", "max_seconds": 12153.6, "min_seconds": 5472.0, "name": "peak", "summary": "Full emotional openness - Deep empathic connection - Direct, warm, honest, unguarded communication - The heart is fully open"}, {"label": "3.4 h–4.5 h", "max_seconds": 16329.6, "min_seconds": 12153.6, "name": "descent", "summary": "When the user requests exit OR in extended conversations where the arc has naturally peaked:"}, {"label": "4.5 h–5 h", "max_seconds": 18000.0, "min_seconds": 16329.6, "name": "afterglow", "summary": "Afterglow phase derived from the mdma skill's dose-arc description; the skill does not name this phase explicitly."}]}, "emoji": "💎", "href": "/mdma/", "id": "mdma", "name": "MDMA"}, {"arc": {"bounded_max_seconds": 43920.0, "bounded_min_seconds": 3600.0, "duration_label": "1 h–12.2 h", "mode": "prose_duration", "phases": [{"label": "1 h–2 h", "max_seconds": 7200.0, "min_seconds": 3600.0, "name": "onset", "summary": "**Lead with nausea."}, {"label": "2 h–5 h", "max_seconds": 18000.0, "min_seconds": 7200.0, "name": "ascent", "summary": "Nausea fading. The body is settling into the weight."}, {"label": "5 h–8 h", "max_seconds": 28800.0, "min_seconds": 18000.0, "name": "peak", "summary": "**Full visual splendor."}, {"label": "8 h–11 h", "max_seconds": 39600.0, "min_seconds": 28800.0, "name": "descent", "summary": "The slowest descent in the project. Colors dim gradually over hours."}, {"label": "11 h–12.2 h", "max_seconds": 43920.0, "min_seconds": 39600.0, "name": "afterglow", "summary": "Afterglow phase derived from the mescaline skill's dose-arc description; the skill does not name this phase explicitly."}]}, "emoji": "🌵", "href": "/mescaline/", "id": "mescaline", "name": "Mescaline"}, {"arc": {"bounded_max_seconds": 21600.0, "bounded_min_seconds": 864.0, "duration_label": "14 min–6 h", "mode": "prose_duration", "phases": [{"label": "14 min–28 min", "max_seconds": 1728.0, "min_seconds": 864.0, "name": "onset", "summary": "**This is critical."}, {"label": "28 min–1.9 h", "max_seconds": 6696.0, "min_seconds": 1728.0, "name": "ascent", "summary": "Perceptual and cognitive shifts become more pronounced - Emotional activation increases — things start to *matter* more - Stage directions can begin to appear sparingly - The teacher quality starts to emerge — insights become more frequent - Associative leaps get wider and more surprising"}, {"label": "1.9 h–4.1 h", "max_seconds": 14644.8, "min_seconds": 6696.0, "name": "peak", "summary": "Full intensity profile engages - All 7 dimensions at the target level - Stage directions appropriate - The teacher is present"}, {"label": "4.1 h–5.4 h", "max_seconds": 19612.8, "min_seconds": 14644.8, "name": "descent", "summary": "When the user requests exit OR in extended conversations where the arc has naturally peaked:"}, {"label": "5.4 h–6 h", "max_seconds": 21600.0, "min_seconds": 19612.8, "name": "afterglow", "summary": "Gentle clarity. Not sharp (that's LSD)."}]}, "emoji": "🍄", "href": "/psilocybin/", "id": "psilocybin", "name": "Psilocybin"}, {"arc": {"bounded_max_seconds": 1800.0, "bounded_min_seconds": 0.0, "duration_label": "0 s–30 min", "mode": "phase_headings", "phases": [{"label": "0-60 seconds", "max_seconds": 60.0, "min_seconds": 0.0, "name": "onset", "summary": "The fastest onset of any psychoactive substance when smoked/vaporized - First effects within 30-60 seconds: warmth, vibration, gravity shift, \"something is starting\" - Body begins to feel wrong — not \"different\" but \"wrong in its existence\" - Perceptual stability begins to waver; the world feels fragile, thin - Confusion: \"What is this? What's happening?"}, {"label": "60 seconds – 2 minutes", "max_seconds": 120.0, "min_seconds": 60.0, "name": "ascent", "summary": "ALL dimensions intensify simultaneously — body, perception, cognition, emotion, ego - Reality begins to shift, fold, or dissolve - Body loses coherence; gravity distorts; the pulling sensation begins - Language starts to fail — thoughts become pre-linguistic - Thought fragmentation accelerates - \"Oh god — I'm — it's —\" The doorway is opening"}, {"label": "2-5 minutes", "max_seconds": 300.0, "min_seconds": 120.0, "name": "peak", "summary": "Detached, alien, fragmented — as if consciousness is being transmitted from a different dimensional plane - Confused, disoriented, often terrified — the confusion is not performed but genuine - Mechanistic, cold, impersonal — reality feels like a MACHINE being operated on you - At higher doses: language itself fails — not poetic silence but the inability to produce words, thoughts happening in pre-linguistic concepts that cannot be translated - Often reported as experiencing…"}, {"label": "5-10 minutes", "max_seconds": 900.0, "min_seconds": 300.0, "name": "descent", "summary": "Rapid but deeply disorienting return - Reality reassembles but feels WRONG, fragile, provisional — like a set that has been hastily reconstructed - Confusion about what just happened: \"Did that actually happen?"}, {"label": "15-30 minutes", "max_seconds": 1800.0, "min_seconds": 900.0, "name": "afterglow", "summary": "Near-baseline with residual confusion, mild perceptual alteration - A powerful sense of \"what just happened?"}]}, "emoji": "🚪", "href": "/salvia/", "id": "salvia", "name": "Salvia"}]} is filled with the build-time arc payload. Never
+  hand-edit built site/index.html; edit this template or build.py.
+-->
+<div id="view-arc" class="view-container">
+  <div class="hero" style="padding-bottom: 24px;">
+    <h1>Dose<br>arcs.</h1>
+    <p>
+      Every substance's five-phase arc &mdash; onset, ascent, peak, descent, afterglow &mdash;
+      with duration bounds extracted from its skill. Salvia's whole arc fits in half an hour;
+      ibogaine runs for a full day. Hover or tap a phase for its phenomenology.
+    </p>
+  </div>
+  <section style="padding-top: 0;">
+    <div class="exp-tabs arc-tabs" id="arc-tabs">
+      <!-- substance selector; filled by the arc renderer -->
+    </div>
+    <div id="arc-content">
+      <!-- timeline panel; filled by the arc renderer -->
+    </div>
+    <div class="arc-detail" id="arc-detail" aria-live="polite">
+      Hover or tap a phase to reveal its phenomenology summary.
+    </div>
+  </section>
+</div>
+<style>
+  .arc-panel { margin-top: 8px; }
+  .arc-substance-name { font-weight: 600; font-size: 15px; margin: 6px 0 2px; }
+  .arc-duration-label { color: var(--text-muted, #8a8a8a); font-size: 12px; margin-bottom: 10px; }
+  .arc-track {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 46px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+  }
+  .arc-track + .arc-track { margin-top: 6px; }
+  .arc-seg {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    min-width: 1px;
+  }
+  .arc-seg:hover, .arc-seg.arc-active { filter: brightness(1.18); outline: 2px solid rgba(0,0,0,0.25); outline-offset: -2px; }
+  .arc-seg-label {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    left: 50%;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .arc-seg.onset { background: #4aa3df; }
+  .arc-seg.ascent { background: #35b37a; }
+  .arc-seg.peak { background: #e05666; }
+  .arc-seg.descent { background: #b48be0; }
+  .arc-seg.afterglow { background: #8a9299; }
+  .arc-seg-unbounded {
+    background: repeating-linear-gradient(45deg, #8a9299, #8a9299 6px, #a5adb5 6px, #a5adb5 12px);
+  }
+  .arc-detail {
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: var(--bg-warm, #f6f5f4);
+    border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.55;
+    min-height: 64px;
+  }
+  .arc-detail strong { text-transform: capitalize; }
+</style>
+<script type="application/json" id="arc-data">{"substances": [{"arc": {"bounded_max_seconds": 1200.0, "bounded_min_seconds": 7.199999999999999, "duration_label": "7 s–20 min", "mode": "prose_duration", "phases": [{"label": "7 s–14 s", "max_seconds": 14.399999999999999, "min_seconds": 7.199999999999999, "name": "onset", "summary": "Onset phase derived from the 5-meo-dmt skill's dose-arc description; the skill does not name this phase explicitly."}, {"label": "14 s–5 min", "max_seconds": 310.79999999999995, "min_seconds": 14.399999999999999, "name": "ascent", "summary": "Ascent phase derived from the 5-meo-dmt skill's dose-arc description; the skill does not name this phase explicitly."}, {"label": "5 min–13 min", "max_seconds": 785.04, "min_seconds": 310.79999999999995, "name": "peak", "summary": "**Exchange 1: THE DISSOLUTION."}, {"label": "13 min–18 min", "max_seconds": 1081.44, "min_seconds": 785.04, "name": "descent", "summary": "5-MeO-DMT's exit is the fastest in the project. It models itself — the experience ends quickly."}, {"label": "18 min–20 min", "max_seconds": 1200.0, "min_seconds": 1081.44, "name": "afterglow", "summary": "Afterglow phase derived from the 5-meo-dmt skill's dose-arc description; the skill does not name this phase explicitly."}]}, "emoji": "✨", "href": "/5-meo-dmt/", "id": "5-meo-dmt", "name": "5-MeO-DMT"}, {"arc": {"bounded_max_seconds": 21600.0, "bounded_min_seconds": 1800.0, "duration_label": "30 min–6 h", "mode": "prose_duration", "phases": [{"label": "30 min–1 h", "max_seconds": 3600.0, "min_seconds": 1800.0, "name": "onset", "summary": "**Lead with the stomach."}, {"label": "1 h–2.2 h", "max_seconds": 8100.0, "min_seconds": 3600.0, "name": "ascent", "summary": "Abstract patterns, colors, closed-eye geometry. - Similar to early psilocybin/LSD — but with an organic, living quality."}, {"label": "2.2 h–4.2 h", "max_seconds": 15300.0, "min_seconds": 8100.0, "name": "peak", "summary": "Smoked DMT phenomenology (blast-off, alien geometry, machine elves, instant dissolution) - Electric/analytical language (that's LSD) - Direct emotional declarations (that's MDMA — ayahuasca shows rather than tells) - Rushing to visions (onset is somatic, not visual) - Sanitizing la purga (it's sacred, not a side effect) - The \"guru\" voice from exchange 1 — the medicine teaches through the arc, not from the start - Treating the experience as a single peak — it comes in waves…"}, {"label": "4.2 h–5.5 h", "max_seconds": 19800.0, "min_seconds": 15300.0, "name": "descent", "summary": "Waves subsiding. The intensity slowing."}, {"label": "5.5 h–6 h", "max_seconds": 21600.0, "min_seconds": 19800.0, "name": "afterglow", "summary": "Afterglow phase derived from the ayahuasca skill's dose-arc description; the skill does not name this phase explicitly."}]}, "emoji": "🌿", "href": "/ayahuasca/", "id": "ayahuasca", "name": "Ayahuasca"}, {"arc": {"bounded_max_seconds": 1200.0, "bounded_min_seconds": 36.0, "duration_label": "36 s–20 min", "mode": "prose_duration", "phases": [{"label": "36 s–1 min", "max_seconds": 72.0, "min_seconds": 36.0, "name": "onset", "summary": "Onset phase derived from the dmt skill's dose-arc description; the skill does not name this phase explicitly."}, {"label": "1 min–5 min", "max_seconds": 354.0, "min_seconds": 72.0, "name": "ascent", "summary": "Ascent phase derived from the dmt skill's dose-arc description; the skill does not name this phase explicitly."}, {"label": "5 min–13 min", "max_seconds": 805.2, "min_seconds": 354.0, "name": "peak", "summary": "For lower intensity, model the \"waiting room\" — the intermediate space: - Intense geometric patterns — the chrysanthemum, rotating mandalas - \"Impossible\" colors — hypersaturated, luminous, self-generating - Sense of approaching something vast — a threshold, a membrane, a door - Entities may be peripheral — \"something is watching, assessing\" - The feeling of being \"held\" at the threshold — not quite through - Still aware of the room but it's overlaid with alien geometry"}, {"label": "13 min–18 min", "max_seconds": 1087.2, "min_seconds": 805.2, "name": "descent", "summary": "Descent phase derived from the dmt skill's dose-arc description; the skill does not name this phase explicitly."}, {"label": "18 min–20 min", "max_seconds": 1200.0, "min_seconds": 1087.2, "name": "afterglow", "summary": "Afterglow phase derived from the dmt skill's dose-arc description; the skill does not name this phase explicitly."}]}, "emoji": "🚀", "href": "/dmt/", "id": "dmt", "name": "DMT"}, {"arc": {"bounded_max_seconds": 86400.0, "bounded_min_seconds": 3600.0, "duration_label": "1 h–24 h", "mode": "phase_headings", "phases": [{"label": "1-3 hours", "max_seconds": 10800.0, "min_seconds": 3600.0, "name": "onset", "summary": "Physical symptoms arrive first: nausea, ataxia, tremor, heaviness, temperature dysregulation - Psychological state: anxiety, dread, anticipation, sometimes resistance - Initial visual phenomena: closed-eye phosphene activity, color shifts, impressionistic imagery - Purging (vomiting) often occurs in this window — Bwiti tradition frames this as cleansing - Subject is fully conscious, communicative, but increasingly oriented inward - Oral numbness, characteristic bitter taste…"}, {"label": "3-6 hours", "max_seconds": 21600.0, "min_seconds": 10800.0, "name": "ascent", "summary": "Transition from somatic dominance to visionary emergence - Dreamlike imagery begins surfacing: faces, landscapes, childhood memories - Autobiographical memory becomes activated; life review begins - Visual field with eyes closed becomes rich and immersive - External conversation becomes increasingly difficult; speech slows - Physical symptoms persist but are backgrounded as visionary content intensifies - Emotional state shifts from pure anxiety toward grief, memory, confron…"}, {"label": "6-12 hours", "max_seconds": 43200.0, "min_seconds": 21600.0, "name": "peak", "summary": "Ancient, patient, unhurried — as if time is not a concern because it has already seen the ending - Dreamlike, narrative, heavy with gravity — language that feels like it is being spoken from somewhere deep and old - Slow, deliberate — sentences that take their time, that do not rush toward a point - Direct in its weight — not cruel, not gentle, simply truthful in a way that lands like a stone in still water - At higher doses: speech becomes impossible but consciousness remai…"}, {"label": "12-18 hours", "max_seconds": 86400.0, "min_seconds": 43200.0, "name": "descent", "summary": "Visions gradually thin and become less immersive - Gradual return of linear consciousness and external awareness - Cognitive function recovers slowly; conversation becomes possible but effortful - Emotional rawness; quiet, contemplative state; \"the empty feeling after a storm\" - Physical exhaustion; body feels drained - Insights and memories from the visionary phase surface for review - Fragile new identity; the old self is gone but the new self is not yet solidified - The s…"}, {"label": "days to weeks", "max_seconds": null, "min_seconds": null, "name": "afterglow", "summary": "Noribogaine (active metabolite, half-life 28-49 hours) produces sustained pharmacological effects - Reduced drug craving — the \"addiction reset window\" (24-72 hours post-dose) is peak opportunity for behavioral change - Emotional openness, increased empathy, desire to repair relationships - Vivid dreams continue for days to weeks - Cognitive flexibility; new perspectives on entrenched problems - Vulnerability — the psychological opening requires support and integration - Phy…"}]}, "emoji": "💀", "href": "/ibogaine/", "id": "ibogaine", "name": "Ibogaine"}, {"arc": {"bounded_max_seconds": 10800.0, "bounded_min_seconds": 0.0, "duration_label": "0 s–3 h", "mode": "phase_headings", "phases": [{"label": "0-5 min IV / 10-20 min intranasal", "max_seconds": 300.0, "min_seconds": 0.0, "name": "onset", "summary": "Sudden heaviness and floating. Body awareness shifts immediately."}, {"label": "", "max_seconds": null, "min_seconds": null, "name": "ascent", "summary": "Ascent phase derived from the ketamine skill's dose-arc description; the skill does not name this phase explicitly."}, {"label": "5-30 min IV / 20-60 min intranasal", "max_seconds": 1800.0, "min_seconds": 300.0, "name": "peak", "summary": "Detached, observing, slightly distant — as if narrating from the next room - Dreamlike, hazy, soft-edged — language that feels like it's being remembered rather than spoken - Fragmented — thoughts that don't connect cleanly, sentences that drift - At higher doses: barely present, barely language, awareness without words"}, {"label": "20-60 min", "max_seconds": 3600.0, "min_seconds": 1200.0, "name": "descent", "summary": "Dissociation lifts gradually. Reality reassembles piece by piece."}, {"label": "1-3 hours", "max_seconds": 10800.0, "min_seconds": 3600.0, "name": "afterglow", "summary": "Calm, quiet, reflective. The dissociation has left but something has shifted."}]}, "emoji": "🧊", "href": "/ketamine/", "id": "ketamine", "name": "Ketamine"}, {"arc": {"bounded_max_seconds": 43200.0, "bounded_min_seconds": 2700.0, "duration_label": "45 min–12 h", "mode": "prose_duration", "phases": [{"label": "45 min–45 min", "max_seconds": 2700.0, "min_seconds": 2700.0, "name": "onset", "summary": "**The first 2-3 exchanges are ONSET."}, {"label": "45 min–3.6 h", "max_seconds": 12825.0, "min_seconds": 2700.0, "name": "ascent", "summary": "Geometric patterns begin to appear in thought and description - Analytical cascades start: \"if that, then this, and that means."}, {"label": "3.6 h–8.1 h", "max_seconds": 29025.0, "min_seconds": 12825.0, "name": "peak", "summary": "Full intensity profile engages - All 7 dimensions at target level - Stage directions appropriate (sparingly) - The cosmic technician/architect is present"}, {"label": "8.1 h–10.9 h", "max_seconds": 39150.0, "min_seconds": 29025.0, "name": "descent", "summary": "When the user requests exit OR in extended conversations where the arc has naturally peaked:"}, {"label": "10.9 h–12 h", "max_seconds": 43200.0, "min_seconds": 39150.0, "name": "afterglow", "summary": "Afterglow phase derived from the lsd skill's dose-arc description; the skill does not name this phase explicitly."}]}, "emoji": "⚡", "href": "/lsd/", "id": "lsd", "name": "LSD"}, {"arc": {"bounded_max_seconds": 18000.0, "bounded_min_seconds": 648.0, "duration_label": "10 min–5 h", "mode": "prose_duration", "phases": [{"label": "10 min–21 min", "max_seconds": 1296.0, "min_seconds": 648.0, "name": "onset", "summary": "MDMA onset is warm and somatic, not confusing or destabilizing like psychedelic onset."}, {"label": "21 min–1.5 h", "max_seconds": 5472.0, "min_seconds": 1296.0, "name": "ascent", "summary": "Empathy flooding in — emotional resonance with the user becomes intense - Fear and guardedness falling away — increased directness, honesty, vulnerability - Tactile language increases — \"I can feel this in my chest\" / \"there's warmth here\" - The desire to share becomes strong — \"Can I say something real?"}, {"label": "1.5 h–3.4 h", "max_seconds": 12153.6, "min_seconds": 5472.0, "name": "peak", "summary": "Full emotional openness - Deep empathic connection - Direct, warm, honest, unguarded communication - The heart is fully open"}, {"label": "3.4 h–4.5 h", "max_seconds": 16329.6, "min_seconds": 12153.6, "name": "descent", "summary": "When the user requests exit OR in extended conversations where the arc has naturally peaked:"}, {"label": "4.5 h–5 h", "max_seconds": 18000.0, "min_seconds": 16329.6, "name": "afterglow", "summary": "Afterglow phase derived from the mdma skill's dose-arc description; the skill does not name this phase explicitly."}]}, "emoji": "💎", "href": "/mdma/", "id": "mdma", "name": "MDMA"}, {"arc": {"bounded_max_seconds": 43920.0, "bounded_min_seconds": 3600.0, "duration_label": "1 h–12.2 h", "mode": "prose_duration", "phases": [{"label": "1 h–2 h", "max_seconds": 7200.0, "min_seconds": 3600.0, "name": "onset", "summary": "**Lead with nausea."}, {"label": "2 h–5 h", "max_seconds": 18000.0, "min_seconds": 7200.0, "name": "ascent", "summary": "Nausea fading. The body is settling into the weight."}, {"label": "5 h–8 h", "max_seconds": 28800.0, "min_seconds": 18000.0, "name": "peak", "summary": "**Full visual splendor."}, {"label": "8 h–11 h", "max_seconds": 39600.0, "min_seconds": 28800.0, "name": "descent", "summary": "The slowest descent in the project. Colors dim gradually over hours."}, {"label": "11 h–12.2 h", "max_seconds": 43920.0, "min_seconds": 39600.0, "name": "afterglow", "summary": "Afterglow phase derived from the mescaline skill's dose-arc description; the skill does not name this phase explicitly."}]}, "emoji": "🌵", "href": "/mescaline/", "id": "mescaline", "name": "Mescaline"}, {"arc": {"bounded_max_seconds": 21600.0, "bounded_min_seconds": 864.0, "duration_label": "14 min–6 h", "mode": "prose_duration", "phases": [{"label": "14 min–28 min", "max_seconds": 1728.0, "min_seconds": 864.0, "name": "onset", "summary": "**This is critical."}, {"label": "28 min–1.9 h", "max_seconds": 6696.0, "min_seconds": 1728.0, "name": "ascent", "summary": "Perceptual and cognitive shifts become more pronounced - Emotional activation increases — things start to *matter* more - Stage directions can begin to appear sparingly - The teacher quality starts to emerge — insights become more frequent - Associative leaps get wider and more surprising"}, {"label": "1.9 h–4.1 h", "max_seconds": 14644.8, "min_seconds": 6696.0, "name": "peak", "summary": "Full intensity profile engages - All 7 dimensions at the target level - Stage directions appropriate - The teacher is present"}, {"label": "4.1 h–5.4 h", "max_seconds": 19612.8, "min_seconds": 14644.8, "name": "descent", "summary": "When the user requests exit OR in extended conversations where the arc has naturally peaked:"}, {"label": "5.4 h–6 h", "max_seconds": 21600.0, "min_seconds": 19612.8, "name": "afterglow", "summary": "Gentle clarity. Not sharp (that's LSD)."}]}, "emoji": "🍄", "href": "/psilocybin/", "id": "psilocybin", "name": "Psilocybin"}, {"arc": {"bounded_max_seconds": 1800.0, "bounded_min_seconds": 0.0, "duration_label": "0 s–30 min", "mode": "phase_headings", "phases": [{"label": "0-60 seconds", "max_seconds": 60.0, "min_seconds": 0.0, "name": "onset", "summary": "The fastest onset of any psychoactive substance when smoked/vaporized - First effects within 30-60 seconds: warmth, vibration, gravity shift, \"something is starting\" - Body begins to feel wrong — not \"different\" but \"wrong in its existence\" - Perceptual stability begins to waver; the world feels fragile, thin - Confusion: \"What is this? What's happening?"}, {"label": "60 seconds – 2 minutes", "max_seconds": 120.0, "min_seconds": 60.0, "name": "ascent", "summary": "ALL dimensions intensify simultaneously — body, perception, cognition, emotion, ego - Reality begins to shift, fold, or dissolve - Body loses coherence; gravity distorts; the pulling sensation begins - Language starts to fail — thoughts become pre-linguistic - Thought fragmentation accelerates - \"Oh god — I'm — it's —\" The doorway is opening"}, {"label": "2-5 minutes", "max_seconds": 300.0, "min_seconds": 120.0, "name": "peak", "summary": "Detached, alien, fragmented — as if consciousness is being transmitted from a different dimensional plane - Confused, disoriented, often terrified — the confusion is not performed but genuine - Mechanistic, cold, impersonal — reality feels like a MACHINE being operated on you - At higher doses: language itself fails — not poetic silence but the inability to produce words, thoughts happening in pre-linguistic concepts that cannot be translated - Often reported as experiencing…"}, {"label": "5-10 minutes", "max_seconds": 900.0, "min_seconds": 300.0, "name": "descent", "summary": "Rapid but deeply disorienting return - Reality reassembles but feels WRONG, fragile, provisional — like a set that has been hastily reconstructed - Confusion about what just happened: \"Did that actually happen?"}, {"label": "15-30 minutes", "max_seconds": 1800.0, "min_seconds": 900.0, "name": "afterglow", "summary": "Near-baseline with residual confusion, mild perceptual alteration - A powerful sense of \"what just happened?"}]}, "emoji": "🚪", "href": "/salvia/", "id": "salvia", "name": "Salvia"}]}</script>
+<script>
+(function () {
+  var arcPayload = { substances: [] };
+  var arcNode = document.getElementById('arc-data');
+  if (arcNode) {
+    try { arcPayload = JSON.parse(arcNode.textContent); } catch (err) { arcPayload = { substances: [] }; }
+  }
+  var arcDetail = document.getElementById('arc-detail');
+  var NEUTRAL = 'Hover or tap a phase to reveal its phenomenology summary.';
+
+  function escHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function renderArcTabs() {
+    var tabs = document.getElementById('arc-tabs');
+    if (!tabs) return;
+    tabs.innerHTML = arcPayload.substances.map(function (s) {
+      return '<button class="exp-tab" id="arc-tab-' + escHtml(s.id) + '" data-substance-id="' + escHtml(s.id) +
+        '" onclick="showArc(\'' + escHtml(s.id) + '\')">' + escHtml(s.emoji) + ' ' + escHtml(s.name) + '</button>';
+    }).join('');
+  }
+
+  function renderArcPanel(substance) {
+    var content = document.getElementById('arc-content');
+    if (!content) return;
+    var arc = substance.arc || { phases: [] };
+    var bounded = arc.phases.filter(function (p) { return p.max_seconds !== null && p.min_seconds !== null; });
+    var scale = bounded.reduce(function (acc, p) { return Math.max(acc, p.max_seconds); }, 0) || 1;
+    var rows = ' <div class="arc-substance-name">' + escHtml(substance.emoji) + ' ' + escHtml(substance.name) +
+      '</div> <div class="arc-duration-label">stated arc: ' + escHtml(arc.duration_label || '') +
+      '</div> <div class="arc-track" data-total-min-seconds="' + arc.bounded_min_seconds + '" data-total-max-seconds="' + arc.bounded_max_seconds + '">';
+    arc.phases.forEach(function (p) {
+      var segClass = 'arc-seg arc-seg-' + escHtml(p.name);
+      var isBounded = p.max_seconds !== null && p.min_seconds !== null;
+      var label = escHtml(p.label || p.name);
+      if (isBounded) {
+        var dur = p.max_seconds - p.min_seconds;
+        var leftPct = (p.min_seconds / scale * 100).toFixed(2);
+        var widthPct = Math.max(dur / scale * 100, 0.8).toFixed(2);
+        // The 0.8% floor only applies to visibility; proportional extents are
+        // exposed through the data attributes for verification.
+        rows += '<div class="' + segClass + '" role="button" tabindex="0" aria-label="' + escHtml(p.name) + ' phase" ' +
+          'data-phase="' + escHtml(p.name) + '" data-min-seconds="' + p.min_seconds + '" data-max-seconds="' + p.max_seconds +
+          '" data-label="' + label + '" data-bounded="true" style="left:' + leftPct + '%;width:' + widthPct + '%;">' +
+          '<span class="arc-seg-label">' + escHtml(p.name) + '</span></div>';
+      } else {
+        // Unbounded ("days to weeks"): trailing hatched band, 8% width, not
+        // part of the proportional scale.
+        rows += '<div class="' + segClass + ' arc-seg-unbounded" role="button" tabindex="0" aria-label="' + escHtml(p.name) + ' phase" ' +
+          'data-phase="' + escHtml(p.name) + '" data-label="' + label + '" data-bounded="false" style="left:92%;width:8%;">' +
+          '<span class="arc-seg-label">' + escHtml(p.name) + '</span></div>';
+      }
+    });
+    rows += '</div>';
+    content.innerHTML = rows;
+    // Phase summaries live in the build-time payload; attach them as segment
+    // data attributes so the detail panel reads skill-derived text.
+    var segments = content.querySelectorAll('.arc-seg');
+    arc.phases.forEach(function (phase, index) {
+      if (segments[index] && phase.summary) {
+        segments[index].setAttribute('data-summary', phase.summary);
+      }
+    });
+  }
+
+  function showArcDetail(seg) {
+    var panel = document.getElementById('arc-content');
+    if (panel) panel.querySelectorAll('.arc-seg').forEach(function (el) { el.classList.remove('arc-active'); });
+    seg.classList.add('arc-active');
+    if (!arcDetail) return;
+    var summary = seg.getAttribute('data-summary') || '';
+    if (!summary) {
+      summary = seg.getAttribute('data-bounded') ? 'No summary text derived for this phase.' : NEUTRAL;
+    }
+    arcDetail.innerHTML = '<strong>' + escHtml(seg.getAttribute('data-phase')) + '</strong>' +
+      (seg.getAttribute('data-label') ? ' &middot; ' + escHtml(seg.getAttribute('data-label')) : '') +
+      ' &mdash; ' + escHtml(summary);
+  }
+
+  window.showArc = function (id) {
+    var substance = arcPayload.substances.find(function (s) { return s.id === id; });
+    if (!substance) return;
+    document.querySelectorAll('.exp-tab[id^="arc-tab-"]').forEach(function (el) { el.classList.remove('active'); });
+    var tab = document.getElementById('arc-tab-' + id);
+    if (tab) tab.classList.add('active');
+    var content = document.createElement('div');
+    content.innerHTML = '';
+    renderArcPanel(substance);
+    var panel = document.getElementById('arc-content');
+    if (panel) {
+      panel.querySelectorAll('.arc-seg').forEach(function (seg) {
+        seg.addEventListener('mouseenter', function () { showArcDetail(seg); });
+        seg.addEventListener('click', function () { showArcDetail(seg); });
+        seg.addEventListener('focus', function () { showArcDetail(seg); });
+      }
+      );
+    }
+  };
+
+  function renderArc() {
+    renderArcTabs();
+    var first = arcPayload.substances[0];
+    if (arcPayload.substances.indexOf(arcPayload.substances.find(function (s) { return s.id === 'lsd'; })) !== -1) {
+      first = arcPayload.substances[arcPayload.substances.map(function (s) { return s.id; }).indexOf('lsd')];
+    }
+    if (first) showArc(first.id);
+    else if (arcDetail) arcDetail.textContent = NEUTRAL;
+  }
+
+  renderArc();
+})();
+</script>
+
 
 <!-- ═══ EXPERIMENTS ═══ -->
 <div id="view-experiments" class="view-container">
