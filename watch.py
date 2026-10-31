@@ -3,15 +3,18 @@
 watch.py — Watch journal and experiment directories, auto-rebuild site on change.
 
 Usage:
-  python3 watch.py          # watch + serve on :8765
-  python3 watch.py --build  # one-shot build only (no watcher)
-  python3 watch.py --port 9000  # custom port
+  python3 watch.py                # watch + rebuild + deploy + serve on :8765
+  python3 watch.py --serve-only   # watch + rebuild + serve, never deploy
+  python3 watch.py --build        # one-shot build only (no watcher)
+  python3 watch.py --port 9000    # custom port
+  python3 watch.py --help         # show usage
 
 Log-event migration note (repo rule 3):
   All high-signal output (deploy start/failure/skip, build warnings and
   summary, serve start/stop, watcher lifecycle) routes through
   ``altered_states.log_utils.log_event`` (JSON to stderr, redacted).
-  Surviving bare ``print()`` calls in this file: NONE.
+  Surviving bare ``print()`` calls in this file: one (the ``--help`` usage
+  text, which is output formatting, not high-signal logging).
 """
 
 import contextlib
@@ -152,18 +155,27 @@ def changed_paths(snapshot: dict[str, float], current: dict[str, float]) -> list
     return changed
 
 
-def watch_loop() -> None:
-    """Main watch loop. Blocks forever."""
+def watch_loop(serve_only: bool = False) -> None:
+    """Main watch loop. Blocks forever.
+
+    With ``serve_only=True`` the loop rebuilds but never calls deploy(): the
+    only deploy/wrangler call sites in this module (``deploy()`` and
+    ``build_and_deploy()``) are unreachable from the serve-only branch.
+    """
     log_event(
         "watch.start",
         journals_dir=WATCH_DIRS[0],
         experiments_dir=WATCH_DIRS[1],
+        serve_only=serve_only,
         note="Press Ctrl+C to stop",
     )
 
     # Initial build + deploy
     log_event("watch.initial_build", note="starting")
-    build_and_deploy()
+    if serve_only:
+        build()
+    else:
+        build_and_deploy()
 
     last_build_time = time.time()
     snapshot = get_snapshot()
@@ -189,11 +201,18 @@ def watch_loop() -> None:
                 names.append(f"... and {len(changed) - PREVIEW_CHANGE_COUNT} more")
             log_event("watch.change_detected", at=ts, count=len(changed), files=names)
 
-            if build_and_deploy():
+            # Deploy is not attempted in serve-only mode: rebuild locally only.
+            okay = build() if serve_only else build_and_deploy()
+            if okay:
                 last_build_time = now
                 log_event("watch.rebuild_ok")
             else:
-                log_event("watch.rebuild_retry", level="WARN", note="build/deploy failed, will retry on next change")
+                retry_note = (
+                    "build failed, will retry on next change"
+                    if serve_only
+                    else "build/deploy failed, will retry on next change"
+                )
+                log_event("watch.rebuild_retry", level="WARN", note=retry_note)
 
             snapshot = current
 
@@ -212,13 +231,33 @@ def parse_port(args: list[str], default: int = 8765) -> int:
     return default
 
 
+USAGE = """usage:
+  python3 watch.py [--serve-only] [--build] [--port <n>]
+
+commands:
+  python3 watch.py                watch, rebuild, deploy, and serve on :8765
+  python3 watch.py --serve-only   watch, rebuild, and serve; never deploy
+  python3 watch.py --build        one-shot build only (no watcher, no serve)
+  python3 watch.py --port 9000    custom port
+  python3 watch.py --help         show this help
+"""
+
+
 def main() -> None:
     args = sys.argv[1:]
+
+    if "--help" in args or "-h" in args:
+        # Usage output is intentionally a plain print, not a log_event.
+        print(USAGE, file=sys.stdout)
+        return
+
     port = parse_port(args)
 
     if "--build" in args:
         build_and_deploy()
         return
+
+    serve_only = "--serve-only" in args
 
     # Start HTTP server in background thread
     server = http.server.HTTPServer(("127.0.0.1", port), SiteHandler)
@@ -233,7 +272,7 @@ def main() -> None:
 
     signal.signal(signal.SIGINT, shutdown)
 
-    watch_loop()
+    watch_loop(serve_only=serve_only)
 
 
 if __name__ == "__main__":
