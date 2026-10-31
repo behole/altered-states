@@ -99,6 +99,18 @@ def deploy() -> bool:
     return True
 
 
+def make_server(port: int) -> http.server.ThreadingHTTPServer:
+    """Build the serve-mode HTTP server.
+
+    ThreadingHTTPServer (with daemon threads) so one slow or wedged client
+    connection can never block other requests to the shared :8765 watcher —
+    see the 2026-10-31 quiz-validation incident in docs notes.
+    """
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", port), SiteHandler)
+    server.daemon_threads = True
+    return server
+
+
 def build_and_deploy() -> bool:
     """Build site and deploy to Cloudflare Pages."""
     if not build():
@@ -260,7 +272,7 @@ def main() -> None:
     serve_only = "--serve-only" in args
 
     # Start HTTP server in background thread
-    server = http.server.HTTPServer(("127.0.0.1", port), SiteHandler)
+    server = make_server(port)
     server_thread = threading.Thread(target=server.serve_forever, daemon=True)
     server_thread.start()
     log_event("watch.serving", url=f"http://localhost:{port}", port=port, host="127.0.0.1", lifecycle="start")

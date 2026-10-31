@@ -7,6 +7,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 ## [Unreleased]
+### Changed
+- **watch.py serves on a threaded HTTP server** — both serve modes
+  (`--serve-only` and default) now use `ThreadingHTTPServer` with daemon
+  threads (via the new `watch.make_server()`), so one slow or half-open
+  client connection on the shared :8765 watcher can no longer block all
+  other requests (the 2026-10-31 quiz-validation wedge, curl 000 for
+  minutes). Handler (`SiteHandler`) and shutdown behaviour are unchanged;
+  `tests/unit/test_watch.py` gained offline tests proving a wedged
+  connection does not block later requests and the server still shuts
+  down cleanly.
 ### Added
 - **Per-substance static pages** — `make build` now also writes one
   standalone, deterministic page per substance skill under
