@@ -1,0 +1,196 @@
+<!--
+  Dose-arc timeline view — injected into the SPA home by build.py behind the
+  site.arc_timeline flag (compiled out entirely when the flag is off, payload
+  included). __ARC_DATA__ is filled with the build-time arc payload. Never
+  hand-edit built site/index.html; edit this template or build.py.
+-->
+<div id="view-arc" class="view-container">
+  <div class="hero" style="padding-bottom: 24px;">
+    <h1>Dose<br>arcs.</h1>
+    <p>
+      Every substance's five-phase arc &mdash; onset, ascent, peak, descent, afterglow &mdash;
+      with duration bounds extracted from its skill. Salvia's whole arc fits in half an hour;
+      ibogaine runs for a full day. Hover or tap a phase for its phenomenology.
+    </p>
+  </div>
+  <section style="padding-top: 0;">
+    <div class="exp-tabs arc-tabs" id="arc-tabs">
+      <!-- substance selector; filled by the arc renderer -->
+    </div>
+    <div id="arc-content">
+      <!-- timeline panel; filled by the arc renderer -->
+    </div>
+    <div class="arc-detail" id="arc-detail" aria-live="polite">
+      Hover or tap a phase to reveal its phenomenology summary.
+    </div>
+  </section>
+</div>
+<style>
+  .arc-panel { margin-top: 8px; }
+  .arc-substance-name { font-weight: 600; font-size: 15px; margin: 6px 0 2px; }
+  .arc-duration-label { color: var(--text-muted, #8a8a8a); font-size: 12px; margin-bottom: 10px; }
+  .arc-track {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 46px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+  }
+  .arc-track + .arc-track { margin-top: 6px; }
+  .arc-seg {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    min-width: 1px;
+  }
+  .arc-seg:hover, .arc-seg.arc-active { filter: brightness(1.18); outline: 2px solid rgba(0,0,0,0.25); outline-offset: -2px; }
+  .arc-seg-label {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    left: 50%;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .arc-seg.onset { background: #4aa3df; }
+  .arc-seg.ascent { background: #35b37a; }
+  .arc-seg.peak { background: #e05666; }
+  .arc-seg.descent { background: #b48be0; }
+  .arc-seg.afterglow { background: #8a9299; }
+  .arc-seg-unbounded {
+    background: repeating-linear-gradient(45deg, #8a9299, #8a9299 6px, #a5adb5 6px, #a5adb5 12px);
+  }
+  .arc-detail {
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: var(--bg-warm, #f6f5f4);
+    border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.55;
+    min-height: 64px;
+  }
+  .arc-detail strong { text-transform: capitalize; }
+</style>
+<script type="application/json" id="arc-data">__ARC_DATA__</script>
+<script>
+(function () {
+  var arcPayload = { substances: [] };
+  var arcNode = document.getElementById('arc-data');
+  if (arcNode) {
+    try { arcPayload = JSON.parse(arcNode.textContent); } catch (err) { arcPayload = { substances: [] }; }
+  }
+  var arcDetail = document.getElementById('arc-detail');
+  var NEUTRAL = 'Hover or tap a phase to reveal its phenomenology summary.';
+
+  function escHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function renderArcTabs() {
+    var tabs = document.getElementById('arc-tabs');
+    if (!tabs) return;
+    tabs.innerHTML = arcPayload.substances.map(function (s) {
+      return '<button class="exp-tab" id="arc-tab-' + escHtml(s.id) + '" data-substance-id="' + escHtml(s.id) +
+        '" onclick="showArc(\'' + escHtml(s.id) + '\')">' + escHtml(s.emoji) + ' ' + escHtml(s.name) + '</button>';
+    }).join('');
+  }
+
+  function renderArcPanel(substance) {
+    var content = document.getElementById('arc-content');
+    if (!content) return;
+    var arc = substance.arc || { phases: [] };
+    var bounded = arc.phases.filter(function (p) { return p.max_seconds !== null && p.min_seconds !== null; });
+    var scale = bounded.reduce(function (acc, p) { return Math.max(acc, p.max_seconds); }, 0) || 1;
+    var rows = ' <div class="arc-substance-name">' + escHtml(substance.emoji) + ' ' + escHtml(substance.name) +
+      '</div> <div class="arc-duration-label">stated arc: ' + escHtml(arc.duration_label || '') +
+      '</div> <div class="arc-track" data-total-min-seconds="' + arc.bounded_min_seconds + '" data-total-max-seconds="' + arc.bounded_max_seconds + '">';
+    arc.phases.forEach(function (p) {
+      var segClass = 'arc-seg arc-seg-' + escHtml(p.name);
+      var isBounded = p.max_seconds !== null && p.min_seconds !== null;
+      var label = escHtml(p.label || p.name);
+      if (isBounded) {
+        var dur = p.max_seconds - p.min_seconds;
+        var leftPct = (p.min_seconds / scale * 100).toFixed(2);
+        var widthPct = Math.max(dur / scale * 100, 0.8).toFixed(2);
+        // The 0.8% floor only applies to visibility; proportional extents are
+        // exposed through the data attributes for verification.
+        rows += '<div class="' + segClass + '" role="button" tabindex="0" aria-label="' + escHtml(p.name) + ' phase" ' +
+          'data-phase="' + escHtml(p.name) + '" data-min-seconds="' + p.min_seconds + '" data-max-seconds="' + p.max_seconds +
+          '" data-label="' + label + '" data-bounded="true" style="left:' + leftPct + '%;width:' + widthPct + '%;">' +
+          '<span class="arc-seg-label">' + escHtml(p.name) + '</span></div>';
+      } else {
+        // Unbounded ("days to weeks"): trailing hatched band, 8% width, not
+        // part of the proportional scale.
+        rows += '<div class="' + segClass + ' arc-seg-unbounded" role="button" tabindex="0" aria-label="' + escHtml(p.name) + ' phase" ' +
+          'data-phase="' + escHtml(p.name) + '" data-label="' + label + '" data-bounded="false" style="left:92%;width:8%;">' +
+          '<span class="arc-seg-label">' + escHtml(p.name) + '</span></div>';
+      }
+    });
+    rows += '</div>';
+    content.innerHTML = rows;
+    // Phase summaries live in the build-time payload; attach them as segment
+    // data attributes so the detail panel reads skill-derived text.
+    var segments = content.querySelectorAll('.arc-seg');
+    arc.phases.forEach(function (phase, index) {
+      if (segments[index] && phase.summary) {
+        segments[index].setAttribute('data-summary', phase.summary);
+      }
+    });
+  }
+
+  function showArcDetail(seg) {
+    var panel = document.getElementById('arc-content');
+    if (panel) panel.querySelectorAll('.arc-seg').forEach(function (el) { el.classList.remove('arc-active'); });
+    seg.classList.add('arc-active');
+    if (!arcDetail) return;
+    var summary = seg.getAttribute('data-summary') || '';
+    if (!summary) {
+      summary = seg.getAttribute('data-bounded') ? 'No summary text derived for this phase.' : NEUTRAL;
+    }
+    arcDetail.innerHTML = '<strong>' + escHtml(seg.getAttribute('data-phase')) + '</strong>' +
+      (seg.getAttribute('data-label') ? ' &middot; ' + escHtml(seg.getAttribute('data-label')) : '') +
+      ' &mdash; ' + escHtml(summary);
+  }
+
+  window.showArc = function (id) {
+    var substance = arcPayload.substances.find(function (s) { return s.id === id; });
+    if (!substance) return;
+    document.querySelectorAll('.exp-tab[id^="arc-tab-"]').forEach(function (el) { el.classList.remove('active'); });
+    var tab = document.getElementById('arc-tab-' + id);
+    if (tab) tab.classList.add('active');
+    var content = document.createElement('div');
+    content.innerHTML = '';
+    renderArcPanel(substance);
+    var panel = document.getElementById('arc-content');
+    if (panel) {
+      panel.querySelectorAll('.arc-seg').forEach(function (seg) {
+        seg.addEventListener('mouseenter', function () { showArcDetail(seg); });
+        seg.addEventListener('click', function () { showArcDetail(seg); });
+        seg.addEventListener('focus', function () { showArcDetail(seg); });
+      }
+      );
+    }
+  };
+
+  function renderArc() {
+    renderArcTabs();
+    var first = arcPayload.substances[0];
+    if (arcPayload.substances.indexOf(arcPayload.substances.find(function (s) { return s.id === 'lsd'; })) !== -1) {
+      first = arcPayload.substances[arcPayload.substances.map(function (s) { return s.id; }).indexOf('lsd')];
+    }
+    if (first) showArc(first.id);
+    else if (arcDetail) arcDetail.textContent = NEUTRAL;
+  }
+
+  renderArc();
+})();
+</script>

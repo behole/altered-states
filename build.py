@@ -657,6 +657,415 @@ def write_substance_pages(substances: list[dict[str, Any]], enabled: bool) -> li
     return pages
 
 
+# ── Dose-arc timeline extraction ─────────────────────────────────────────────
+#
+# The dose-arc visualizer needs, per substance, five phases (onset, ascent,
+# peak, descent, afterglow) with duration bounds that come FROM the substance's
+# own SKILL.md — never a hand-typed table, so the site cannot drift from the
+# skills. Skills state their arc in two shapes:
+#
+#   1. "phase_headings": bold phase headings carrying a time range, e.g.
+#      ``**Deep Visionary (6-12 hours):**`` (ibogaine, salvia, ketamine).
+#      Variant prose is tolerated: en/em dashes, mixed units inside one range
+#      ("60 seconds \u2013 2 minutes"), route-qualified ranges ("0-5 min IV / 10-20
+#      min intranasal" — first route wins), and unit-less heads ("days to
+#      weeks" → unbounded afterglow).
+#   2. "prose_duration": durations stated in prose/tables ("LSD lasts 8-12
+#      hours", "Duration: 10-20 minutes", "onset in 30-60 MINUTES"). The total
+#      (and any explicit onset/plateau range) are parsed; the middle phases are
+#      then split deterministically across the stated arc.
+#
+# Phase summaries come from the text under whichever heading in the skill
+# matches the phase name, so the tooltip text the site shows is also skill
+# text. Everything here is a pure function of the SKILL.md text.
+
+ARC_PHASES: tuple[str, ...] = ("onset", "ascent", "peak", "descent", "afterglow")
+ARC_FLAG = "site.arc_timeline"
+ARC_TEMPLATE = os.path.join(BASE, "site", "arc.template.html")
+
+# Keyword sets used BOTH to map a skill's own phase heading to a canonical
+# phase and (prose mode) to find descriptive text for a phase. Checked in this
+# order: afterglow before descent ("Late Descent" must not match ascent, and
+# "Integration" must not capture peak), peak before ascent ("Deep Visionary"
+# belongs to peak; "Early Visionary" to ascent).
+_PHASE_KEYWORD_TABLE: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("afterglow", ("afterglow",)),
+    ("descent", ("descent", "integration", "resolution", "comedown", "clearing", "exit")),
+    ("peak", ("peak", "deep visionary", "breakthrough", "plateau", "void")),
+    ("ascent", ("ascent", "acceleration", "early visionary", "geometric", "wake", "rise")),
+    ("onset", ("onset",)),
+)
+
+_UNIT_SECONDS: dict[str, float] = {
+    "second": 1,
+    "sec": 1,
+    "minute": 60,
+    "min": 60,
+    "hour": 3600,
+    "hr": 3600,
+}
+
+# One time token: a number (optional trailing "+") followed by an optional
+# unit word. Re-applied in sequence so "min IV / min" route splits and mixed
+# units fall out naturally: "0-5 min IV / 10-20 min intranasal" yields
+# (0, 5, min) then (10, 20, min).
+_TIME_TOKEN = re.compile(
+    r"(\d+(?:\.\d+)?)\s*\+?\s*"
+    r"(?:[\u2013\u2014-]\s*(\d+(?:\.\d+)?)\s*\+?\s*)?"
+    r"(seconds?|secs?|minutes?|mins?|hours?|hrs?)?\b",
+    re.IGNORECASE,
+)
+
+_PROSE_TOTAL_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"lasts?\s+(\d+)\s*[\u2013\u2014-]\s*(\d+)\s*(minutes?|hours?|mins?|hrs?)", re.IGNORECASE),
+    re.compile(r"duration[^\n.]{0,40}?(\d+)\s*[\u2013\u2014-]\s*(\d+)\s*(minutes?|hours?|mins?|hrs?)", re.IGNORECASE),
+    re.compile(r"(\d+)\s*[\u2013\u2014-]\s*(\d+)\s*(minutes?|hours?|mins?|hrs?)\s+duration", re.IGNORECASE),
+    re.compile(r"(\d+)\s*[\u2013\u2014-]\s*(\d+)\s*(minutes?|hours?|mins?|hrs?)\s+window", re.IGNORECASE),
+)
+
+_PROSE_ONSET_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"onset[^\n.]{0,40}?(\d+)\s*[\u2013\u2014-]\s*(\d+)\s*(minutes?|hours?|mins?|hrs?)", re.IGNORECASE),
+    re.compile(r"over\s+(\d+)\+?\s*(minutes?|hours?|mins?|hrs?)", re.IGNORECASE),
+)
+
+_PROSE_PLATEAU_PATTERN = re.compile(
+    r"plateau\s+of\s+(\d+)\s*[\u2013\u2014-]\s*(\d+)\s*(hours?|minutes?)", re.IGNORECASE
+)
+
+# Bounds for the deterministic middle-phase split and render thresholds.
+_SECONDS_PER_MINUTE = 60.0
+_SECONDS_PER_HOUR = 3600.0
+_MAX_PHASE_WORDED_HEADINGS = 2  # a phase-shape skill needs >= 2 bounded phases
+
+# A bold-only phase line with a parenthesized annotation, e.g.
+# ``**Late Descent (10-15 minutes):**`` — the shape salvia/ibogaine/ketamine use.
+_ARC_BOLD_PHASE = re.compile(r"^\*\*\s*([^*]+?)\s*\(([^)]+)\)\s*:?\s*\*\*\s*$")
+
+
+def _unit_to_seconds(unit: str) -> float:
+    """Normalize a unit word from the tokenizer to seconds (``hours``, ``hrs``,
+    ``minutes``, ``mins``, ``seconds``, ``secs`` all accepted)."""
+    stem = unit.lower().rstrip("+").rstrip("s")
+    for key, value in _UNIT_SECONDS.items():
+        if stem == key or stem.startswith(key):
+            return value
+    raise ValueError(f"unknown duration unit: {unit!r}")
+
+
+def parse_time_pair(text: str) -> tuple[float, float] | None:
+    """Parse a duration range like ``1-3 hours``, ``0-60 seconds`` or
+    ``60 seconds - 2 minutes`` (the skill's own en-dash shape) into
+    (min, max) seconds.
+
+    Tolerant of the prose variants the skills actually use: any dash shape, a
+    unit change inside the range, a trailing ``+``, and route qualifiers
+    (``0-5 min IV / 10-20 min intranasal`` → the first route). Returns None
+    when the text carries no ``number [range] unit`` shape at all, so the
+    heading classifier can treat it as an unbounded reference ("days to
+    weeks") rather than inventing numbers.
+    """
+    matches: list[tuple[float, float | None, float]] = []
+    for match in _TIME_TOKEN.finditer(text):
+        number, upper, unit = match.group(1), match.group(2), match.group(3)
+        if unit is None:
+            continue  # a bare number ("~90% coherent") carries no magnitude
+        scale = _unit_to_seconds(unit)
+        lo = float(number) * scale
+        hi = float(upper) * scale if upper is not None else None
+        matches.append((lo, hi, scale))
+    if not matches:
+        return None
+    first_lo, first_hi, _ = matches[0]
+    if first_hi is not None:
+        return first_lo, first_hi
+    if len(matches) > 1:
+        # "60 seconds - 2 minutes": the next number+unit token ends the range.
+        return first_lo, matches[1][0]
+    return first_lo, first_lo
+
+
+def _classify_phase_name(heading: str) -> str | None:
+    """Map a skill's own phase heading to a canonical arc phase name.
+
+    Order matters and is intentional: see _PHASE_KEYWORD_TABLE.
+    """
+    lowered = heading.lower()
+    for canonical, keywords in _PHASE_KEYWORD_TABLE:
+        if any(word in lowered for word in keywords):
+            return canonical
+    return None
+
+
+def _first_sentences(text: str, limit: int = 480) -> str:
+    """Collapse whitespace and keep roughly the first two sentences of a block."""
+    cleaned = " ".join(text.split())
+    cleaned = re.sub(r"^(-+ |\*+ )+", "", cleaned)
+    if not cleaned:
+        return ""
+    take = re.match(r".+?[.!?](?:\s.+?[.!?])?", cleaned)
+    result = take.group(0) if take else cleaned
+    if len(result) > limit:
+        result = result[: limit - 1].rstrip() + "…"
+    return result
+
+
+def _heading_bodies(lines: list[str]) -> dict[str, str]:
+    """For each canonical phase, join the body text of the first heading whose
+    text names that phase (``## Dose Arc`` sections, bold phase headings, and
+    capital-bold variants alike)."""
+    bodies: dict[str, str] = {}
+    is_heading = re.compile(r"^(#{2,4}\s|\*\*.+\*\*$)").match
+    for i, line in enumerate(lines):
+        if not is_heading(line):
+            continue
+        canonical = _classify_phase_name(line)
+        if canonical is None or canonical in bodies:
+            continue
+        body_lines: list[str] = []
+        for following in lines[i + 1 :]:
+            if is_heading(following) and _classify_phase_name(following) is not None:
+                break
+            if following.startswith("#"):
+                break
+            if not following.strip():
+                if body_lines:
+                    break
+                continue
+            body_lines.append(following)
+        if body_lines:
+            # A heading-only block still yields the heading text itself.
+            bodies[canonical] = _first_sentences(" ".join(body_lines) or line.strip("*# "))
+    return bodies
+
+
+def _excerpt_arc(sound_text: str, slug: str) -> dict[str, Any] | None:
+    """Mode 1 ("phase_headings"): derive the arc from bold phase headings that
+    carry a time range, e.g. ``**Late Descent (10-15 minutes):**``. Returns
+    None unless at least two canonical phases got real bounds, so prose-only
+    skills fall through to _prose_arc instead of shipping a hollow payload."""
+    lines = sound_text.splitlines()
+    phases: dict[str, dict[str, Any]] = {}
+    for line in lines:
+        match = _ARC_BOLD_PHASE.match(line)
+        if not match:
+            continue
+        canonical = _classify_phase_name(match.group(1))
+        if canonical is None:
+            continue
+        bounds = parse_time_pair(match.group(2))
+        entry = phases.setdefault(
+            canonical, {"name": canonical, "min_seconds": None, "max_seconds": None, "label": "", "summary": ""}
+        )
+        if entry["label"] == "" and match.group(2):
+            entry["label"] = match.group(2).strip()
+        if bounds is not None:
+            lo, hi = bounds
+            entry["min_seconds"] = lo if entry["min_seconds"] is None else min(entry["min_seconds"], lo)
+            entry["max_seconds"] = hi if entry["max_seconds"] is None else max(entry["max_seconds"], hi)
+    bounded = sum(1 for p in phases.values() if p["max_seconds"] is not None)
+    if len(phases) < _MAX_PHASE_WORDED_HEADINGS or bounded < _MAX_PHASE_WORDED_HEADINGS:
+        return None
+    bodies = _heading_bodies(lines)
+    missing = [p for p in ARC_PHASES if p not in phases]
+    phases.update({name: _unbounded_phase(name) for name in missing})
+    for name, phase in phases.items():
+        if not phase["summary"]:
+            phase["summary"] = bodies.get(name) or _fallback_summary(name, slug)
+    return {"phases": [phases[name] for name in ARC_PHASES], "mode": "phase_headings"}
+
+
+def _unbounded_phase(name: str) -> dict[str, Any]:
+    """A canonical phase the skill does not bound (e.g. ibogaine's 'days to
+    weeks' afterglow): present, labeled, but with None bounds so the client
+    renders it as an unbounded band rather than inventing a number."""
+    return {"name": name, "min_seconds": None, "max_seconds": None, "label": "", "summary": ""}
+
+
+def _format_duration(seconds: float) -> str:
+    """Human label for a seconds value, choosing the smallest clean unit."""
+    seconds = round(seconds)
+    if seconds < _SECONDS_PER_MINUTE:
+        return f"{seconds} s"
+    if seconds < _SECONDS_PER_HOUR:
+        return f"{seconds // 60} min"
+    hours = seconds / 3600
+    if hours.is_integer():
+        return f"{int(hours)} h"
+    return f"{hours:.1f} h"
+
+
+def _fallback_summary(canonical: str, slug: str) -> str:
+    """Deterministic placeholder when a skill never names a phase: derived,
+    not authored — points at the skill rather than paraphrasing it."""
+    names = {"onset": "Onset", "ascent": "Ascent", "peak": "Peak", "descent": "Descent", "afterglow": "Afterglow"}
+    return (
+        f"{names[canonical]} phase derived from the {slug} skill's dose-arc "
+        "description; the skill does not name this phase explicitly."
+    )
+
+
+def _pattern_time(match: re.Match[str]) -> tuple[float, float]:
+    """Interpret a duration match whose unit is the last group; all earlier
+    groups are numbers (one is a plain onset value, two are a range)."""
+    groups = match.groups()
+    unit = groups[-1]
+    numbers = [g for g in groups[:-1] if g is not None]
+    lo = float(numbers[0])
+    hi = float(numbers[1]) if len(numbers) > 1 else lo
+    scale = _unit_to_seconds(unit)
+    # "45+" means "at least": treat the upper bound as double rather than
+    # collapsing the onset to zero width.
+    if len(numbers) == 1 and match.group(0).rstrip("s ").endswith("+"):
+        hi = lo * 2
+    return lo * scale, hi * scale
+
+
+def _first_prose_match(text: str, patterns: tuple[re.Pattern[str], ...]) -> tuple[float, float] | None:
+    for pattern in patterns:
+        match = pattern.search(text)
+        if match:
+            return _pattern_time(match)
+    return None
+
+
+def _prose_arc(text: str, slug: str, bodies: dict[str, str]) -> dict[str, Any]:
+    """Mode 2 ("prose_duration"): no phase headings carry time ranges, so read
+    the durations the skill DOES state — a total duration (required) plus any
+    explicit onset/plateau range — and split the arc across the five canonical
+    phases with fixed proportions of the stated span."""
+    total = _first_prose_match(text, _PROSE_TOTAL_PATTERNS)
+    if total is None:
+        raise ValueError(f"no duration range parseable in skills/{slug}/SKILL.md")
+    tmin, tmax = total
+    onset = _first_prose_match(text, _PROSE_ONSET_PATTERNS)
+    if onset:
+        on_lo, on_hi, cursor = onset[0], onset[1], onset[1]
+    else:
+        # Not stated: a deterministic small opening slice of the stated arc.
+        on_lo, on_hi = tmin * 0.06, tmin * 0.12
+        on_hi = min(on_hi, tmax * 0.5)
+        cursor = on_hi
+    span = max(tmax - cursor, 60)
+    phases: dict[str, dict[str, Any]] = {
+        "onset": {"name": "onset", "min_seconds": on_lo, "max_seconds": on_hi, "label": "", "summary": ""}
+    }
+    labels: dict[str, str] = {"onset": f"{_format_duration(on_lo)}\u2013{_format_duration(on_hi)}"}
+    proportions = {"ascent": 0.25, "peak": 0.40, "descent": 0.25, "afterglow": 0.10}
+    for canonical in ARC_PHASES[1:]:
+        if canonical == "peak":
+            plateau = _first_prose_match(text, (_PROSE_PLATEAU_PATTERN,))
+            if plateau is not None and plateau[1] > cursor and plateau[1] <= tmax:
+                # Clamp a plateau that started before the ascent ended, so
+                # segment extents stay sequential.
+                plateau_lo = max(plateau[0], cursor)
+                phases["peak"] = {
+                    "name": "peak",
+                    "min_seconds": plateau_lo,
+                    "max_seconds": plateau[1],
+                    "label": "",
+                    "summary": "",
+                }
+                labels["peak"] = f"{_format_duration(plateau_lo)}\u2013{_format_duration(plateau[1])}"
+                cursor = plateau[1]
+                continue
+        fraction = proportions[canonical]
+        lo, hi = cursor, min(cursor + fraction * span, tmax)
+        phases[canonical] = {"name": canonical, "min_seconds": lo, "max_seconds": hi, "label": "", "summary": ""}
+        labels[canonical] = f"{_format_duration(lo)}\u2013{_format_duration(hi)}"
+        cursor = hi
+    missing = [p for p in ARC_PHASES if p not in phases]
+    phases.update({name: _unbounded_phase(name) for name in missing})
+    for name, phase in phases.items():
+        phase["label"] = labels.get(name, phase["label"])
+        if not phase["summary"]:
+            phase["summary"] = bodies.get(name) or _fallback_summary(name, slug)
+    return {"phases": [phases[name] for name in ARC_PHASES], "mode": "prose_duration"}
+
+
+def extract_substance_arc(skill_text: str, slug: str) -> dict[str, Any]:
+    """Derive this substance's five-phase arc payload from its SKILL.md text.
+
+    Tries the phase-heading shape first and falls through to prose-duration
+    parsing; the chosen mode is recorded in the payload so audits can see how
+    each substance was derived. Raises when a skill states NO duration at all
+    (an unparseable skill should fail the build loudly, not ship a fake arc).
+    """
+    bodies = _heading_bodies(skill_text.splitlines())
+    from_headings = _excerpt_arc(skill_text, slug)
+    arc = from_headings if from_headings is not None else _prose_arc(skill_text, slug, bodies)
+    # Any phase whose summary was not filled by a heading or fallback above.
+    for phase in arc["phases"]:
+        if not phase["summary"]:
+            phase["summary"] = bodies.get(phase["name"]) or _fallback_summary(phase["name"], slug)
+    bounded = [p for p in arc["phases"] if p["max_seconds"] is not None and p["min_seconds"] is not None]
+    total_labels = "\u2013".join(
+        (
+            _format_duration(min(p["min_seconds"] for p in arc["phases"] if p["min_seconds"] is not None)),
+            _format_duration(max(p["max_seconds"] for p in arc["phases"] if p["max_seconds"] is not None)),
+        )
+    )
+    return {
+        "phases": arc["phases"],
+        "mode": arc["mode"],
+        # Bounded phases only: the visualizer scales against these. An
+        # unbounded afterglow ("days to weeks") is displayed but excluded.
+        "bounded_min_seconds": min(p["min_seconds"] for p in bounded) if bounded else 0,
+        "bounded_max_seconds": max(p["max_seconds"] for p in bounded) if bounded else 0,
+        "duration_label": total_labels,
+    }
+
+
+def build_arc_payload(substances: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Arc payload for every substance, keyed off the same list the substance
+    pages use so the two surfaces can never disagree on the substance set."""
+    payload: list[dict[str, Any]] = []
+    for substance in substances:
+        skill_path = os.path.join(SKILLS_DIR, str(substance["id"]), "SKILL.md")
+        with open(skill_path) as f:
+            text = f.read()
+        arc = extract_substance_arc(text, str(substance["id"]))
+        payload.append(
+            {
+                "id": substance["id"],
+                "name": substance["name"],
+                "emoji": substance["emoji"],
+                "href": substance["href"],
+                "arc": arc,
+            }
+        )
+    log_event("build.arc_payload", substances=len(payload))
+    return payload
+
+
+ARC_SECTION_LABEL = "Timelines"
+ARC_SECTION_TITLE = "Dose Arcs"
+ARC_SECTION_DESC = (
+    "Onset to afterglow for every substance, with durations extracted from each skill's own"
+    " data. Hover or tap a phase for its phenomenology summary."
+)
+
+
+def render_arc_nav(enabled: bool) -> str:
+    """The nav link for the arc view; compiled out when the flag is off."""
+    if not enabled:
+        return ""
+    return '<a href="#" data-view="arc" onclick="showView(\'arc\'); closeMobileNav(); return false;">Dose Arcs</a>'
+
+
+def render_arc_view(arc_payload: list[dict[str, Any]], enabled: bool) -> str:
+    """The full arc-timeline view markup plus its embedded payload; empty
+    string when ``site.arc_timeline`` is off, so nothing (not even the JSON)
+    reaches the built page."""
+    if not enabled:
+        return ""
+    with open(ARC_TEMPLATE) as f:
+        template_html = f.read()
+    json_payload = json.dumps({"substances": arc_payload}, ensure_ascii=False, sort_keys=True)
+    json_payload = json_payload.replace("<", "\\u003c").replace(">", "\\u003e")
+    view = template_html.replace("__ARC_DATA__", json_payload)
+    return view
+
+
 def count_cycles(journals: dict[str, list[dict[str, Any]]]) -> int:
     """Count unique successful cycles across all personas."""
     return sum(
@@ -675,9 +1084,15 @@ def render_page(
     experiments: list[dict[str, Any]],
     music: list[dict[str, Any]],
     total_cycles: int,
-    substance_links: str = "",
+    sections: dict[str, str] | None = None,
 ) -> str:
-    """Inject every data payload into the HTML template."""
+    """Inject every data payload into the HTML template.
+
+    ``sections`` carries the flag-gated section HTML (``substance_links``,
+    ``arc_nav``, ``arc_view``) keyed by placeholder name in snake_case; a
+    flag that is off contributes nothing.
+    """
+    sections = sections or {}
     with open(TEMPLATE) as f:
         html = f.read()
 
@@ -691,7 +1106,7 @@ def render_page(
         "__CYCLE_COUNT__": str(total_cycles),
         "__EXP_COUNT__": str(len(experiments)),
         "__MUSIC_COUNT__": str(total_songs),
-        "__SUBSTANCE_LINKS__": substance_links,
+        **{f"__{key.upper()}__": value for key, value in sections.items()},
     }
     for placeholder, value in replacements.items():
         html = html.replace(placeholder, value)
@@ -762,8 +1177,24 @@ def build() -> None:
 
             log_event("build.stage", stage="render")
             substances = load_substances()
-            substance_links = render_substance_links(substances, enabled_section_flags().get(SUBSTANCES_FLAG, False))
-            html = render_page(persona_data, journal_data, experiments, music, total_cycles, substance_links)
+            section_flags = enabled_section_flags()
+            substance_links = render_substance_links(substances, section_flags.get(SUBSTANCES_FLAG, False))
+
+            log_event("build.stage", stage="arc_payload")
+            arc_payload = build_arc_payload(substances)
+            arc_enabled = section_flags.get(ARC_FLAG, False)
+            log_event("build.stage", stage="arc_render", enabled=arc_enabled)
+            arc_nav = render_arc_nav(arc_enabled)
+            arc_view = render_arc_view(arc_payload, arc_enabled)
+
+            html = render_page(
+                persona_data,
+                journal_data,
+                experiments,
+                music,
+                total_cycles,
+                sections={"substance_links": substance_links, "arc_nav": arc_nav, "arc_view": arc_view},
+            )
 
             with open(OUTPUT, "w") as f:
                 f.write(html)
