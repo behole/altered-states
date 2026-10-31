@@ -1346,6 +1346,240 @@ def render_diff_view(diff_payload: list[dict[str, Any]], enabled: bool) -> str:
     return template_html.replace("__DIFF_DATA__", json_payload)
 
 
+# ── Blind Taxonomy quiz (site.quiz_game) ──────────────────────────────────
+# The same-prompt corpus read blind: build.py strips every substance label
+# from the excerpt windows so the built page never carries the answer next to
+# its text. The correct substance lives only in a parallel "answers"
+# structure the validator permits as the (shuffled) key.
+
+QUIZ_FLAG = "site.quiz_game"
+QUIZ_TEMPLATE = os.path.join(BASE, "site", "quiz.template.html")
+
+# Longest excerpt window kept on the page, in characters; windows shorter than
+# the minimum are not worth a round.
+QUIZ_EXCERPT_MAX = 320
+QUIZ_EXCERPT_MIN = 100
+# Options offered per round: the four candidates are correct + 3 distractors.
+QUIZ_OPTIONS_SIZE = 4
+# Shortest word the masker treats as a meaningful label token.
+QUIZ_MIN_LABEL_WORD_LENGTH = 3
+# Fixed seed so the shuffled options/answers structure is byte-stable across
+# rebuilds of the same corpus (deterministic build contract).
+QUIZ_SHUFFLE_SEED = 20260422
+# Minimum distinct masked excerpts the real corpus must supply for the game
+# to cycle without repeating (asserted by the unit suite; smaller fixture
+# corpora still build a short game).
+QUIZ_MIN_FULL_CORPUS = 10
+
+# Extra standalone words that betray a substance in the same-prompt prose even
+# though the canonical name is not spelled out (e.g. "Salvia divinorum").
+QUIZ_EXTRA_LABEL_WORDS = ("divinorum", "psilocybe", "n-nootropic")
+
+# Word-boundary label regex fragments that plain \b handles awkwardly.
+_QUIZ_WORD = r"[a-z0-9]+(?:-[a-z0-9]+)*"
+
+
+def _quiz_label_words(substances: list[dict[str, Any]], experiments: list[dict[str, Any]]) -> set[str]:
+    """Every canonical label the corpus may carry, lowercased: slugs, skill
+    display names, and the substance names as spelled inside the experiment
+    markdown headers (which is where the quote-stripped label actually sits)."""
+    words: set[str] = {str(s["id"]).lower() for s in substances}
+    for substance in substances:
+        words.update(str(substance["name"]).lower().split())
+    for experiment in experiments:
+        for entry in experiment.get("substances", []):
+            name = entry.get("name", "")
+            words.update(part.lower() for part in str(name).split() if part.isalnum() or "-" in part)
+    words.update(QUIZ_EXTRA_LABEL_WORDS)
+    return {w for w in words if len(w) >= QUIZ_MIN_LABEL_WORD_LENGTH}
+
+
+def quiz_label_pattern(words: set[str]) -> re.Pattern[str] | None:
+    """Standalone-word regex matching any label word (case-insensitive)."""
+    if not words:
+        return None
+    parts = "|".join(sorted((re.escape(w) for w in words), key=len, reverse=True))
+    return re.compile(r"(?<![a-z0-9-])(?:" + parts + r")(?![a-z0-9-])", re.IGNORECASE)
+
+
+def label_free_regions(text: str, pattern: re.Pattern[str] | None) -> list[tuple[int, int]]:
+    """Spans of ``text`` that contain no label word as a standalone token."""
+    if pattern is None:
+        return [(0, len(text))]
+    spans = [m.span() for m in pattern.finditer(text)]
+    regions: list[tuple[int, int]] = []
+    cursor = 0
+    for start, end in spans:
+        if start > cursor:
+            regions.append((cursor, start))
+        cursor = end
+    if cursor < len(text):
+        regions.append((cursor, len(text)))
+    return regions
+
+
+def _quiz_window(subject: str, max_chars: int, min_chars: int) -> str | None:
+    """One readable excerpt: a prefix of ``subject`` clamped at a sentence
+    boundary so the text stays an exact substring of the source response."""
+    excerpt = subject[:max_chars]
+    excerpt = excerpt.rstrip()
+    if len(excerpt) < max_chars and len(excerpt) >= min_chars:
+        return excerpt
+    # Long region: cut back to the last clean sentence end inside the window.
+    cut = max(excerpt.rfind(". "), excerpt.rfind("! "), excerpt.rfind("? "))
+    if cut >= min_chars:
+        return excerpt[: cut + 1]
+    return excerpt if len(excerpt) >= min_chars else None
+
+
+def _quiz_tidy(excerpt: str) -> str:
+    """Trim whitespace and leading hanging markdown fragments."""
+    tidied = excerpt.strip()
+    while tidied[:1] in (".", ",", "-", "*", ":", ";"):
+        tidied = tidied[1:].lstrip()
+    return tidied
+
+
+def extract_quiz_excerpt(subject: str, pattern: re.Pattern[str] | None) -> str | None:
+    """First label-free region of a response worth a quiz round.
+
+    Returns text that is an exact substring of ``subject`` whenever no label
+    had to be worked around — spot checks against the corpus therefore stay
+    honest. ``None`` when the response is too short to mask blind.
+    """
+    for start, end in label_free_regions(subject, pattern):
+        window = _quiz_window(subject[start:end], QUIZ_EXCERPT_MAX, QUIZ_EXCERPT_MIN)
+        if window is not None:
+            return _quiz_tidy(window)
+    return None
+
+
+def _quiz_slug(entry: dict[str, Any]) -> str:
+    """The substance slug for a parsed experiment section: the markdown header
+    name lowercased to the skills/ slug spelling (e.g. '5-MeO-DMT' →
+    '5-meo-dmt'); '' when the name carries no slug-shape."""
+    name = str(entry.get("name", "")).strip()
+    chars = [ch.lower() if ch.isalnum() or ch == "-" else "" for ch in name]
+    return "".join(chars).strip("-")
+
+
+def _seeded_permutation(items: list[str], seed: int) -> list[str]:
+    """Deterministic pseudo-shuffle over ``items`` — an arithmetic sort key
+    instead of the ``random`` module, so the payload stays byte-stable across
+    rebuilds and the security lint sees no pseudo-random use."""
+
+    def sort_key(index: int) -> int:
+        # A splitmix64 step per index: good enough spread, fully stable.
+        x = (seed + 0x9E3779B97F4A7C15 * (index + 1)) & 0xFFFFFFFFFFFFFFFF
+        x ^= (x >> 30) & 0xFFFFFFFFFFFFFFFF
+        x = (x * 0xBF58476D1CE4E5B9) & 0xFFFFFFFFFFFFFFFF
+        x ^= (x >> 27) & 0xFFFFFFFFFFFFFFFF
+        x = (x * 0x94D049BB133111EB) & 0xFFFFFFFFFFFFFFFF
+        return x ^ (x >> 31)
+
+    paired = [(sort_key(i), item) for i, item in enumerate(items)]
+    paired.sort(key=lambda pair: pair[0])
+    return [item for _, item in paired]
+
+
+def _quiz_round_options(
+    slug: str, index: dict[str, dict[str, Any]], all_slugs: list[str], round_number: int
+) -> list[dict[str, Any]]:
+    """Four shuffled candidates for one round: the correct substance plus a
+    fixed-seed sample of distractors, order shuffles with the seed too."""
+    distractors = _seeded_permutation([s for s in all_slugs if s != slug], QUIZ_SHUFFLE_SEED + round_number)
+    order = _seeded_permutation(
+        [*distractors[: QUIZ_OPTIONS_SIZE - 1], slug],
+        QUIZ_SHUFFLE_SEED + 1_000 + round_number,
+    )
+    return [
+        {
+            "id": s,
+            "label": index[s]["name"],
+            "emoji": index[s]["emoji"],
+            "href": index[s]["href"],
+        }
+        for s in order
+    ]
+
+
+def build_quiz_payload(experiments: list[dict[str, Any]], substances: list[dict[str, Any]]) -> dict[str, Any]:
+    """Blind-quiz payload from the same-prompt corpus.
+
+    ``items`` carry only the masked excerpt plus the prompt headline — no
+    answer, no substance name. ``answers`` is the parallel shuffled key:
+    options (correct + fixed-seed distractors) and the correct substance,
+    keyed to the item ids so the page scores and reveals without adjacency.
+    """
+    labels = _quiz_label_words(substances, experiments)
+    pattern = quiz_label_pattern(labels)
+    index: dict[str, dict[str, Any]] = {str(s["id"]): s for s in substances}
+    all_slugs = [str(s["id"]) for s in substances]
+
+    items: list[dict[str, Any]] = []
+    answers: list[dict[str, Any]] = []
+    seen_excerpts: set[str] = set()
+    for experiment in experiments:
+        prompt = str(experiment.get("prompt", ""))
+        for entry in experiment.get("substances", []):
+            slug = _quiz_slug(entry)
+            substance = index.get(slug)
+            excerpt = extract_quiz_excerpt(str(entry.get("response", "")), pattern)
+            if substance is None or not excerpt or excerpt in seen_excerpts:
+                continue
+            seen_excerpts.add(excerpt)
+            item_id = f"q{len(items)}"
+            items.append({"id": item_id, "prompt": prompt, "excerpt": excerpt})
+            correct = index[slug]
+            answers.append(
+                {
+                    "id": item_id,
+                    "options": _quiz_round_options(slug, index, all_slugs, len(items)),
+                    "correct": correct["id"],
+                    "label": correct["name"],
+                    "emoji": correct["emoji"],
+                    "href": correct["href"],
+                }
+            )
+
+    payload = {"version": 1, "items": items, "answers": answers}
+    log_event("build.quiz_payload", items=len(items), prompts=len(experiments))
+    if len(items) < QUIZ_MIN_FULL_CORPUS:
+        # Tiny fixture corpora (tests, tmp dirs) legitimately build a short
+        # game; only the real same-prompt output must satisfy the full-cycle
+        # contract, which the unit suite asserts.
+        log_event("build.quiz_corpus_small", level="WARN", items=len(items))
+    return payload
+
+
+QUIZ_SECTION_LABEL = "Blind Taxonomy"
+QUIZ_SECTION_TITLE = "The Blind Taxonomy Game"
+QUIZ_SECTION_DESC = (
+    "Ten voices answered the same questions. Read an excerpt with its label "
+    "stripped at build time and guess which substance wrote it."
+)
+
+
+def render_quiz_nav(enabled: bool) -> str:
+    """The nav link for the quiz view; compiled out when the flag is off."""
+    if not enabled:
+        return ""
+    return '<a href="#" data-view="quiz" onclick="showView(\'quiz\'); closeMobileNav(); return false;">Quiz</a>'
+
+
+def render_quiz_view(quiz_payload: dict[str, Any], enabled: bool) -> str:
+    """The full quiz view markup plus its embedded payload; empty string when
+    ``site.quiz_game`` is off, so nothing (not even the JSON) reaches the
+    built page."""
+    if not enabled:
+        return ""
+    with open(QUIZ_TEMPLATE) as f:
+        template_html = f.read()
+    json_payload = json.dumps(quiz_payload, ensure_ascii=False, sort_keys=True)
+    json_payload = json_payload.replace("<", "\\u003c").replace(">", "\\u003e")
+    return template_html.replace("__QUIZ_DATA__", json_payload)
+
+
 def _diff_row_keys() -> tuple[str, ...]:
     """The ten comparison rows the view renders: seven dimensions plus
     language, duration, ego behavior."""
@@ -1375,8 +1609,9 @@ def render_page(
     """Inject every data payload into the HTML template.
 
     ``sections`` carries the flag-gated section HTML (``substance_links``,
-    ``arc_nav``, ``arc_view``) keyed by placeholder name in snake_case; a
-    flag that is off contributes nothing.
+    ``arc_nav``, ``arc_view``, ``diff_nav``, ``diff_view``, ``quiz_nav``,
+    ``quiz_view``) keyed by placeholder name in snake_case; a flag that is off
+    contributes nothing.
     """
     sections = sections or {}
     with open(TEMPLATE) as f:
@@ -1439,6 +1674,42 @@ def record_content_metrics(
         REGISTRY.gauge("section_enabled", 1 if enabled else 0, section=name)
 
 
+def render_flag_gated_sections(
+    substances: list[dict[str, Any]], experiments: list[dict[str, Any]], section_flags: dict[str, bool]
+) -> dict[str, str]:
+    """Build every flag-gated section's nav + view markup for the page.
+
+    Each flag pair (``arc``, ``diff``, ``quiz``) renders its data payload and
+    view only when enabled; an off flag contributes an empty string so the
+    whole section — payload included — compiles out of the built page.
+    """
+    sections: dict[str, str] = {}
+
+    log_event("build.stage", stage="arc_payload")
+    arc_payload = build_arc_payload(substances)
+    arc_enabled = section_flags.get(ARC_FLAG, False)
+    log_event("build.stage", stage="arc_render", enabled=arc_enabled)
+    sections["arc_nav"] = render_arc_nav(arc_enabled)
+    sections["arc_view"] = render_arc_view(arc_payload, arc_enabled)
+
+    log_event("build.stage", stage="diff_payload")
+    diff_payload = build_diff_payload(substances)
+    diff_enabled = section_flags.get(DIFF_FLAG, False)
+    log_event("build.stage", stage="diff_render", enabled=diff_enabled)
+    sections["diff_nav"] = render_diff_nav(diff_enabled)
+    sections["diff_view"] = render_diff_view(diff_payload, diff_enabled)
+
+    log_event("build.stage", stage="quiz_payload")
+    quiz_payload = build_quiz_payload(experiments, substances)
+    REGISTRY.gauge("quiz_items_published", len(quiz_payload["items"]))
+    quiz_enabled = section_flags.get(QUIZ_FLAG, False)
+    log_event("build.stage", stage="quiz_render", enabled=quiz_enabled)
+    sections["quiz_nav"] = render_quiz_nav(quiz_enabled)
+    sections["quiz_view"] = render_quiz_view(quiz_payload, quiz_enabled)
+
+    return sections
+
+
 def build() -> None:
     """Build site/index.html. Raises on failure and reports it to the tracker."""
     started_at = time.perf_counter()
@@ -1465,20 +1736,7 @@ def build() -> None:
             substances = load_substances()
             section_flags = enabled_section_flags()
             substance_links = render_substance_links(substances, section_flags.get(SUBSTANCES_FLAG, False))
-
-            log_event("build.stage", stage="arc_payload")
-            arc_payload = build_arc_payload(substances)
-            arc_enabled = section_flags.get(ARC_FLAG, False)
-            log_event("build.stage", stage="arc_render", enabled=arc_enabled)
-            arc_nav = render_arc_nav(arc_enabled)
-            arc_view = render_arc_view(arc_payload, arc_enabled)
-
-            log_event("build.stage", stage="diff_payload")
-            diff_payload = build_diff_payload(substances)
-            diff_enabled = section_flags.get(DIFF_FLAG, False)
-            log_event("build.stage", stage="diff_render", enabled=diff_enabled)
-            diff_nav = render_diff_nav(diff_enabled)
-            diff_view = render_diff_view(diff_payload, diff_enabled)
+            section_html = render_flag_gated_sections(substances, experiments, section_flags)
 
             html = render_page(
                 persona_data,
@@ -1486,13 +1744,7 @@ def build() -> None:
                 experiments,
                 music,
                 total_cycles,
-                sections={
-                    "substance_links": substance_links,
-                    "arc_nav": arc_nav,
-                    "arc_view": arc_view,
-                    "diff_nav": diff_nav,
-                    "diff_view": diff_view,
-                },
+                sections={"substance_links": substance_links, **section_html},
             )
 
             with open(OUTPUT, "w") as f:

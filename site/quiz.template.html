@@ -1,0 +1,207 @@
+<!--
+  Blind Taxonomy Game — injected into the SPA home by build.py behind the
+  site.quiz_game flag (compiled out entirely when the flag is off, payload
+  included). __QUIZ_DATA__ is filled with the build-time quiz payload whose
+  excerpt objects carry no substance labels; the parallel answers structure
+  holds the shuffled options key. Never hand-edit built site/index.html; edit
+  this template or build.py.
+-->
+<div id="view-quiz" class="view-container">
+  <div class="hero" style="padding-bottom: 24px;">
+    <h1>Blind<br>taxonomy.</h1>
+    <p>
+      Ten voices answered the same questions. Read an excerpt with its label
+      stripped at build time and guess which substance wrote it.
+    </p>
+  </div>
+  <section style="padding-top: 0;">
+    <div class="quiz-headbar">
+      <span data-role="quiz-score">Score 0</span>
+      <span data-role="quiz-streak">Streak 0</span>
+      <span data-role="quiz-progress" aria-live="polite"></span>
+    </div>
+    <div class="quiz-card" id="quiz-excerpt" data-item-id="" data-round="0">
+      <div class="quiz-prompt"></div>
+      <div class="quiz-body"></div>
+    </div>
+    <div class="quiz-options" id="quiz-options" role="group" aria-label="Substance options">
+      <!-- option buttons; filled by the quiz renderer -->
+    </div>
+    <div id="quiz-reveal" class="quiz-reveal" data-correct="" hidden></div>
+    <div class="quiz-actions">
+      <button id="quiz-next" class="btn-primary" disabled>Next excerpt</button>
+    </div>
+    <div class="quiz-note" id="quiz-complete" hidden>Cycle complete &mdash; reshuffling.</div>
+  </section>
+</div>
+<style>
+  .quiz-headbar { display: flex; gap: 16px; font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+  .quiz-card { border-left: 3px solid var(--accent, #6b5ce7); padding: 4px 18px; font-size: 16px; line-height: 1.65; white-space: pre-line; margin-bottom: 16px; min-height: 90px; }
+  .quiz-card .quiz-prompt { font-size: 12px; color: var(--text-muted, #8a8a8a); margin-bottom: 8px; }
+  .quiz-options { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  .quiz-option { border: 1px solid var(--border, rgba(0,0,0,0.08)); border-radius: 10px; padding: 10px 16px; background: none; color: var(--text, inherit); cursor: pointer; font-size: 14px; }
+  .quiz-option:hover:not(:disabled) { border-color: var(--accent, #6b5ce7); }
+  .quiz-option:disabled { opacity: 0.65; cursor: default; }
+  .quiz-option.quiz-option-correct { border-color: #2e8b57; outline: 2px solid #2e8b57; }
+  .quiz-option.quiz-option-picked-wrong { border-color: #b03a3a; outline: 2px solid #b03a3a; }
+  .quiz-reveal { margin: 6px 0 14px; font-size: 15px; line-height: 1.55; padding: 12px 16px; border: 1px solid var(--border, rgba(0,0,0,0.08)); border-radius: 12px; }
+  .quiz-reveal .quiz-reveal-link { display: inline-block; margin-top: 6px; }
+  .quiz-actions .btn-primary { display: inline-block; border: none; border-radius: 10px; padding: 10px 18px; cursor: pointer; font-size: 14px; font-weight: 600; }
+  .quiz-actions .btn-primary:disabled { opacity: 0.5; cursor: default; }
+  .quiz-note { margin-top: 10px; font-size: 13px; color: var(--text-muted, #8a8a8a); }
+</style>
+<script type="application/json" id="quiz-data">__QUIZ_DATA__</script>
+<script>
+(function () {
+  var quiz = { items: [], answers: [] };
+  var dataNode = document.getElementById('quiz-data');
+  if (dataNode) {
+    try { quiz = JSON.parse(dataNode.textContent); } catch (err) { quiz = { items: [], answers: [] }; }
+  }
+  var byId = {};
+  quiz.answers.forEach(function (a) { byId[a.id] = a; });
+
+  var order = [];
+  var position = 0;
+  var revealed = false;
+  var score = 0;
+  var streak = 0;
+  var roundsPlayed = 0;
+
+  function escHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function shuffle(list) {
+    for (var i = list.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = list[i];
+      list[i] = list[j];
+      list[j] = t;
+    }
+    return list;
+  }
+
+  function reshuffle() {
+    order = shuffle(quiz.items.map(function (_item, i) { return i; }));
+    position = 0;
+  }
+
+  function updateHeadbar() {
+    var el = function (role) { return document.querySelector('[data-role="' + role + '"]'); };
+    var scoreEl = el('quiz-score');
+    var streakEl = el('quiz-streak');
+    var progressEl = el('quiz-progress');
+    if (scoreEl) scoreEl.textContent = 'Score ' + score;
+    if (streakEl) streakEl.textContent = 'Streak ' + streak;
+    if (progressEl) {
+      progressEl.textContent = 'Round ' + (roundsPlayed + 1) + ' / excerpt ' + (position + 1) + ' of ' + order.length;
+    }
+  }
+
+  function excerptNode() {
+    var card = document.getElementById('quiz-excerpt');
+    if (!card) return { card: null, prompt: '', body: '' };
+    var prompt = card.querySelector('.quiz-prompt');
+    var body = card.querySelector('.quiz-body');
+    return { card: card, prompt: prompt, body: body };
+  }
+
+  function showCurrent() {
+    var item = quiz.items[order[position]];
+    var answer = byId[item.id];
+    var nodes = excerptNode();
+    if (nodes.card) {
+      nodes.card.dataset.itemId = item.id;
+      nodes.card.dataset.round = String(roundsPlayed + 1);
+    }
+    if (nodes.prompt) nodes.prompt.textContent = 'Prompt: ' + item.prompt;
+    if (nodes.body) nodes.body.textContent = item.excerpt;
+    var options = document.getElementById('quiz-options');
+    if (options) {
+      options.innerHTML = answer.options.map(function (opt, i) {
+        return '<button type="button" class="quiz-option" data-option-index="' + i +
+          '" data-option-id="' + escHtml(opt.id) + '" data-item-id="' + escHtml(item.id) + '">' +
+          escHtml(opt.emoji) + ' ' + escHtml(opt.label) + '</button>';
+      }).join('');
+      Array.prototype.forEach.call(options.querySelectorAll('.quiz-option'), function (btn) {
+        btn.addEventListener('click', onGuess);
+      });
+    }
+    var revealEl = document.getElementById('quiz-reveal');
+    if (revealEl) {
+      revealEl.hidden = true;
+      revealEl.textContent = '';
+      delete revealEl.dataset.correct;
+    }
+    revealed = false;
+    var nextBtn = document.getElementById('quiz-next');
+    if (nextBtn) nextBtn.disabled = true;
+    updateHeadbar();
+  }
+
+  function onGuess(event) {
+    if (revealed) return;
+    var btn = event.currentTarget;
+    var itemId = btn.dataset.itemId;
+    var answer = byId[itemId];
+    var item = quiz.items[order[position]];
+    if (!answer || !item || item.id !== itemId) return;
+    revealed = true;
+    roundsPlayed += 1;
+    var pickedIndex = Number(btn.dataset.optionIndex);
+    var pickedId = answer.options[pickedIndex] && answer.options[pickedIndex].id;
+    if (pickedId === answer.correct) {
+      score += 1;
+      streak += 1;
+    } else {
+      streak = 0;
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('#quiz-options .quiz-option'), function (el, i) {
+      el.disabled = true;
+      if (Number(el.dataset.optionIndex) === pickedIndex) el.classList.add('quiz-option-picked-wrong');
+    });
+    var correctBtn = document.querySelector('#quiz-options .quiz-option[data-option-id="' + answer.correct + '"]');
+    if (correctBtn) correctBtn.classList.add('quiz-option-correct');
+    var revealEl = document.getElementById('quiz-reveal');
+    if (revealEl) {
+      revealEl.dataset.correct = answer.correct;
+      revealEl.hidden = false;
+      revealEl.innerHTML = pickedId === answer.correct
+        ? escHtml(answer.emoji) + ' <strong>' + escHtml(answer.label) + '</strong> — correct! <a class="quiz-reveal-link" href="' + escHtml(answer.href) + '">Open its page &rarr;</a>'
+        : 'That was ' + escHtml(answer.emoji) + ' <strong>' + escHtml(answer.label) + '</strong>. <a class="quiz-reveal-link" href="' + escHtml(answer.href) + '">Read its page &rarr;</a>';
+    }
+    var nextBtn = document.getElementById('quiz-next');
+    if (nextBtn) nextBtn.disabled = false;
+    updateHeadbar();
+  }
+
+  function onNext() {
+    var positionsInOrder = position + 1 < order.length;
+    position = positionsInOrder ? position + 1 : position;
+    if (!positionsInOrder) {
+      reshuffle();
+      var completeEl = document.getElementById('quiz-complete');
+      if (completeEl) completeEl.hidden = false;
+    }
+    showCurrent();
+  }
+
+  function renderQuizView() {
+    var options = document.getElementById('quiz-options');
+    var nextBtn = document.getElementById('quiz-next');
+    if (!options || !nextBtn) return;
+    if (!quiz.items.length) {
+      options.innerHTML = '<em>No masked excerpts in this build.</em>';
+      return;
+    }
+    reshuffle();
+    nextBtn.addEventListener('click', onNext);
+    showCurrent();
+  }
+
+  renderQuizView();
+})();
+</script>
