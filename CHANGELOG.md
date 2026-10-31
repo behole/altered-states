@@ -7,6 +7,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 ## [Unreleased]
+### Added
+- **Same-prompt offline dry-run integration test** —
+  `tests/integration/test_same_prompt_dry_run.py` invokes
+  `experiments/same-prompt/run-ten-ways.py --dry-run` as a subprocess and
+  asserts exit 0, `Dry-run: True`, 10/10 substances succeeding, and the
+  `[DRY-RUN STUB]` marker in the compiled markdown (written to a temp
+  directory, so `experiments/same-prompt/output/` stays untouched). The
+  `experiments/same-prompt` omission from the `[tool.coverage.run]` source
+  list is now annotated in-place in `pyproject.toml` with the reason
+  (subprocess coverage is invisible to the 75% floor).
+
 ### Changed
 - **Structured logging migration** — `build.py` and `watch.py` route all
   high-signal output through `altered_states.log_utils.log_event()` (JSON,

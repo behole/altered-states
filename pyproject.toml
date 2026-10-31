@@ -192,6 +192,12 @@ filterwarnings = ["error::DeprecationWarning:bin.*"]
 
 [tool.coverage.run]
 branch = true
+# experiments/same-prompt is deliberately NOT in this list: its runner
+# (run-ten-ways.py) is exercised in a subprocess by
+# tests/integration/test_same_prompt_dry_run.py, which coverage cannot see.
+# Adding it here would pull 133 uncovered statements into the total and sink
+# the 75% floor. Revisit only if the runner gains importable, unit-testable
+# logic.
 source = ["altered_states", "build.py", "watch.py", "bin", "experiments/temporal-lab/scripts", "experiments/music"]
 omit = ["*/tests/*", "*/site/*"]
 
