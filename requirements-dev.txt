@@ -8,8 +8,8 @@
 # build.py and bin/ still targets Python 3.10 as declared by ruff/mypy.
 
 # --- lint, format, types, code health ---
-ruff==0.14.4
-mypy==1.18.2
+ruff==0.17.2
+mypy==2.4.0
 types-requests==2.33.0.20261030
 types-pyyaml==6.0.12.20261030
 vulture==2.16
