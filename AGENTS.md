@@ -33,6 +33,7 @@ make check         # static analysis only — use this while iterating
 make test          # unit + integration tests
 make build         # regenerate site/index.html
 make skills-check  # validate every SKILL.md (structure + safety furniture)
+make safety-lint   # content-safety scan: skills Markdown + built site/index.html
 ```
 
 If `make verify` is green, CI will be green.
@@ -118,6 +119,24 @@ dose arc, and router alias resolution. When authoring a new skill, run
 `python3 bin/check_skills.py --new-skill skills/<name>/SKILL.md` — it prints the
 full authoring checklist. Seeded-mutation tests in
 `tests/unit/test_skills_check.py` prove the failure paths fire.
+
+### 6b. Skill content is safety-linted, not hand-inspected
+
+`make safety-lint` (`bin/safety_lint.py`, stdlib-only) scans every Markdown
+file under `skills/` AND the BUILT `site/index.html` (never the template) for
+forbidden patterns: dose figures with dosing verbs, dosing-schedule/posology
+phrasing, therapy/guidance claims, and sourcing-language slips. It is wired
+into `make security` and `make verify`. Findings name file:line. Suppression
+contracts (documented in the `bin/safety_lint.py` docstring, proven in
+`tests/unit/test_safety_lint.py`): an inline
+`<!-- safety-lint: allow: rule -- reason: ... -->` comment scopes exactly one
+rule to the line above which it sits — but dose-verb matches (which always
+carry a dose number) are never suppressible, so an allowlist can not defeat a
+genuine forbidden pattern + number. Forbidden-word matches are additionally
+excused inside refusal sentences (overlay overlay bans worded as refusals,
+e.g. "**No schedule, and no recovery arithmetic**") and in two historical
+quoted phrases ("Ineffability protocol", "clinical protocol"). `research/` is
+exempt from scanning.
 
 ### 7. The temporal-lab scripts are entry points, not a package
 

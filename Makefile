@@ -47,10 +47,10 @@ AUDIT_VENV ?= $(CURDIR)/.audit-venv
 AUDIT_LOCKFILES = bin/requirements.lock experiments/music/requirements.lock experiments/temporal-lab/requirements.lock
 
 .PHONY: verify check lint format format-check types dead-code duplicates \
-	test coverage security deps flags docs skills-check release alerts labels build \
+	test coverage security safety-lint deps flags docs skills-check release alerts labels build \
 	install-hooks lock
 
-verify: check test security deps flags docs skills-check
+verify: check test security deps flags docs skills-check safety-lint
 
 check: lint format-check types dead-code duplicates
 
@@ -78,7 +78,7 @@ test:
 coverage:
 	$(PYTEST) --cov --cov-report=term-missing --cov-report=xml
 
-security:
+security: safety-lint
 	$(BANDIT) --quiet -c pyproject.toml -r $(BANDIT_TARGETS)
 	@rm -rf $(AUDIT_VENV)
 	@$(UVX) uv venv $(AUDIT_VENV) --python 3.11 -q
@@ -101,6 +101,13 @@ docs:
 # schema; see bin/check_skills.py --new-skill for the authoring checklist.
 skills-check:
 	$(PYTHON) bin/check_skills.py
+
+# Content-safety lint: forbidden dose+verb, schedule/posology, therapy-claim
+# and sourcing patterns over skills/**/*.md AND the built site/index.html
+# (not the template). Allowlist contract documented in bin/safety_lint.py;
+# tests in tests/unit/test_safety_lint.py prove the defeat guard.
+safety-lint:
+	$(PYTHON) bin/safety_lint.py
 
 alerts:
 	$(PY_YAML) bin/check_alerts.py --validate-only
