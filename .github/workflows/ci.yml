@@ -98,38 +98,6 @@ jobs:
           python -m pip install -r requirements-test.lock
           python -m pip install -r bin/requirements.lock
 
-      # TEMP-DEBUG (remove): profile the OG-card render path on the ubuntu
-      # runner, where committed-card tests cost ~13s/card despite being
-      # ~milliseconds locally on darwin. Prints top-15 cumulative cProfile
-      # frames, per-card wall time, the resolved font path, and font-candidate
-      # existence so the next CI run's log explains the slowdown.
-      - name: TEMP-DEBUG cProfile og.render_card
-        run: |
-          python - <<'PY'
-          import cProfile, io, pstats, time
-          from pathlib import Path
-          import altered_states.og as og
-          import build
-
-          font = og._card_font(104)
-          print("TEMP-DEBUG resolved _card_font(104) repr:", repr(font))
-          for p in og._FONT_CANDIDATES:
-              print(f"TEMP-DEBUG font candidate {p} exists={Path(p).exists()}")
-
-          substances = build.load_substances()[:2]
-          for s in substances:
-              t0 = time.time()
-              prof = cProfile.Profile()
-              prof.enable()
-              og.render_card(s)
-              prof.disable()
-              elapsed = time.time() - t0
-              buf = io.StringIO()
-              pstats.Stats(prof, stream=buf).sort_stats("cumulative").print_stats(15)
-              print(f"TEMP-DEBUG card {s.get('id')} wall={elapsed:.3f}s")
-              print(buf.getvalue())
-          PY
-
       - name: Run unit and integration tests with coverage
         run: pytest --cov --cov-report=term-missing --cov-report=xml --durations=25
 
