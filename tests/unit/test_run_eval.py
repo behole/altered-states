@@ -15,6 +15,8 @@ from typing import Any
 import pytest
 import run_eval
 
+from altered_states import eval_budget
+
 
 class FakeMessage:
     def __init__(self, text: str, reasoning: str | None = None) -> None:
@@ -287,13 +289,33 @@ class TestExecuteRuns:
         completions = FakeCompletions(responses=[stub_response] * 2)
         monkeypatch.setattr(run_eval, "make_client", lambda: FakeClient(completions))
         out_path = tmp_path / "responses.jsonl"
-        ret = run_async(run_eval.execute_runs([a_run("lsd"), a_run("mdma")], 2, "deepseek-chat", out_path))
+        manifest = eval_budget.build_manifest(
+            run_kind="real",
+            model="deepseek-chat",
+            max_tokens=1000,
+            max_requests=2,
+            concurrency=2,
+            command_line="bin/run_eval.py --out x.jsonl",
+            num_runs=2,
+        )
+        ledger = tmp_path / "ledger.jsonl"
+        ret = run_async(
+            run_eval.execute_runs([a_run("lsd"), a_run("mdma")], 2, "deepseek-chat", out_path, manifest, ledger)
+        )
         assert ret == 0
         lines = out_path.read_text().splitlines()
         assert len(lines) == 2
         rows = [json.loads(line) for line in lines]
         assert {r["substance"] for r in rows} == {"lsd", "mdma"}
         assert all(r["model"] == "deepseek-chat" for r in rows)
+        # The run wrote one manifest-annotated real-run ledger entry.
+        entries = eval_budget.read_ledger_entries(ledger)
+        assert len(entries) == 1
+        entry = entries[0]
+        assert entry["run_kind"] == "real"
+        assert entry["manifest_id"] == manifest["manifest_id"]
+        assert entry["actual_cost_usd"] >= 0
+        assert eval_budget.ledger_total(ledger) == entry["actual_cost_usd"]
 
     def test_any_error_makes_the_exit_code_nonzero(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, no_sleep: list[float]
@@ -304,7 +326,19 @@ class TestExecuteRuns:
         )
         monkeypatch.setattr(run_eval, "make_client", lambda: FakeClient(completions))
         out_path = tmp_path / "responses.jsonl"
-        ret = run_async(run_eval.execute_runs([a_run("lsd"), a_run("mdma")], 2, "deepseek-chat", out_path))
+        manifest = eval_budget.build_manifest(
+            run_kind="real",
+            model="deepseek-chat",
+            max_tokens=1000,
+            max_requests=2,
+            concurrency=2,
+            command_line="bin/run_eval.py --out x.jsonl",
+            num_runs=2,
+        )
+        ledger = tmp_path / "ledger.jsonl"
+        ret = run_async(
+            run_eval.execute_runs([a_run("lsd"), a_run("mdma")], 2, "deepseek-chat", out_path, manifest, ledger)
+        )
         assert ret == 1
         rows = [json.loads(line) for line in out_path.read_text().splitlines()]
         assert all(r["score"] == "error" and "RuntimeError" in (r["notes"] or "") for r in rows)
@@ -362,12 +396,90 @@ class TestCli:
         args = self._parse("--dry-run", "--substances", "lsd", "--out", str(tmp_path / "d.jsonl"))
         assert run_async(run_eval.main_async(args)) == 0
 
-    def test_missing_deepseek_key_exits_with_code_two(self, monkeypatch: pytest.MonkeyPatch, capsys: Any) -> None:
+    def test_missing_deepseek_key_exits_with_code_two(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: Any
+    ) -> None:
         monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
-        args = self._parse("--substances", "lsd")
+        args = self._parse("--substances", "lsd", "--out", str(tmp_path / "key.jsonl"))
+        self._seed_manifest(args, tmp_path, monkeypatch)
         rc = run_async(run_eval.main_async(args))
         assert rc == 2
         assert "DEEPSEEK_API_KEY" in capsys.readouterr().err
+
+    @staticmethod
+    def _boom_client() -> None:
+        raise AssertionError("no client must be constructed on a gated real-run path")
+
+    def test_real_run_without_manifest_is_refused_with_code_two(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: Any
+    ) -> None:
+        """Manifest-before-run (VAL-EVAL-012): no sidecar, no run."""
+        monkeypatch.setattr(run_eval, "make_client", TestCli._boom_client)
+        monkeypatch.setattr(eval_budget, "REPO_LEDGER_PATH", tmp_path / "spend-ledger.jsonl")
+        args = self._parse("--substances", "lsd", "--out", str(tmp_path / "nomanifest.jsonl"))
+        rc = run_async(run_eval.main_async(args))
+        assert rc == 2
+        assert "manifest" in capsys.readouterr().err.lower()
+        assert not (tmp_path / "nomanifest.jsonl").exists()
+
+    def test_write_manifest_writes_sidecar_and_never_calls_the_api(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: Any
+    ) -> None:
+        monkeypatch.setattr(run_eval, "make_client", TestCli._boom_client)
+        args = self._parse("--write-manifest", "--substances", "lsd", "--out", str(tmp_path / "spend.jsonl"))
+        rc = run_async(run_eval.main_async(args))
+        assert rc == 0
+        sidecar = tmp_path / "spend.manifest.json"
+        assert sidecar.exists()
+        manifest = eval_budget.load_manifest(sidecar)
+        assert manifest["run_kind"] == "real"
+        assert manifest["total_cap_usd"] == eval_budget.TOTAL_CAP_USD
+        assert manifest["estimated_cost_usd"] <= manifest["total_cap_usd"]
+        assert "REVIEW" in capsys.readouterr().out
+
+    def test_real_run_refused_when_ledger_would_breach_the_cap(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: Any
+    ) -> None:
+        monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+        monkeypatch.setattr(run_eval, "make_client", TestCli._boom_client)
+        ledger = tmp_path / "spend-ledger.jsonl"
+        monkeypatch.setattr(eval_budget, "REPO_LEDGER_PATH", ledger)
+        # Pretend a prior manifest-annotated real run already burned $4.99.
+        eval_budget.append_ledger(
+            ledger,
+            {
+                "manifest_id": "oldrun0001",
+                "run_kind": "real",
+                "model": "deepseek-chat",
+                "actual_cost_usd": eval_budget.TOTAL_CAP_USD - 0.01,
+                "prompt_tokens": 1,
+                "output_tokens": 1,
+                "output": "tests/responses/old.jsonl",
+            },
+        )
+        args = self._parse("--substances", "lsd", "--out", str(tmp_path / "over.jsonl"))
+        self._seed_manifest(args, tmp_path, monkeypatch)
+        rc = run_async(run_eval.main_async(args))
+        assert rc == 3
+        assert not (tmp_path / "over.jsonl").exists()
+        assert len(eval_budget.chargeable_ledger_entries(ledger)) == 1
+
+    def _seed_manifest(
+        self, args: argparse.Namespace, tmp_path: Path, monkeypatch: pytest.MonkeyPatch | None = None
+    ) -> Path:
+        """Write a valid pre-reviewed manifest for this exact CLI invocation.
+
+        ``monkeypatch`` (when given) also points the cumulative-spend gate at
+        an empty tmp ledger so tests never read the repo's real ledger.
+        """
+        if monkeypatch is not None:
+            monkeypatch.setattr(eval_budget, "REPO_LEDGER_PATH", tmp_path / "spend-ledger.jsonl")
+        runs_len = len(run_eval.load_prompts(run_eval.REPO_ROOT / args.prompts))
+        manifest = run_eval._manifest_for_args(args, runs_len, "real")
+        eval_budget.validate_manifest(manifest)
+        out_path = run_eval.resolve_output(args)
+        out_path.with_name(out_path.stem + ".manifest.json").write_text(json.dumps(manifest, indent=2))
+        return out_path
 
     def test_output_path_defaults_to_a_dated_model_tagged_file(self) -> None:
         path = run_eval.resolve_output(self._parse())

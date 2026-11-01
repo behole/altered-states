@@ -316,3 +316,38 @@ STRONGEST PAIR: ___________ vs ___________
 
 NOTES:
 ```
+
+---
+
+## Appendix: Budget Guardrails (manifest-before-run)
+
+Every REAL model run is capped by the $5.00 cumulative mission budget and is
+gated by two artifacts managed by `altered_states/eval_budget.py`:
+
+1. **Spend manifest** (`<out>.manifest.json` sidecar, written by
+   `bin/run_eval.py --write-manifest`): one JSON object per run —
+   `run_kind`, `model`, `max_tokens`, `max_concurrent_requests`,
+   `max_requests` (worst case including retries), estimated cost per request
+   and total (DeepSeek list pricing, rounded UP, caching discounts ignored),
+   a `total_cap_usd` of **<= $5.00**, and the exact command line. Review the
+   sidecar BEFORE starting the run; `bin/run_eval.py` (real-run mode) refuses
+   to fire anything without a manifest that matches the invocation and fits
+   the budget.
+2. **Cumulative ledger** (`docs/evals/spend-ledger.jsonl`): after each run
+   completes, ONE manifest-annotated real-run entry is appended with its
+   actual cost, computed from the returned `usage` tokens. The ledger sums
+   ONLY manifest-annotated real-run entries — dry-run rows are never written
+   and always contribute 0.
+
+Recommended workflow:
+
+```bash
+python3 bin/run_eval.py --write-manifest --substances lsd --out tests/responses/r.jsonl
+# review tests/responses/r.manifest.json, then:
+set -a; source .env; set +a
+python3 bin/run_eval.py --substances lsd --out tests/responses/r.jsonl
+```
+
+Guardrail checks live in `tests/unit/test_eval_budget.py` (manifest schema +
+cap, ledger arithmetic, command-list proof that no CI/hook/test surface ever
+invokes a runner in real-run mode) and are part of `make test`.

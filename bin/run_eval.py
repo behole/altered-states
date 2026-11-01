@@ -10,6 +10,17 @@ The auth gate is ``DEEPSEEK_API_KEY``; it is read from the environment (load the
 repo-root ``.env`` the usual way: ``set -a; source .env; set +a``). There is no
 Anthropic/OpenRouter path: ambient OPENROUTER_API_KEY never reroutes this runner.
 
+Manifest-before-run (budget guardrail, VAL-EVAL-012): a real run first writes
+its spend manifest with ``--write-manifest`` (sidecar ``<out>.manifest.json``
+recording ``max_tokens``, ``max_concurrent_requests``, ``max_requests``,
+estimated cost and a ``total_cap_usd`` of at most $5.00), the operator reviews
+it, and the actual run then re-validates the manifest against this exact
+invocation and the cumulative ledger (``docs/evals/spend-ledger.jsonl``) before
+any API call. On completion the run appends ONE manifest-annotated real-run
+ledger entry with its actual cost (computed from returned ``usage`` tokens at
+DeepSeek list pricing). Dry-run writes neither a manifest nor a ledger row, so
+its contribution to cumulative spend is always 0.
+
 DeepSeek context caching is automatic (server-side); usage carries prompt/
 completion tokens only — no cache_control parameters are sent.
 
@@ -51,6 +62,7 @@ if str(REPO_ROOT) not in sys.path:
     # Running `bin/run_eval.py` puts only bin/ on sys.path.
     sys.path.insert(0, str(REPO_ROOT))
 
+from altered_states import eval_budget  # noqa: E402  (repo root is injected first)
 from altered_states.error_tracking import capture_exception, init_error_tracking  # noqa: E402
 from altered_states.log_utils import log_event, trace_context  # noqa: E402
 from altered_states.metrics import REGISTRY, flush_metrics  # noqa: E402
@@ -377,8 +389,21 @@ async def dry_run_to_disk(runs: list[EvalRun], model: str, out_path: Path) -> in
     return 0
 
 
-async def execute_runs(runs: list[EvalRun], concurrency: int, model: str, out_path: Path) -> int:
-    """Run every eval, streaming rows to disk. Returns a process exit code."""
+async def execute_runs(
+    runs: list[EvalRun],
+    concurrency: int,
+    model: str,
+    out_path: Path,
+    manifest: dict[str, Any],
+    ledger_path: Path,
+) -> int:
+    """Run every eval, streaming rows to disk. Returns a process exit code.
+
+    ``manifest`` is the pre-validated spend manifest this run was authorized
+    against; the run's actuals (returned usage tokens × DeepSeek list pricing)
+    are appended to ``ledger_path`` as one manifest-annotated real-run entry
+    when the run completes.
+    """
     client = make_client()
     sem = asyncio.Semaphore(concurrency)
 
@@ -405,6 +430,17 @@ async def execute_runs(runs: list[EvalRun], concurrency: int, model: str, out_pa
                 usage_info = f"  in={usage.get('prompt_tokens')}  out={usage.get('output_tokens')}"
             print(f"  [{done}/{len(runs)}] {status} {row['substance']:<12} {row['prompt_id']:<24}{usage_info}")
 
+    actual_cost = eval_budget.estimate_cost_from_tokens(model, total_tokens_in, total_tokens_out)
+    eval_budget.append_ledger(
+        ledger_path,
+        eval_budget.build_ledger_entry(
+            manifest=manifest,
+            model=model,
+            prompt_tokens=total_tokens_in,
+            output_tokens=total_tokens_out,
+            output_relpath=os.path.relpath(out_path, REPO_ROOT),
+        ),
+    )
     log_event(
         "eval.complete",
         runs=done,
@@ -412,12 +448,85 @@ async def execute_runs(runs: list[EvalRun], concurrency: int, model: str, out_pa
         tokens_in=total_tokens_in,
         tokens_out=total_tokens_out,
         output=str(out_path),
+        manifest_id=manifest.get("manifest_id"),
     )
     flush_metrics()
     print(f"\n→ done. {done} runs, {errors} errors.")
     print(f"  tokens: in={total_tokens_in:,}  out={total_tokens_out:,}")
+    print(f"  actual spend: ${actual_cost:.6f}  → ledger {os.path.relpath(ledger_path, REPO_ROOT)}")
     print(f"  {out_path}")
     return 0 if errors == 0 else 1
+
+
+def _manifest_for_args(args: argparse.Namespace, runs_len: int, run_kind: str) -> dict[str, Any]:
+    """Build the spend manifest matching this exact invocation."""
+    command_line = "bin/run_eval.py " + " ".join(sys.argv[1:])
+    max_requests = runs_len * RETRY_ATTEMPTS  # worst case: every run exhausts retry
+    manifest = eval_budget.build_manifest(
+        run_kind=run_kind,
+        model=args.model,
+        max_tokens=DEFAULT_MAX_TOKENS,
+        max_requests=max_requests,
+        concurrency=args.concurrency,
+        command_line=command_line,
+        num_runs=runs_len,
+    )
+    manifest["spec_key"] = eval_budget.spec_key(
+        args.model, runs_len, args.concurrency, args.exchange, args.prompts, command_line
+    )
+    return manifest
+
+
+def _gate_manifest(args: argparse.Namespace, runs_len: int, out_path: Path) -> tuple[str, dict[str, Any] | None] | int:
+    """Manifest-before-run enrollment (VAL-EVAL-012).
+
+    With ``--write-manifest``: write the sidecar and exit 0 so the operator can
+    review the estimated spend. Otherwise: require the sidecar to exist, match
+    this exact invocation, and fit within the cumulative ledger budget.
+    """
+    manifest_path = eval_budget.manifest_path_for(out_path)
+    command_line = "bin/run_eval.py " + " ".join(sys.argv[1:])
+    if args.write_manifest:
+        manifest = _manifest_for_args(args, runs_len, "real")
+        try:
+            eval_budget.validate_manifest(manifest)
+            eval_budget.enforce_pre_run_budget(manifest, eval_budget.REPO_LEDGER_PATH)
+        except eval_budget.ManifestError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 3
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+        print(f"→ manifest written: {os.path.relpath(manifest_path, REPO_ROOT)}")
+        print(
+            f"  max_requests={manifest['max_requests']} (worst case incl. retries)  "
+            f"estimated=${manifest['estimated_cost_usd']:.4f} of ${manifest['total_cap_usd']:.2f} cap"
+        )
+        print("  REVIEW the manifest, then start the run WITHOUT --write-manifest.")
+        return "written", None
+    try:
+        manifest = eval_budget.load_manifest(manifest_path)
+    except eval_budget.ManifestError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
+    if manifest.get("spec_key") != eval_budget.spec_key(
+        args.model, runs_len, args.concurrency, args.exchange, args.prompts, command_line
+    ):
+        print(
+            "ERROR: the sidecar manifest does not match this invocation (model/runs/concurrency/out changed).\n"
+            "       Regenerate it with `--write-manifest` and re-review.",
+            file=sys.stderr,
+        )
+        return 3
+    try:
+        remaining = eval_budget.enforce_pre_run_budget(manifest, eval_budget.REPO_LEDGER_PATH)
+    except eval_budget.ManifestError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 3
+    print(
+        f"→ manifest ok: {manifest['manifest_id']}  estimated=${manifest['estimated_cost_usd']:.4f}  "
+        f"ledger-total=${eval_budget.ledger_total(eval_budget.REPO_LEDGER_PATH):.4f}  "
+        f"remaining=${remaining:.4f}"
+    )
+    return "ok", manifest
 
 
 async def main_async(args: argparse.Namespace) -> int:
@@ -435,11 +544,23 @@ async def main_async(args: argparse.Namespace) -> int:
     print(f"→ model={args.model}  concurrency={args.concurrency}  exchange={args.exchange}")
     print(f"→ out={os.path.relpath(out_path, REPO_ROOT)}")
 
-    # Note: --dry-run returns *before* make_client() is ever called, so the
-    # no-SDK / no-credential probe never constructs a network client.
+    # Note: --dry-run returns *before* make_client(), the manifest gate, and
+    # any ledger write: the offline probe is free and contributes 0 to the
+    # spend ledger (VAL-EVAL-012: only manifest-annotated real runs are
+    # chargeable).
     if args.dry_run:
         print_dry_run(runs)
         return await dry_run_to_disk(runs, args.model, out_path)
+
+    # Manifest-before-run enforcement (VAL-EVAL-012, orchestrator authorization
+    # 2026-11-01): no API call is fired without a reviewed sidecar manifest
+    # that fits inside the cumulative real-run budget.
+    gate = _gate_manifest(args, len(runs), out_path)
+    if isinstance(gate, int):
+        return gate
+    mode, manifest = gate
+    if mode == "written" or manifest is None:
+        return 0
 
     # Gate before anything is written: DEEPSEEK_API_KEY must be resolvable.
     try:
@@ -456,8 +577,9 @@ async def main_async(args: argparse.Namespace) -> int:
             runs=len(runs),
             model=args.model,
             concurrency=args.concurrency,
+            manifest_id=manifest.get("manifest_id"),
         )
-        return await execute_runs(runs, args.concurrency, args.model, out_path)
+        return await execute_runs(runs, args.concurrency, args.model, out_path, manifest, eval_budget.REPO_LEDGER_PATH)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -473,6 +595,12 @@ def _build_parser() -> argparse.ArgumentParser:
         "--out", default=None, help="output JSONL path (default: tests/responses/responses-DATE-MODEL.jsonl)"
     )
     ap.add_argument("--dry-run", action="store_true", help="enumerate runs without making API calls")
+    ap.add_argument(
+        "--write-manifest",
+        action="store_true",
+        help="write the <out>.manifest.json spend manifest and exit 0 "
+        "(manifest-before-run: review the sidecar, then start the real run)",
+    )
     return ap
 
 
