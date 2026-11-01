@@ -9,7 +9,10 @@ per-substance pages.
 
 from __future__ import annotations
 
+import io
 import re
+import sys
+from importlib.metadata import version as _pkg_version
 from pathlib import Path
 
 import pytest
@@ -126,13 +129,23 @@ class TestWriteOgCards:
         assert (og_dir / "foreign-art.svg").read_text() == '<svg xmlns="#"/>'
 
     def test_committed_cards_match_pinned_pillow_render(self) -> None:
-        """The committed site/og/*.png bytes are what Pillow 13.0.0 renders.
+        """Two-layer guard for the committed site/og/*.png blobs.
 
-        The committed blobs are contractually defined as the output of the
-        pinned ``pillow==13.0.0`` (the version `make build` installs via
-        ``BUILD_PY``). If a rebuild is done under a different Pillow (e.g. the
-        ambient interpreter's), the bytes drift and this test fails — run
-        ``make build`` to re-commit the pinned render.
+        Layer 1 (content, CI-robust): decode both the committed card and the
+        freshly rendered card with the ambient Pillow and assert identical
+        size, mode, and ``tobytes()`` pixel content. PNG encoding choices
+        (deflate/zlib settings, encoder paths) differ between Pillow builds
+        per-platform, so raw-byte equality holds only on the platform that
+        produced the committed blobs.
+
+        Layer 2 (bytes, provenance-platform only): when running on darwin
+        (where the committed cards were rendered, per the pinned BUILD_PY
+        recipe ``uvx --with pillow==13.0.0``) with ambient Pillow exactly
+        version 13.0.0, additionally assert raw-byte equality. Elsewhere
+        (e.g. linux/x86-64 CI, where Pillow picks different deflate/encoder
+        settings) the byte clause is skipped with a reason naming the platform
+        provenance. On the provenance platform a byte drift still fails the test with
+        "run `make build` (pinned pillow==13.0.0) and re-commit".
         """
         if og.card_extension() != "png":
             pytest.skip("PNG card format not active in this environment")
@@ -160,12 +173,47 @@ class TestWriteOgCards:
             pytest.skip("no committed site/og cards in this checkout")
 
         substances = {str(s["id"]): s for s in build.load_substances()}
+        # Provenance-platform preconditions for Layer 2: the committed blobs
+        # were rendered on darwin with the pinned Pillow, and PNG encoding is
+        # platform-dependent in Pillow, so raw-byte equality is only
+        # contractually meaningful there. Layer 1 below always runs.
+        _pillow_version = _pkg_version("Pillow")
+        _provenance = sys.platform == "darwin" and _pillow_version == "13.0.0"
+        # PNG decoder is needed for Layer 1 regardless of platform.
+        from PIL import Image
+
         for slug, committed_path in signals:
             assert committed_path.is_file(), f"some committed cards exist but {slug} is missing"
-            slug_img = og.render_card(substances[slug])
-            assert slug_img == committed_path.read_bytes(), (
-                f"site/og/{committed_path.name} drifted from the pinned-Pillow render; "
-                "run `make build` (pinned pillow==13.0.0) and commit the rebuilt cards"
+            fresh_bytes = og.render_card(substances[slug])
+            committed_img = Image.open(io.BytesIO(committed_path.read_bytes()))
+            fresh_img = Image.open(io.BytesIO(fresh_bytes))
+            assert committed_img.size == fresh_img.size, (
+                f"site/og/{committed_path.name} rendered size {fresh_img.size} != committed size {committed_img.size}"
+            )
+            assert committed_img.mode == fresh_img.mode, (
+                f"site/og/{committed_path.name} rendered mode {fresh_img.mode} != committed mode {committed_img.mode}"
+            )
+            assert committed_img.tobytes() == fresh_img.tobytes(), (
+                f"site/og/{committed_path.name} decoded pixel content drifted "
+                "from the pinned-Pillow render; run `make build` (pinned "
+                "pillow==13.0.0) and commit the rebuilt cards"
+            )
+
+        # Layer 2: raw-byte equality on the provenance platform only.
+        if not _provenance:
+            pytest.skip(
+                "raw-byte guard applies only on the provenance platform "
+                "(darwin with pillow==13.0.0); this is platform="
+                f"{sys.platform}, Pillow={_pillow_version}, where PNG "
+                "encoding (deflate/zlib settings, encoder choices) differs "
+                "from the darwin/arm64 render that produced the committed "
+                "bytes — pixel-content equality above is the CI contract"
+            )
+        for slug, committed_path in signals:
+            assert og.render_card(substances[slug]) == committed_path.read_bytes(), (
+                f"site/og/{committed_path.name} raw bytes drifted from the "
+                "pinned-Pillow render; run `make build` (pinned "
+                "pillow==13.0.0) and commit the rebuilt cards"
             )
 
 
