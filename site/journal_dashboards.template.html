@@ -1,0 +1,245 @@
+<!--
+  Journal arc dashboards — injected into the SPA home by build.py behind the
+  site.journal_dashboards flag (compiled out entirely when the flag is off,
+  payload included). __JOURNAL_DATA__ carries one axis series per temporal-lab
+  character, read from the journal JSON (axis fields per the temporal_init
+  dry-run schema; mapping documented in build.JOURNAL_AXES). All client code
+  reads the build-time payload; no fetches; no external assets.
+  Never hand-edit built site/index.html; edit this template or build.py.
+-->
+<div id="view-journal_dashboards" class="view-container">
+  <div class="hero" style="padding-bottom: 24px;">
+    <h1>Journal<br>arcs.</h1>
+    <p>
+      Each temporal-lab character logs a journal per cycle. These dashboards
+      chart their phenomenology across cycles: intensity and novelty as
+      numeric series, with the cycle's emotional valence, ego coherence and
+      integration state in the hover readout. Every point is the journal's
+      own value for that cycle.
+    </p>
+  </div>
+  <section style="padding-top: 0;">
+    <div class="jdash-tabs" id="jdash-tabs" role="tablist" aria-label="Characters">
+      <!-- character tabs; filled by the dashboards renderer -->
+    </div>
+    <div id="jdash-chart" class="jdash-chart"></div>
+    <div class="jdash-readout" id="jdash-readout" aria-live="polite">
+      Hover or tap a data point to read that cycle's values.
+    </div>
+    <div class="jdash-note">
+      Series: <span class="jdash-swatch jdash-swatch-intensity"></span>intensity
+      (0&ndash;1) &middot; <span class="jdash-swatch jdash-swatch-novelty"></span>novelty
+      (0&ndash;1). Valence, coherence and integration are the journal's
+      categorical states for each cycle.
+    </div>
+  </section>
+</div>
+<style>
+  .jdash-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  .jdash-tab { border: 1px solid var(--border, rgba(0,0,0,0.08)); border-radius: 10px;
+    padding: 8px 14px; background: none; color: var(--text, inherit); cursor: pointer; font-size: 14px; }
+  .jdash-tab:hover:not(:disabled) { border-color: var(--accent, #6b5ce7); }
+  .jdash-tab.jdash-tab-active { border-color: var(--accent, #6b5ce7); outline: 1px solid var(--accent, #6b5ce7); }
+  .jdash-tab:disabled { opacity: 0.6; cursor: default; }
+  .jdash-chart { overflow-x: auto; padding: 4px 0 10px; }
+  .jdash-chart svg { display: block; min-width: 640px; width: 100%;
+    height: auto; }
+  .jdash-grid { stroke: var(--border, rgba(0,0,0,0.12)); stroke-width: 1; }
+  .jdash-line-series-intensity { fill: none; stroke: #6b5ce7; stroke-width: 2; }
+  .jdash-line-series-novelty { fill: none; stroke: #2e8b57; stroke-width: 2; stroke-dasharray: 5 4; }
+  .jdash-point { cursor: pointer; }
+  .jdash-point circle { fill: var(--bg, #fff); stroke-width: 2; }
+  .jdash-point:hover circle, .jdash-point.jdash-point-active circle { fill: #6b5ce7; }
+  .jdash-cycle-label { font-size: 11px; fill: var(--text-muted, #8a8a8a); }
+  .jdash-readout { min-height: 84px; font-size: 14px; line-height: 1.55; padding: 12px 16px 0;
+    border-top: 1px solid var(--border, rgba(0,0,0,0.08)); }
+  .jdash-note { margin-top: 12px; font-size: 13px; color: var(--text-muted, #8a8a8a); }
+  .jdash-swatch { display: inline-block; width: 18px; height: 3px; vertical-align: middle;
+    margin-right: 4px; border-radius: 2px; }
+  .jdash-swatch-intensity { background: #6b5ce7; }
+  .jdash-swatch-novelty { background: #2e8b57; }
+</style>
+<script type="application/json" id="jdash-data">__JOURNAL_DATA__</script>
+<script>
+(function () {
+  var dash = { axes: {}, characters: [] };
+  var dataNode = document.getElementById('jdash-data');
+  if (dataNode) {
+    try { dash = JSON.parse(dataNode.textContent); } catch (err) { dash = { axes: {}, characters: [] }; }
+  }
+
+  var WIDTH = 720, HEIGHT = 300, PAD = { left: 34, right: 16, top: 16, bottom: 30 };
+
+  function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function fmt(v) {
+    return v == null ? '&mdash;' : (typeof v === 'number' ? (Math.round(v * 100) / 100) : escHtml(v));
+  }
+
+  // One point document-wide: which point is showing its readout right now.
+  var activePoint = null;
+
+  function readout(char, point) {
+    var el = document.getElementById('jdash-readout');
+    if (!el) return;
+    if (!point) {
+      el.innerHTML = 'Hover or tap a data point to read that cycle\'s values.';
+      return;
+    }
+    el.innerHTML =
+      '<strong>' + escHtml(char.emoji + ' ' + char.name) +
+      ' &mdash; cycle ' + escHtml(point.cycle) + '</strong><br>' +
+      'intensity: ' + fmt(point.intensity) +
+      ' &middot; novelty: ' + fmt(point.novelty) +
+      ' &middot; valence: ' + fmt(point.emotionalState) +
+      ' &middot; coherence: ' + fmt(point.clarity) +
+      ' &middot; integration: ' + fmt(point.integration);
+  }
+
+  function xScale(min, max) {
+    var span = Math.max(max - min, 1);
+    return function (cycle) {
+      return PAD.left + ((cycle - min) / span) * (WIDTH - PAD.left - PAD.right);
+    };
+  }
+
+  function yScale(min, max) {
+    var span = Math.max(max - min, 0.001);
+    var plotH = HEIGHT - PAD.top - PAD.bottom;
+    return function (v) {
+      return PAD.top + (1 - (v - min) / span) * plotH;
+    };
+  }
+
+  function renderChart(char) {
+    var cycles = char.cycles.filter(function (p) { return typeof p.cycle === 'number'; });
+    var host = document.getElementById('jdash-chart');
+    if (!host) return;
+    if (!cycles.length) {
+      host.innerHTML = '<p class="jdash-note">No chartable cycles for this character yet.</p>';
+      return;
+    }
+    var minC = cycles[0].cycle, maxC = cycles[cycles.length - 1].cycle;
+    var x = xScale(minC, maxC);
+
+    // Numeric series extents, ignoring missing values; fall back to 0-1.
+    var values = [];
+    cycles.forEach(function (p) {
+      if (p.intensity != null) values.push(p.intensity);
+      if (p.novelty != null) values.push(p.novelty);
+    });
+    var yMin = values.length ? Math.min.apply(null, values) : 0;
+    var yMax = values.length ? Math.max.apply(null, values) : 1;
+    if (yMax - yMin < 0.001) { yMin -= 0.05; yMax += 0.05; }
+    var y = yScale(yMin, yMax);
+
+    var segs = ['#6b5ce7', '#2e8b57', '#b8860b', '#b03a3a', '#556b8f'];
+    var parts = '<svg viewBox="0 0 ' + WIDTH + ' ' + HEIGHT +
+      '" role="img" aria-label="' + escHtml(char.name + ' phenomenology across cycles') + '">';
+
+    // Horizontal grid + cycle-number axis labels.
+    [yMin, (yMin + yMax) / 2, yMax].forEach(function (v) {
+      parts += '<line class="jdash-grid" x1="' + PAD.left + '" y1="' + y(v) +
+        '" x2="' + (WIDTH - PAD.right) + '" y2="' + y(v) + '"/>';
+    });
+    cycles.forEach(function (p, i) {
+      if (cycles.length > 12 && i % 2 !== 0) return; // thin crowded labels
+      parts += '<text class="jdash-cycle-label" x="' + x(p.cycle) +
+        '" y="' + (HEIGHT - 8) + '" text-anchor="middle">' + escHtml(p.cycle) + '</text>';
+    });
+
+    // One polyline per numeric axis (only where values exist).
+    var axisDef = [
+      { key: 'intensity', cls: 'jdash-line-series-intensity' },
+      { key: 'novelty', cls: 'jdash-line-series-novelty' },
+    ];
+    axisDef.forEach(function (a) {
+      var pts = cycles.filter(function (p) { return p[a.key] != null; });
+      if (!pts.length) return;
+      parts += '<polyline class="' + a.cls + '" points="' + pts.map(function (p) {
+        return x(p.cycle) + ',' + y(p[a.key]);
+      }).join(' ') + '"/>';
+    });
+
+    // Interactive points colored by index so each numeric axis is legible.
+    var axisIndex = 0;
+    axisDef.forEach(function (a) {
+      cycles.forEach(function (p) {
+        if (p[a.key] == null) return;
+        var color = segs[axisIndex % segs.length];
+        parts += '<g class="jdash-point" data-cycle="' + escHtml(p.cycle) + '" tabindex="0">' +
+          '<circle cx="' + x(p.cycle) + '" cy="' + y(p[a.key]) + '" r="6" stroke="' + color + '"/>' +
+          '</g>';
+      });
+      axisIndex += 1;
+    });
+    parts += '</svg>';
+    host.innerHTML = parts;
+
+    // Wire hover/tap readouts, with the point data embedded on the node.
+    var pointNodes = host.querySelectorAll('.jdash-point');
+    Array.prototype.forEach.call(pointNodes, function (node, idx) {
+      node._jdash = { char: char, point: cycles[idx] };
+      function activate(ev) {
+        Array.prototype.forEach.call(pointNodes, function (n) {
+          n.classList.remove('jdash-point-active');
+        });
+        node.classList.add('jdash-point-active');
+        activePoint = node._jdash;
+        readout(activePoint.char, activePoint.point);
+        if (ev && ev.type === 'click') ev.preventDefault();
+      }
+      node.addEventListener('mouseenter', activate);
+      node.addEventListener('focus', activate);
+      node.addEventListener('click', activate);
+      function deactivate() {
+        node.classList.remove('jdash-point-active');
+        readout(activePoint && activePoint.char, activePoint && activePoint.point);
+      }
+      node.addEventListener('mouseleave', deactivate);
+      node.addEventListener('blur', deactivate);
+    });
+  }
+
+  function renderTabs() {
+    var tabs = document.getElementById('jdash-tabs');
+    if (!tabs) return;
+    if (!dash.characters.length) {
+      tabs.innerHTML = '<span class="jdash-note">No temporal-lab journals landed in this build.</span>';
+      return;
+    }
+    tabs.innerHTML = dash.characters.map(function (c, i) {
+      return '<button type="button" class="jdash-tab' + (i === 0 ? ' jdash-tab-active' : '') +
+        '" data-jdash-slug="' + escHtml(c.id) + '" role="tab">' +
+        escHtml(c.emoji + ' ' + c.name) + ' <small>' + c.cycles.length + ' cycles</small></button>';
+    }).join('');
+    selectChar(dash.characters[0]);
+    Array.prototype.forEach.call(tabs.querySelectorAll('.jdash-tab'), function (btn) {
+      btn.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        Array.prototype.forEach.call(tabs.querySelectorAll('.jdash-tab'), function (b) {
+          b.classList.remove('jdash-tab-active');
+        });
+        btn.classList.add('jdash-tab-active');
+        var slug = btn.getAttribute('data-jdash-slug');
+        var found = dash.characters.filter(function (c) { return c.id === slug; })[0];
+        if (found) {
+          activePoint = null;
+          readout(null);
+          selectChar(found);
+        }
+      });
+    });
+  }
+
+  function selectChar(char) {
+    renderChart(char);
+  }
+
+  renderTabs();
+})();
+</script>

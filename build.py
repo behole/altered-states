@@ -25,6 +25,7 @@ Log-event migration note (repo rule 3):
 import html
 import json
 import os
+import pathlib
 import re
 import shutil
 import sys
@@ -223,12 +224,34 @@ PERSONAS: list[dict[str, Any]] = [
 ]
 
 
+def temporal_journals_dir() -> str:
+    """Resolve the temporal-lab journals directory.
+
+    ``ALTERED_STATES_TEMPORAL_PATH`` points the build at an alternate
+    temporal-lab root (offline fixture scaffolds, per-user storage). The value
+    is interpreted like the lab itself resolves it: a root containing a
+    ``journals/`` subdir wins; a value that is itself the journals dir is used
+    as-is. Unset (or unresolvable) falls back to the in-repo runtime dir.
+    """
+    override = os.environ.get("ALTERED_STATES_TEMPORAL_PATH")
+    if not override:
+        return JOURNALS_DIR
+    root = pathlib.Path(override)
+    if root.is_dir():
+        nested = root / "journals"
+        if nested.is_dir():
+            return str(nested)
+        return str(root)
+    return JOURNALS_DIR
+
+
 def load_journals() -> dict[str, list[dict[str, Any]]]:
     """Load all journal JSON files."""
     journals: dict[str, list[dict[str, Any]]] = {}
+    journals_dir = temporal_journals_dir()
     for persona in PERSONAS:
         sid = persona["id"]
-        path = os.path.join(JOURNALS_DIR, f"{sid}_journal.json")
+        path = os.path.join(journals_dir, f"{sid}_journal.json")
         if os.path.exists(path):
             with open(path) as f:
                 data: Any = json.load(f)
@@ -1355,6 +1378,47 @@ def render_diff_view(diff_payload: list[dict[str, Any]], enabled: bool) -> str:
 QUIZ_FLAG = "site.quiz_game"
 QUIZ_TEMPLATE = os.path.join(BASE, "site", "quiz.template.html")
 
+# Journal arc dashboards (site.journal_dashboards): per-character series over
+# temporal-lab cycles, charted from the journal JSON as defined by the
+# temporal_init dry-run schema.
+JOURNAL_FLAG = "site.journal_dashboards"
+JOURNAL_TEMPLATE = os.path.join(BASE, "site", "journal_dashboards.template.html")
+
+# The axes the dashboards chart, with the journal JSON field each one reads.
+# Categorical values (emotional valence / ego coherence / integration state)
+# are shown verbatim in the hover readout; the numeric axes are the series
+# drawn as lines. No payload value is invented: every field is the journal's
+# own value for that cycle, or None when the journal omits the field.
+JOURNAL_AXES: dict[str, dict[str, str]] = {
+    "intensity": {
+        "journalField": "experience.intensity",
+        "kind": "number",
+        "label": "Phenomenology intensity",
+        "scale": "0-1",
+    },
+    "novelty": {
+        "journalField": "experience.novelty",
+        "kind": "number",
+        "label": "Novelty",
+        "scale": "0-1",
+    },
+    "emotionalState": {
+        "journalField": "emotional_state",
+        "kind": "category",
+        "label": "Emotional valence",
+    },
+    "clarity": {
+        "journalField": "clarity",
+        "kind": "category",
+        "label": "Ego coherence",
+    },
+    "integration": {
+        "journalField": "integration",
+        "kind": "category",
+        "label": "Integration",
+    },
+}
+
 # Longest excerpt window kept on the page, in characters; windows shorter than
 # the minimum are not worth a round.
 QUIZ_EXCERPT_MAX = 320
@@ -1580,6 +1644,29 @@ def render_quiz_view(quiz_payload: dict[str, Any], enabled: bool) -> str:
     return template_html.replace("__QUIZ_DATA__", json_payload)
 
 
+def render_journal_nav(enabled: bool) -> str:
+    """The nav link for the journal dashboards; compiled out when off."""
+    if not enabled:
+        return ""
+    return (
+        '<a href="#" data-view="journal_dashboards" '
+        "onclick=\"showView('journal_dashboards'); closeMobileNav(); return false;\">Arcs</a>"
+    )
+
+
+def render_journal_view(payload: dict[str, Any], enabled: bool) -> str:
+    """The journal dashboards view + embedded payload; empty string when
+    ``site.journal_dashboards`` is off, so neither the markup nor the series
+    JSON reaches the built page."""
+    if not enabled:
+        return ""
+    with open(JOURNAL_TEMPLATE) as f:
+        template_html = f.read()
+    json_payload = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    json_payload = json_payload.replace("<", "\\u003c").replace(">", "\\u003e")
+    return template_html.replace("__JOURNAL_DATA__", json_payload)
+
+
 def _diff_row_keys() -> tuple[str, ...]:
     """The ten comparison rows the view renders: seven dimensions plus
     language, duration, ego behavior."""
@@ -1591,6 +1678,62 @@ def count_cycles(journals: dict[str, list[dict[str, Any]]]) -> int:
     return sum(
         len({e.get("cycle") for e in v if not e.get("error") and e.get("cycle") is not None}) for v in journals.values()
     )
+
+
+def _journal_axis_point(entry: dict[str, Any]) -> dict[str, Any]:
+    """One cycle's point on the documented axes, taken verbatim from the
+    journal entry. Numeric axes are None (not zero) when the journal omits
+    the field, so a missing value is never charted as 0."""
+    raw_experience = entry.get("experience")
+    experience = raw_experience if isinstance(raw_experience, dict) else {}
+    intensity: float | None
+    novelty: float | None
+    intensity = experience.get("intensity") if isinstance(experience.get("intensity"), (int, float)) else None
+    novelty = experience.get("novelty") if isinstance(experience.get("novelty"), (int, float)) else None
+    cycle = entry.get("cycle", "?")
+    cycle = cycle if isinstance(cycle, int) else str(cycle)
+    return {
+        "cycle": cycle,
+        "intensity": intensity,
+        "novelty": novelty,
+        "emotionalState": entry.get("emotional_state", ""),
+        "clarity": entry.get("clarity", ""),
+        "integration": entry.get("integration", ""),
+    }
+
+
+def _journal_sort_key(entry: dict[str, Any]) -> int:
+    """Entries sort by cycle, with unnumbered entries pinned first."""
+    cycle = entry.get("cycle")
+    return cycle if isinstance(cycle, int) else -1
+
+
+def build_journal_series_payload(journals: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
+    """Build the dashboards payload: per-character axis series over cycles.
+
+    Pure function of ``journals``; every series value is exactly the journal
+    entry's own value for that cycle (see JOURNAL_AXES for the field mapping).
+    Error entries and entries without a cycle index cannot be charted and are
+    skipped; characters with no chartable cycles contribute nothing.
+    """
+    characters: list[dict[str, Any]] = []
+    for persona in PERSONAS:
+        sid = persona["id"]
+        entries = journals.get(sid, [])
+        chartable = [e for e in entries if not e.get("error") and e.get("cycle") is not None]
+        if not chartable:
+            continue
+        chartable.sort(key=_journal_sort_key)
+        characters.append(
+            {
+                "id": sid,
+                "name": persona["name"],
+                "emoji": persona["emoji"],
+                "character": persona["character"],
+                "cycles": [_journal_axis_point(e) for e in chartable],
+            }
+        )
+    return {"axes": JOURNAL_AXES, "characters": characters}
 
 
 def enabled_section_flags() -> dict[str, bool]:
@@ -1675,11 +1818,14 @@ def record_content_metrics(
 
 
 def render_flag_gated_sections(
-    substances: list[dict[str, Any]], experiments: list[dict[str, Any]], section_flags: dict[str, bool]
+    journals: dict[str, list[dict[str, Any]]],
+    substances: list[dict[str, Any]],
+    experiments: list[dict[str, Any]],
+    section_flags: dict[str, bool],
 ) -> dict[str, str]:
     """Build every flag-gated section's nav + view markup for the page.
 
-    Each flag pair (``arc``, ``diff``, ``quiz``) renders its data payload and
+    Each flag pair (``arc``, ``diff``, ``quiz``, ``journal``) renders its data payload and
     view only when enabled; an off flag contributes an empty string so the
     whole section — payload included — compiles out of the built page.
     """
@@ -1706,6 +1852,14 @@ def render_flag_gated_sections(
     log_event("build.stage", stage="quiz_render", enabled=quiz_enabled)
     sections["quiz_nav"] = render_quiz_nav(quiz_enabled)
     sections["quiz_view"] = render_quiz_view(quiz_payload, quiz_enabled)
+
+    log_event("build.stage", stage="journal_series_payload")
+    journal_series = build_journal_series_payload(journals)
+    REGISTRY.gauge("journal_series_characters", len(journal_series["characters"]))
+    journal_enabled = section_flags.get(JOURNAL_FLAG, False)
+    log_event("build.stage", stage="journal_render", enabled=journal_enabled)
+    sections["journal_nav"] = render_journal_nav(journal_enabled)
+    sections["journal_view"] = render_journal_view(journal_series, journal_enabled)
 
     return sections
 
@@ -1736,7 +1890,7 @@ def build() -> None:
             substances = load_substances()
             section_flags = enabled_section_flags()
             substance_links = render_substance_links(substances, section_flags.get(SUBSTANCES_FLAG, False))
-            section_html = render_flag_gated_sections(substances, experiments, section_flags)
+            section_html = render_flag_gated_sections(journals, substances, experiments, section_flags)
 
             html = render_page(
                 persona_data,
