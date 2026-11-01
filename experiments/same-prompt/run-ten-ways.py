@@ -146,19 +146,33 @@ RESPOND TO THE PROMPT FROM INSIDE THE EXPERIENCE. Do not break character to expl
 
 
 # ---------------------------------------------------------------------------
-# Bootstrap dotenv early — load temporal-lab .env for DEEPSEEK_API_KEY
+# Bootstrap dotenv early — root `.env` first (project key convention), then
+# the temporal-lab local `.env` as fallback
 # ---------------------------------------------------------------------------
+
+# Key-loading priority (same convention as the temporal lab's llm_invoke):
+# repo-root `.env` first, then the lab-local `.env`. Both use override=True so
+# whichever file wins beats any ambient shell variable deterministically.
+ROOT_ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
+LAB_LOCAL_ENV_PATH = Path(__file__).resolve().parents[1] / "temporal-lab" / ".env"
 
 
 def _load_dotenv() -> None:
-    """Load .env from temporal-lab/ so DEEPSEEK_API_KEY is always available."""
+    """Load .env from the repo root, falling back to experiments/temporal-lab/.
+
+    The root `.env` is the shared key source for all three model-call
+    surfaces; the lab-local file is the exception, used only when the root
+    file is absent. Both are loaded with override=True so the resolved `.env`
+    (not an ambient shell var like OPENROUTER_API_KEY) decides the config.
+    """
     try:
         # Imported lazily: dotenv is optional (only needed for .env loading).
         from dotenv import load_dotenv  # noqa: PLC0415
 
-        env_path = Path(__file__).resolve().parents[1] / "temporal-lab" / ".env"
-        if env_path.exists():
-            load_dotenv(env_path, override=True)
+        for env_path in (ROOT_ENV_PATH, LAB_LOCAL_ENV_PATH):
+            if env_path.exists():
+                load_dotenv(env_path, override=True)
+                return
     except ImportError:
         return
 
@@ -176,7 +190,7 @@ def invoke_model(
     model: str = DEFAULT_MODEL,
     temperature: float = 0.85,
 ) -> tuple[str, int, int]:
-    """Call OpenRouter API. Returns (text, tokens_in, tokens_out)."""
+    """Call the DeepSeek chat-completions API. Returns (text, tokens_in, tokens_out)."""
     try:
         # Imported lazily so --dry-run works without the SDK installed.
         from openai import OpenAI  # noqa: PLC0415
@@ -185,7 +199,10 @@ def invoke_model(
 
     api_key = os.environ.get("DEEPSEEK_API_KEY")
     if not api_key:
-        raise RuntimeError("DEEPSEEK_API_KEY not set. Check experiments/temporal-lab/.env")
+        raise RuntimeError(
+            "DEEPSEEK_API_KEY not set. Load the repo-root .env with "
+            "`set -a; source .env; set +a` (fallback: experiments/temporal-lab/.env), then retry."
+        )
 
     client = OpenAI(
         base_url="https://api.deepseek.com/v1",

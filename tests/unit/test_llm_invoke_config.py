@@ -28,6 +28,19 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1"
 import llm_invoke  # noqa: E402
 
 
+@pytest.fixture(autouse=True)
+def _isolate_real_env_paths(tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Point both real .env paths at nonexistent tmp files for every test.
+
+    Importing llm_invoke runs its import-time _load_dotenv(), which loads the
+    real repo-root `.env` into the process env; this fixture neutralizes that
+    for anything that re-loads during a test, and no assertions ever read the
+    real key value.
+    """
+    monkeypatch.setattr(llm_invoke, "ROOT_ENV_PATH", tmp_path / "does-not-exist.env")
+    monkeypatch.setattr(llm_invoke, "LOCAL_ENV_PATH", tmp_path / "does-not-exist-local.env")
+
+
 @pytest.fixture
 def fake_openai(monkeypatch: pytest.MonkeyPatch) -> Any:
     """Replace the openai SDK with a stub that records constructor kwargs."""

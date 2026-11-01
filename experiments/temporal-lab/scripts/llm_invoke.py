@@ -24,7 +24,10 @@ TEMPORAL_LAB_MODEL. Key resolution is DeepSeek-first on every surface:
      the documented free endpoints keep working.
   4. A model slug that looks OpenRouter-shaped ("provider/model" or ":free")
      also resolves to OpenRouter — that is explicit configuration, not
-     ambient-key guessing.
+     ambient-key guessing. Note the ranking: with DEEPSEEK_API_KEY set, an
+     OpenRouter-shaped slug still resolves to api.deepseek.com (the slug
+     shape alone does not reroute); set LLM_BASE_URL explicitly for a
+     deliberate OpenRouter run.
 
 Keys load from the repo-root `.env` first (the project convention), falling
 back to `experiments/temporal-lab/.env`; both use override=True, so the

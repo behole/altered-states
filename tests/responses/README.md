@@ -2,6 +2,36 @@
 
 This directory stores raw model outputs from evaluation runs. Each run produces a JSONL file capturing every prompt → response pair alongside its scoring.
 
+## Scope note for the site payload builders (cross-model & grids)
+
+`build.py`'s cross-model diff and eval-grid payloads glob **every `*.jsonl`
+in this directory** (and every `*.md` in `experiments/same-prompt/output/`)
+in sorted filename order. That means:
+
+- any untracked real-run JSONL temporarily placed here changes the built page
+  on that machine; the committed state always rebuilds byte-identical.
+- dry-run stub rows (`dry_run: true`) are excluded from publication.
+
+The stale lists below describe the original scoring workflow; the manifest,
+adapter notes, and glob scope above supersede them.
+
+## Executed one-shot interpretation
+
+`bin/run_eval.py` has no per-prompt selector flag: an invocation without a
+prompts override runs **every prompt in the prompts JSON through every named
+substance**. A real run budgeted for "$0.005, one prompt x three substances"
+that omits the prompt selector therefore executes as the full prompts file
+(in practice: 5 prompts x the substances given) at ~5x the budgeted request
+count — disclosed in the run handoff and ledgered by actuals in
+`docs/evals/spend-ledger.jsonl`. To restrict to fewer prompts, pass a
+custom `--prompts` JSON file containing only the prompts you want.
+
+## Manifest-annotated real runs
+
+Every real run writes a `*.manifest.json` sidecar before any API call is
+fired, and appends its actuals (at DeepSeek list pricing) to
+`docs/evals/spend-ledger.jsonl`; cumulative real spend is capped at $5.00.
+
 ## Why this exists
 
 The eval reports in `../../docs/evals/eval-report-*.md` record pass/fail judgments but not the actual model responses. This means:

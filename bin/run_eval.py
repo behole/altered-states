@@ -18,11 +18,20 @@ it, and the actual run then re-validates the manifest against this exact
 invocation and the cumulative ledger (``docs/evals/spend-ledger.jsonl``) before
 any API call. On completion the run appends ONE manifest-annotated real-run
 ledger entry with its actual cost (computed from returned ``usage`` tokens at
-DeepSeek list pricing). Dry-run writes neither a manifest nor a ledger row, so
-its contribution to cumulative spend is always 0.
+DeepSeek list pricing). A crash after some API calls fired still appends an
+annotated partial entry (whatever tokens completed) in a ``finally`` block, so
+cumulative spend is never under-counted. Dry-run writes neither a manifest nor
+a ledger row, so its contribution to cumulative spend is always 0.
 
 DeepSeek context caching is automatic (server-side); usage carries prompt/
 completion tokens only — no cache_control parameters are sent.
+
+Retry budget: the first attempt requests ``DEFAULT_MAX_TOKENS``; a short/empty
+response is retried with a lifted budget of ``min(DEFAULT_MAX_TOKENS * 4, the
+model's documented output cap)`` — a budget-raise retry can never request more
+output tokens than the provider's cap (no 400 from an oversized max_tokens).
+The pre-run manifest records that WORST-CASE retry ceiling as its ``max_tokens``
+(no silent 4x understatement of the retry cost headroom).
 
 Reasoning models (``deepseek-v4-pro``): the chain-of-thought arrives in
 ``message.reasoning_content`` and is recorded as its own JSONL field, never
@@ -39,6 +48,8 @@ reasoning-token count. Prose answers have a hard floor of
 Interpreter: run with the repo's pinned interpreter, ``.venv/bin/python3``
 (Python 3.13, relative to the repo root); any system ``python3`` >= 3.10 with
 the locked deps importable works identically.
+
+Default model: ``deepseek-chat`` (``DEFAULT_MODEL``; override with ``--model``).
 
 Usage:
   DEEPSEEK_API_KEY=... bin/run_eval.py
@@ -66,6 +77,8 @@ from altered_states import eval_budget  # noqa: E402  (repo root is injected fir
 from altered_states.error_tracking import capture_exception, init_error_tracking  # noqa: E402
 from altered_states.log_utils import log_event, trace_context  # noqa: E402
 from altered_states.metrics import REGISTRY, flush_metrics  # noqa: E402
+
+ManifestError = eval_budget.ManifestError
 
 # Imported lazily inside make_client() so --dry-run works without the SDK
 # installed. AsyncOpenAI targets any OpenAI-compatible endpoint; here the
@@ -105,6 +118,15 @@ DEFAULT_MODEL = "deepseek-chat"
 # (deepseek-v4-pro) can burn the whole budget on reasoning and return an empty
 # content with finish_reason "length". 8192 gives reasoning + prose headroom.
 DEFAULT_MAX_TOKENS = 8192
+
+# Documented maximum OUTPUT tokens per model id (DeepSeek's API reference).
+# A budget-raise retry clamps to this: it can never request more output tokens
+# than the provider accepts for that model, so a retry cannot 400 on cap.
+MODEL_OUTPUT_TOKEN_CAP: dict[str, int] = {
+    "deepseek-chat": 8192,
+    "deepseek-v4-pro": 65536,
+    "deepseek-reasoner": 65536,
+}
 # Per skill contract (library/model-providers.md): >=200 chars for prose
 # responses. Block empty-content persistence.
 MIN_RESPONSE_CHARS = 200
@@ -206,6 +228,19 @@ def _reasoning_tokens(usage: Any) -> int:
     return int(getattr(details, "reasoning_tokens", 0) or 0) if details is not None else 0
 
 
+def retry_max_tokens(model: str) -> int:
+    """The worst-case (budget-raise retry) output budget for a model.
+
+    Four x the pinned budget, clamped to the model's documented output cap so
+    a retry request can never exceed what the provider accepts. This same
+    value is what the pre-run manifest records as its ``max_tokens`` ceiling.
+    """
+    cap = MODEL_OUTPUT_TOKEN_CAP.get(model)
+    if cap is None:
+        raise ManifestError(f"no documented output cap for model {model!r}")
+    return min(DEFAULT_MAX_TOKENS * 4, cap)
+
+
 async def _attempt(
     client: Any,
     run: EvalRun,
@@ -289,8 +324,9 @@ async def run_one(
         for attempt in range(RETRY_ATTEMPTS):
             # First attempt uses the pinned budget; a short/empty response is
             # retried with a larger one (the reasoning model can eat the
-            # completion budget with chain-of-thought and leave no prose).
-            max_tokens = DEFAULT_MAX_TOKENS * (1 if attempt == 0 else 4)
+            # completion budget with chain-of-thought and leave no prose),
+            # clamped to the model's documented output cap.
+            max_tokens = DEFAULT_MAX_TOKENS if attempt == 0 else retry_max_tokens(model)
             try:
                 row = await _attempt(client, run, model, system_text, max_tokens=max_tokens)
                 if len(row.get("response") or "") < MIN_RESPONSE_CHARS:
@@ -299,6 +335,10 @@ async def run_one(
                         f"(finish_reason={row.get('stop_reason')!r}) — retrying with a larger token budget"
                     )
                     exc.finish_reason = row.get("stop_reason")  # type: ignore[attr-defined]
+                    # This call was already counted as an llm_calls success by
+                    # _attempt; the budget-raise retry below must not count the
+                    # same request again as an error.
+                    exc.budget_raise_retry = True  # type: ignore[attr-defined]
                     raise exc
                 REGISTRY.observe("llm_latency_seconds", time.perf_counter() - started_at, substance=run.substance)
                 return row
@@ -307,7 +347,8 @@ async def run_one(
                 # just backing off (the budget, not rate limits, is usually why
                 # a reasoning-model answer came back thin).
                 last_error = f"{type(exc).__name__}: {exc}"
-                REGISTRY.increment("llm_calls", status="error", substance=run.substance)
+                if not getattr(exc, "budget_raise_retry", False):
+                    REGISTRY.increment("llm_calls", status="error", substance=run.substance)
                 log_event(
                     "eval.retry",
                     level="WARNING",
@@ -322,7 +363,19 @@ async def run_one(
                 capture_exception(exc)
                 if attempt + 1 < RETRY_ATTEMPTS:
                     await asyncio.sleep(BACKOFFS_SEC[attempt])
-        return build_row(run, model, None, last_error)
+        # Error rows carry the same key set as success/dry-run rows so any
+        # consumer can index every published row identically.
+        row = build_row(run, model, None, last_error)
+        row["reasoning_content"] = None
+        row["reasoning_content_chars"] = 0
+        row["stop_reason"] = None
+        row["usage"] = {
+            "completion_tokens": 0,
+            "total_tokens": 0,
+            "prompt_tokens": 0,
+            "reasoning_tokens": 0,
+        }
+        return row
 
 
 def resolve_substances(spec: str) -> list[str]:
@@ -402,7 +455,10 @@ async def execute_runs(
     ``manifest`` is the pre-validated spend manifest this run was authorized
     against; the run's actuals (returned usage tokens × DeepSeek list pricing)
     are appended to ``ledger_path`` as one manifest-annotated real-run entry
-    when the run completes.
+    when the run completes. If the run crashes after the loop started — even
+    with zero completed rows — a ``finally`` block still appends an annotated
+    partial entry (``partial: true``, zero-actual when no usage was counted),
+    so cumulative spend is never under-counted.
     """
     client = make_client()
     sem = asyncio.Semaphore(concurrency)
@@ -411,36 +467,45 @@ async def execute_runs(
     errors = 0
     total_tokens_in = 0
     total_tokens_out = 0
-    with out_path.open("w") as f:
-        tasks = [asyncio.create_task(run_one(client, sem, run, model)) for run in runs]
-        for coro in asyncio.as_completed(tasks):
-            row = await coro
-            f.write(json.dumps(row, ensure_ascii=False) + "\n")
-            f.flush()
-            done += 1
-            ok = row.get("response") is not None
-            if not ok:
-                errors += 1
-            usage = row.get("usage") or {}
-            total_tokens_in += usage.get("prompt_tokens") or 0
-            total_tokens_out += usage.get("completion_tokens") or 0
-            status = "✓" if ok else "✗"
-            usage_info = ""
-            if ok and usage:
-                usage_info = f"  in={usage.get('prompt_tokens')}  out={usage.get('completion_tokens')}"
-            print(f"  [{done}/{len(runs)}] {status} {row['substance']:<12} {row['prompt_id']:<24}{usage_info}")
-
-    actual_cost = eval_budget.estimate_cost_from_tokens(model, total_tokens_in, total_tokens_out)
-    eval_budget.append_ledger(
-        ledger_path,
-        eval_budget.build_ledger_entry(
+    try:
+        with out_path.open("w") as f:
+            tasks = [asyncio.create_task(run_one(client, sem, run, model)) for run in runs]
+            for coro in asyncio.as_completed(tasks):
+                row = await coro
+                f.write(json.dumps(row, ensure_ascii=False) + "\n")
+                f.flush()
+                done += 1
+                ok = row.get("response") is not None
+                if not ok:
+                    errors += 1
+                usage = row.get("usage") or {}
+                total_tokens_in += usage.get("prompt_tokens") or 0
+                total_tokens_out += usage.get("completion_tokens") or 0
+                status = "✓" if ok else "✗"
+                usage_info = ""
+                if ok and usage:
+                    usage_info = f"  in={usage.get('prompt_tokens')}  out={usage.get('completion_tokens')}"
+                print(f"  [{done}/{len(runs)}] {status} {row['substance']:<12} {row['prompt_id']:<24}{usage_info}")
+    finally:
+        # Crash persistence (scrutiny finding, eval-budget-guardrails): billed
+        # API calls fired before a crash must still reach the ledger; a
+        # zero-actual partial row annotates cleanly and contributes $0 when no
+        # usage was counted. The single ledger append point for the run.
+        entry = eval_budget.build_ledger_entry(
             manifest=manifest,
             model=model,
             prompt_tokens=total_tokens_in,
             output_tokens=total_tokens_out,
             output_relpath=os.path.relpath(out_path, REPO_ROOT),
-        ),
-    )
+            output_abspath=str(out_path),
+            partial=done < len(runs),
+        )
+        eval_budget.append_ledger(ledger_path, entry)
+        if done < len(runs):
+            # Annotate the crash loudly: the entry above is partial.
+            log_event("eval.partial_ledger", level="WARNING", runs_done=done, runs_total=len(runs))
+
+    actual_cost = eval_budget.estimate_cost_from_tokens(model, total_tokens_in, total_tokens_out)
     log_event(
         "eval.complete",
         runs=done,
@@ -470,13 +535,18 @@ def _invocation_argv() -> str:
 
 
 def _manifest_for_args(args: argparse.Namespace, runs_len: int, run_kind: str) -> dict[str, Any]:
-    """Build the spend manifest matching this exact invocation."""
+    """Build the spend manifest matching this exact invocation.
+
+    ``max_tokens`` records the WORST-CASE output ceiling actually available on
+    a budget-raise retry (first attempt ``DEFAULT_MAX_TOKENS``, clamped lift),
+    so the manifest's cost estimate never understates the retry headroom.
+    """
     command_line = _invocation_argv()
     max_requests = runs_len * RETRY_ATTEMPTS  # worst case: every run exhausts retry
     manifest = eval_budget.build_manifest(
         run_kind=run_kind,
         model=args.model,
-        max_tokens=DEFAULT_MAX_TOKENS,
+        max_tokens=retry_max_tokens(args.model),
         max_requests=max_requests,
         concurrency=args.concurrency,
         command_line=command_line,
@@ -509,6 +579,7 @@ def _gate_manifest(args: argparse.Namespace, runs_len: int, out_path: Path) -> t
         print(f"→ manifest written: {os.path.relpath(manifest_path, REPO_ROOT)}")
         print(
             f"  max_requests={manifest['max_requests']} (worst case incl. retries)  "
+            f"max_tokens={manifest['max_tokens']} (worst-case retry ceiling; first attempt {DEFAULT_MAX_TOKENS})  "
             f"estimated=${manifest['estimated_cost_usd']:.4f} of ${manifest['total_cap_usd']:.2f} cap"
         )
         print("  REVIEW the manifest, then start the run WITHOUT --write-manifest.")

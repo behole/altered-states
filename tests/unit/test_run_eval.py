@@ -9,6 +9,8 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import sys
+from itertools import islice
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +18,7 @@ import pytest
 import run_eval
 
 from altered_states import eval_budget
+from altered_states.metrics import REGISTRY
 
 
 class FakeMessage:
@@ -205,14 +208,64 @@ class TestRunOne:
         assert row["response"] is not None
         assert row["score"] is None
 
-    def test_short_response_retries_with_a_bigger_budget_then_succeeds(self, no_sleep: list[float]) -> None:
+    def test_short_response_retries_with_the_capped_budget_then_succeeds(self, no_sleep: list[float]) -> None:
         tiny = FakeResponse([FakeChoice(FakeMessage("too short"))])
         big = FakeResponse([FakeChoice(FakeMessage("a complete, substantive in-character response. " * 10))])
         completions = FakeCompletions(responses=[tiny, big])
         row = run_async(run_eval.run_one(FakeClient(completions), asyncio.Semaphore(1), a_run(), "deepseek-chat"))
         assert row["score"] is None
+        # Budget-raise retry, clamped to deepseek-chat's documented output cap.
         budgets = [call["max_tokens"] for call in completions.calls]
-        assert budgets[1] > budgets[0]
+        assert budgets[0] == run_eval.DEFAULT_MAX_TOKENS
+        assert budgets[1] == run_eval.retry_max_tokens("deepseek-chat")
+        assert budgets[1] <= run_eval.MODEL_OUTPUT_TOKEN_CAP["deepseek-chat"]
+
+    def test_retry_budget_of_the_reasoning_model_lifts_but_never_exceeds_the_cap(self, no_sleep: list[float]) -> None:
+        reasoning_lift = FakeResponse(
+            [FakeChoice(FakeMessage("a complete, substantive in-character deepseek-v4-pro response. " * 10))]
+        )
+        tiny = FakeResponse([FakeChoice(FakeMessage("too short"))])
+        completions = FakeCompletions(responses=[tiny, reasoning_lift])
+        run_async(run_eval.run_one(FakeClient(completions), asyncio.Semaphore(1), a_run(), "deepseek-v4-pro"))
+        lifted = completions.calls[1]["max_tokens"]
+        assert lifted == min(run_eval.DEFAULT_MAX_TOKENS * 4, run_eval.MODEL_OUTPUT_TOKEN_CAP["deepseek-v4-pro"])
+        assert lifted == run_eval.retry_max_tokens("deepseek-v4-pro")
+
+    def test_llm_calls_are_counted_once_per_request_across_a_budget_raise_retry(self, no_sleep: list[float]) -> None:
+        """Scrutiny fix: the budget-raise retry must not double-count a call
+        (the first attempt was already counted ok; the retry has its own ok
+        count, and no error increment for the same request).
+        """
+        REGISTRY.reset()
+        tiny = FakeResponse([FakeChoice(FakeMessage("too short"))])
+        big = FakeResponse([FakeChoice(FakeMessage("a complete, substantive in-character response. " * 10))])
+        completions = FakeCompletions(responses=[tiny, big])
+        run_async(run_eval.run_one(FakeClient(completions), asyncio.Semaphore(1), a_run(), "deepseek-chat"))
+        counters = REGISTRY.as_dict()["counters"]
+        ok = sum(v for k, v in counters.items() if "llm_calls" in k and 'status="ok"' in k)
+        error = sum(v for k, v in counters.items() if "llm_calls" in k and 'status="error"' in k)
+        # Two actual API requests => two ok counts; zero error counts.
+        assert ok == 2
+        assert error == 0
+
+    def test_error_row_carries_the_same_key_set_as_success_rows(self, no_sleep: list[float]) -> None:
+        """Scrutiny fix: exhausted retries still carry the full row contract
+        (reasoning_content / stop_reason / usage = None / None / zero usage)."""
+        completions = FakeCompletions(errors=[RuntimeError("boom")] * 10)
+        err = run_async(run_eval.run_one(FakeClient(completions), asyncio.Semaphore(1), a_run(), "deepseek-chat"))
+        success_keys = set(run_eval.build_row(a_run(), "deepseek-chat", "text"))
+        success_keys -= {"category"}  # deliberate: error rows drop the unused category key
+        success_keys |= {"reasoning_content", "reasoning_content_chars", "stop_reason", "usage"}
+        assert set(err) == success_keys
+        assert err["reasoning_content"] is None
+        assert err["stop_reason"] is None
+        assert err["usage"] == {
+            "completion_tokens": 0,
+            "total_tokens": 0,
+            "prompt_tokens": 0,
+            "reasoning_tokens": 0,
+        }
+        assert err["response"] is None and err["score"] == "error"
 
     def test_exhausted_retries_return_an_error_row(self, no_sleep: list[float]) -> None:
         completions = FakeCompletions(errors=[RuntimeError("boom")] * 10)
@@ -340,6 +393,160 @@ class TestExecuteRuns:
         assert ret == 1
         rows = [json.loads(line) for line in out_path.read_text().splitlines()]
         assert all(r["score"] == "error" and "RuntimeError" in (r["notes"] or "") for r in rows)
+
+
+class TestManifestHonestyAndSpecKey:
+    """Scrutiny follow-ups: manifest records the worst-case retry ceiling;
+    the argv-stripping fix has a regression test."""
+
+    def _args(self) -> argparse.Namespace:
+        return run_eval._build_parser().parse_args(["--model", "deepseek-v4-pro"])
+
+    def test_manifest_max_tokens_records_the_worst_case_retry_ceiling(self) -> None:
+        manifest = run_eval._manifest_for_args(self._args(), 3, "real")
+        # Not the first-attempt budget: the lifted, cap-clamped ceiling.
+        assert manifest["max_tokens"] == run_eval.retry_max_tokens("deepseek-v4-pro")
+        assert manifest["max_tokens"] == min(
+            run_eval.DEFAULT_MAX_TOKENS * 4, run_eval.MODEL_OUTPUT_TOKEN_CAP["deepseek-v4-pro"]
+        )
+        assert manifest["max_tokens"] > run_eval.DEFAULT_MAX_TOKENS
+        assert manifest["max_tokens"] <= run_eval.MODEL_OUTPUT_TOKEN_CAP["deepseek-v4-pro"]
+
+    def test_chat_manifest_ceiling_is_clamped_to_the_documented_cap(self) -> None:
+        args = run_eval._build_parser().parse_args(["--model", "deepseek-chat"])
+        manifest = run_eval._manifest_for_args(args, 2, "real")
+        assert manifest["max_tokens"] == run_eval.MODEL_OUTPUT_TOKEN_CAP["deepseek-chat"]
+        assert manifest["max_tokens"] <= run_eval.MODEL_OUTPUT_TOKEN_CAP["deepseek-chat"]
+
+    def test_spec_key_strips_the_write_manifest_flag_from_argv(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Regression for 8db600d: a raw sys.argv with --write-manifest made
+        every review-then-run manifest self-reject (exit 3, dead flow)."""
+        argv = [
+            "bin/run_eval.py",
+            "--write-manifest",
+            "--substances",
+            "lsd",
+            "--out",
+            "/tmp/spec.jsonl",
+        ]
+        monkeypatch.setattr(sys, "argv", argv)
+        scored = run_eval._manifest_for_args(self._args(), 1, "real")["spec_key"]
+        monkeypatch.setattr(sys, "argv", [a for a in argv if a != "--write-manifest"])
+        reviewed = run_eval._manifest_for_args(self._args(), 1, "real")["spec_key"]
+        assert scored == reviewed
+
+    def test_retry_max_tokens_refuses_an_unknown_model(self) -> None:
+        with pytest.raises(eval_budget.ManifestError, match="output cap"):
+            run_eval.retry_max_tokens("gpt-5")
+
+
+class TestCrashLedgerPersistence:
+    def test_crash_mid_run_appends_an_annotated_partial_ledger_entry(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Scrutiny fix: a crash after N billed API calls must not lose them
+        from the cumulative ledger. The finally block appends a partial,
+        manifest-annotated entry with the usage counted so far."""
+        monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+        stub = FakeResponse([FakeChoice(FakeMessage("a complete, substantive in-character response. " * 10))])
+        completions = FakeCompletions(responses=[stub, stub])
+        monkeypatch.setattr(run_eval, "make_client", lambda: FakeClient(completions))
+        out_path = tmp_path / "crash.jsonl"
+        manifest = eval_budget.build_manifest(
+            run_kind="real",
+            model="deepseek-chat",
+            max_tokens=1000,
+            max_requests=6,
+            concurrency=2,
+            command_line="bin/run_eval.py --out crash.jsonl",
+            num_runs=2,
+        )
+        ledger = tmp_path / "spend-ledger.jsonl"
+        # Simulate the crash right after the first row is processed: the
+        # completion iterator yields row one, then raise.
+        orig_as_completed = asyncio.as_completed
+
+        class OneThenCrash:
+            def __init__(self, iterable: Any) -> None:
+                self.remaining = list(islice(iter(iterable), 2))
+
+            def __iter__(self) -> Any:
+                yield from self.remaining
+                raise RuntimeError("simulated crash after the first billed row")
+
+        monkeypatch.setattr(asyncio, "as_completed", lambda tasks: OneThenCrash(orig_as_completed(tasks)))
+        with pytest.raises(RuntimeError, match="simulated crash"):
+            run_async(
+                run_eval.execute_runs(
+                    [a_run("lsd", 1), a_run("mdma", 5), a_run("psilocybin", 1)],
+                    1,
+                    "deepseek-chat",
+                    out_path,
+                    manifest,
+                    ledger,
+                )
+            )
+        entries = eval_budget.read_ledger_entries(ledger)
+        assert len(entries) == 1
+        entry = entries[0]
+        assert entry["run_kind"] == "real"
+        assert entry["manifest_id"] == manifest["manifest_id"]
+        assert entry["partial"] is True
+        # The first row's billed usage reached the ledger, not zero.
+        assert entry["prompt_tokens"] > 0 and entry["output_tokens"] > 0
+        assert entry["actual_cost_usd"] > 0
+        # Annotated entries stay chargeable toward the cap.
+        assert eval_budget.ledger_total(ledger) > 0
+
+    def test_completed_run_ledger_entry_is_not_marked_partial(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+        stub = FakeResponse([FakeChoice(FakeMessage("a complete, substantive in-character response. " * 10))])
+        completions = FakeCompletions(responses=[stub, stub])
+        monkeypatch.setattr(run_eval, "make_client", lambda: FakeClient(completions))
+        out_path = tmp_path / "ok.jsonl"
+        manifest = eval_budget.build_manifest(
+            run_kind="real",
+            model="deepseek-chat",
+            max_tokens=1000,
+            max_requests=2,
+            concurrency=2,
+            command_line="bin/run_eval.py --out ok.jsonl",
+            num_runs=2,
+        )
+        ledger = tmp_path / "spend-ledger.jsonl"
+        run_async(
+            run_eval.execute_runs([a_run("lsd", 1), a_run("mdma", 5)], 2, "deepseek-chat", out_path, manifest, ledger)
+        )
+        entry = eval_budget.read_ledger_entries(ledger)[0]
+        assert "partial" not in entry
+        # run_one's per-call accounting from the earlier test still holds.
+        assert entry["manifest_id"] == manifest["manifest_id"]
+
+    def test_ledger_output_outside_the_repo_root_carries_an_absolute_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+        stub = FakeResponse([FakeChoice(FakeMessage("a complete, substantive in-character response. " * 10))])
+        completions = FakeCompletions(responses=[stub])
+        monkeypatch.setattr(run_eval, "make_client", lambda: FakeClient(completions))
+        out_path = Path("/tmp/val-eval-abs-007.jsonl")
+        manifest = eval_budget.build_manifest(
+            run_kind="real",
+            model="deepseek-chat",
+            max_tokens=1000,
+            max_requests=1,
+            concurrency=1,
+            command_line="bin/run_eval.py --out /tmp/x.jsonl",
+            num_runs=1,
+        )
+        ledger = tmp_path / "spend-ledger.jsonl"
+        run_async(run_eval.execute_runs([a_run("lsd", 1)], 1, "deepseek-chat", out_path, manifest, ledger))
+        # Not a useless ../../.. relative path: an absolute path.
+        entry = eval_budget.read_ledger_entries(ledger)[0]
+        assert entry["output"].startswith("/tmp/")
+        assert abs(eval_budget.ledger_total(ledger)) >= 0
 
 
 class TestDryRunRows:

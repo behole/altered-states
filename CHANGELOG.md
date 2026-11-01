@@ -8,6 +8,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 ### Changed
+- **Provider migration: DeepSeek is the sanctioned default on all three
+  model-call surfaces** — `bin/run_eval.py` now talks to
+  `api.deepseek.com/v1` through the OpenAI SDK gated solely on
+  `DEEPSEEK_API_KEY`; `experiments/temporal-lab/scripts/llm_invoke.py` and
+  `experiments/same-prompt/run-ten-ways.py` resolve keys root-`.env`-first
+  with DeepSeek outranking an ambient `OPENROUTER_API_KEY` (ambient
+  OpenRouter keys never silently reroute a surface to OpenRouter). The eval
+  runner's budget-raise retry is clamped to the model's documented output
+  cap (no retry can request more output tokens than the provider accepts),
+  the pre-run manifest records that worst-case retry ceiling, error rows
+  carry the same key set as success rows, `llm_calls` is counted once per
+  request across retries, and a crash after billed API calls persists an
+  annotated partial ledger entry so cumulative spend is never under-counted.
 - **watch.py serves on a threaded HTTP server** — both serve modes
   (`--serve-only` and default) now use `ThreadingHTTPServer` with daemon
   threads (via the new `watch.make_server()`), so one slow or half-open
@@ -18,6 +31,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   connection does not block later requests and the server still shuts
   down cleanly.
 ### Added
+- **Per-substance eval-grid sections (Cross-model & Grids views)** —
+  `site/index.html` now ships two data-driven sections: the cross-model
+  diff (`site.cross_model_diff`, owner eval) showing DeepSeek responses
+  side-by-side with the historical same-prompt corpora
+  (anthropic/claude-sonnet-4.6, zai/glm-5-turbo), and the eval grids
+  (`site.eval_grids`, owner site) publishing every prompt/run with
+  model-tagged, run-toggleable cells. Both payloads derive deterministically
+  from the committed artifacts under `tests/responses/` and
+  `experiments/same-prompt/output/` (see `tests/responses/README.md` for
+  the glob scope both sections consume).
 - **Per-substance static pages** — `make build` now also writes one
   standalone, deterministic page per substance skill under
   `site/<substance>/index.html` (10 at this milestone: every `skills/*` dir

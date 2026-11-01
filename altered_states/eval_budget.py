@@ -73,10 +73,12 @@ def pricing_for(model: str) -> dict[str, float]:
 
 
 def estimate_cost_per_call(model: str, max_tokens: int) -> float:
-    """Worst-case billed cost of one request capped at ``max_tokens``.
+    """Output-side bound on the billed cost of one request capped at ``max_tokens``.
 
-    Assumes every billed output token is spent (the model never stops early)
-    and ignores caching discounts, so the estimate is an upper bound.
+    Assumes every billed OUTPUT token is spent (the model never stops early)
+    and ignores caching discounts. Billed INPUT tokens are not bounded by
+    ``max_tokens``, so this is not a true worst case; the pre-run gate still
+    bounds real spend by actuals in the ledger.
     """
     return max_tokens * pricing_for(model)["output"]
 
@@ -239,22 +241,42 @@ def append_ledger(ledger_path: Path, entry: dict[str, Any]) -> None:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
-def build_ledger_entry(
+def build_ledger_entry(  # noqa: PLR0913 (entry assembly needs the path fallback knobs)
     *,
     manifest: dict[str, Any],
     model: str,
     prompt_tokens: int,
     output_tokens: int,
     output_relpath: str,
+    output_abspath: str | None = None,
+    partial: bool = False,
 ) -> dict[str, Any]:
-    """The post-run actuals record: where the spend figure comes from."""
-    return {
+    """The post-run actuals record: where the spend figure comes from.
+
+    ``output_relpath`` is repo-root-relative when the output lives inside the
+    repo; when it would escape the root (an output written outside the repo,
+    e.g. ``/tmp``), the absolute ``output_abspath`` is recorded instead so the
+    path stays resolvable.
+
+    ``partial=True`` marks a crash-persisted entry: only the usage tokens that
+    were counted before the crash are billed, and the record never
+    under-reports what was counted so far. It stays manifest-annotated and
+    chargeable, exactly like a completed run's entry.
+    """
+    output = output_relpath
+    if output_abspath and output_relpath.split("/")[0] == "..":
+        # relpath escapes the repo root: record the absolute path instead.
+        output = output_abspath
+    entry: dict[str, Any] = {
         "manifest_id": manifest["manifest_id"],
         "run_kind": "real",
         "model": model,
         "actual_cost_usd": round(estimate_cost_from_tokens(model, prompt_tokens, output_tokens), 6),
         "prompt_tokens": prompt_tokens,
         "output_tokens": output_tokens,
-        "output": output_relpath,
+        "output": output,
         "recorded_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
+    if partial:
+        entry["partial"] = True
+    return entry

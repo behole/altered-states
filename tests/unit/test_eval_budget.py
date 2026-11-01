@@ -171,6 +171,36 @@ class TestPreRunBudget:
         assert entry["manifest_id"] == manifest["manifest_id"]
         assert entry["run_kind"] == "real"
         assert entry["actual_cost_usd"] > 0
+        assert "partial" not in entry
+
+    def test_partial_crash_entry_stays_annotated_and_chargeable(self, tmp_path: Path) -> None:
+        """Scrutiny fix: a crash-persisted entry is a valid annotated real row."""
+        ledger = tmp_path / "spend-ledger.jsonl"
+        entry = eval_budget.build_ledger_entry(
+            manifest=_manifest(),
+            model="deepseek-chat",
+            prompt_tokens=13762,
+            output_tokens=935,
+            output_relpath="tests/responses/partial.jsonl",
+            partial=True,
+        )
+        eval_budget.append_ledger(ledger, entry)
+        assert entry["partial"] is True
+        chargeable = eval_budget.chargeable_ledger_entries(ledger)
+        assert len(chargeable) == 1
+        assert eval_budget.ledger_total(ledger) == pytest.approx(entry["actual_cost_usd"])
+
+    def test_out_of_repo_output_falls_back_to_an_absolute_path(self) -> None:
+        """Scrutiny fix: ../../..-relative paths are useless in the ledger."""
+        entry = eval_budget.build_ledger_entry(
+            manifest=_manifest(),
+            model="deepseek-chat",
+            prompt_tokens=1,
+            output_tokens=1,
+            output_relpath="../../../../tmp/val-eval-abs.jsonl",
+            output_abspath="/tmp/val-eval-abs.jsonl",
+        )
+        assert entry["output"] == "/tmp/val-eval-abs.jsonl"
 
 
 RUNNER_NAMES = ("run_eval", "run-ten-ways", "llm_invoke")

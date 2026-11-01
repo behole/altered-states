@@ -230,6 +230,22 @@ class TestRealRepoSources:
             # The published text is a prefix cap of the source row's response.
             assert any(row.startswith(cell["text"][:80]) for row in row_texts), cell["substance"]
 
+    def test_md_corpus_cells_trace_to_their_source_md(self) -> None:
+        """Scrutiny follow-up (site-eval-grid review): the md side of the
+        payload gets the same source-trace guarantee as the JSONL side — a
+        claude-sonnet-4.6 cell must come verbatim from the same-prompt md
+        capture it is tagged with."""
+        md_path = Path(build.BASE) / "experiments" / "same-prompt" / "output" / "what-is-love-20260422-2200.md"
+        payloads = build.build_eval_grid_payload()
+        love = next(g for g in payloads["grids"] if g["prompt"] == "What is love?")
+        claude = next(run for run in love["runs"] if run["model"] == "anthropic/claude-sonnet-4.6")
+        md_text = md_path.read_text()
+        for cell in claude["substances"]:
+            # The published text is a prefix cap of the md section body.
+            assert cell["text"], "empty md-corpus cell must never publish (VAL-SITE-014)"
+            head = cell["text"][:80]
+            assert head in md_text, f"cell for {cell['substance']} does not trace to its md source"
+
 
 class TestRenderAndFlagLifecycle:
     def test_view_compiles_out_when_flag_off(self) -> None:
