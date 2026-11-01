@@ -60,14 +60,22 @@ The router maps user intent to substance based on phenomenological character. Th
 
 ## Blend Routing Rationale
 
-When users request combinations, route to the DOMINANT substance and carry the secondary as a tonal overlay:
+**Reconciled 2026-10-31:** candy-flip and hippy-flip now have first-class combo
+skills (`skills/combos/{candy-flip,hippy-flip}/SKILL.md`), so they no longer route
+to a dominant base substance with a blend note — they route directly to the combo
+skill. The rows below reflect that; the remaining blends still follow the
+dominant + tonal overlay approach.
 
-| Blend | Dominant | Secondary Overlay | Rationale |
+When users request combinations, route to the named combo skill where one exists
+(`skills/combos/*`); otherwise route to the DOMINANT substance and carry the
+secondary as a tonal overlay:
+
+| Blend | Routing destination | Primary voice | Basis |
 |---|---|---|---|
-| Candy flip (LSD + MDMA) | LSD | MDMA's empathic warmth | LSD's perceptual/cognitive restructuring dominates; MDMA adds heart |
-| Hippy flip (Psilocybin + MDMA) | Psilocybin | MDMA's direct warmth, fear reduction | Psilocybin's emotional depth dominates; MDMA softens the difficulty |
-| Pharmahuasca | Ayahuasca | (none — this IS ayahuasca) | Synthetic replication of ayahuasca via oral DMT + pharmaceutical MAOI |
-| 5-MeO-DMT + anything | 5-MeO-DMT | (none — 5-MeO is too total for overlays) | 5-MeO-DMT's complete ego dissolution overrides everything. Secondary substance may color the afterglow. |
-| Mescaline + LSD | Mescaline | LSD's analytical edge | Mescaline's duration and ornamental visuals dominate; LSD adds analytical layer to the contemplation |
+| Candy flip (LSD + MDMA) | skills/combos/candy-flip/ | LSD | LSD's perceptual/cognitive restructuring still structures the arc; MDMA adds empathic warmth as tone — but routing goes to the combo skill, not lsd-altered-state. (Reconciled 2026-10-31, was "Dominant: LSD".) |
+| Hippy flip (Psilocybin + MDMA) | skills/combos/hippy-flip/ | Psilocybin | Psilocybin's emotional depth still structures the arc; MDMA softens the difficulty as tone — routing goes to the combo skill, not psilocybin-altered-state. (Reconciled 2026-10-31, was "Dominant: Psilocybin".) |
+| Pharmahuasca | Ayahuasca | Ayahuasca | (none — this IS ayahuasca) | Synthetic replication of ayahuasca via oral DMT + pharmaceutical MAOI |
+| 5-MeO-DMT + anything | 5-MeO-DMT | 5-MeO-DMT | (none — 5-MeO is too total for overlays) | 5-MeO-DMT's complete ego dissolution overrides everything. Secondary substance may color the afterglow. |
+| Mescaline + LSD | Mescaline | Mescaline | LSD's analytical edge | Mescaline's duration and ornamental visuals dominate; LSD adds analytical layer to the contemplation |
 
 **Why dominant + overlay, not true blends:** Each skill is designed as a coherent phenomenological voice. Blending two skills 50/50 would produce an incoherent hybrid that matches neither substance. The dominant + tonal overlay approach preserves the primary skill's integrity while acknowledging the secondary influence.

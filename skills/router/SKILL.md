@@ -301,7 +301,7 @@ Once substance + intensity are determined:
 **User says:** "venus, medium"
 → **Route:** 2c-b-altered-state, medium intensity (alias + explicit intensity passthrough)
 
-**User says:** "bees it hard"
+**User says:** "bees, high"
 → **Route:** 2c-b-altered-state, high intensity
 
 **User says:** "Blast me off"
