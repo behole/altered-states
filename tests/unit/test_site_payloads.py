@@ -11,11 +11,13 @@ from __future__ import annotations
 
 import itertools
 import json
+import os
 from pathlib import Path
 
 import pytest
 
 import build
+from altered_states import feature_flags
 
 
 def test_parse_time_pair_accepts_skill_prose_variants() -> None:
@@ -119,11 +121,34 @@ def test_prose_mode_substances_derive_a_monotone_arc() -> None:
             assert lo_b <= hi_b
 
 
-def test_arc_view_payloads_are_absent_when_flag_is_off(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_arc_flag_off_drives_the_real_render_path(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The AGENTS.md rule-4 lifecycle: the FLAG_ env var decides
+    enabled_section_flags(), and the derived gate — not a hardcoded bool —
+    drives what compiles into the page."""
     monkeypatch.setenv("FLAG_SITE_ARC_TIMELINE", "off")
+    store = feature_flags.load_flags(environ=dict(os.environ))
+    monkeypatch.setattr(build, "flags", store)
+    flags = build.enabled_section_flags()
+    assert flags[build.ARC_FLAG] is False
     payload = build.build_arc_payload(build.load_substances())
-    assert build.render_arc_view(payload, False) == ""
-    assert build.render_arc_nav(False) == ""
+    assert build.render_arc_view(payload, flags[build.ARC_FLAG]) == ""
+    assert build.render_arc_nav(flags[build.ARC_FLAG]) == ""
+    # Negative control: the same drive with the flag on still renders.
+    monkeypatch.setenv("FLAG_SITE_ARC_TIMELINE", "on")
+    store_on = feature_flags.load_flags(environ=dict(os.environ))
+    monkeypatch.setattr(build, "flags", store_on)
+    flags_on = build.enabled_section_flags()
+    assert flags_on[build.ARC_FLAG] is True
+    assert build.render_arc_nav(flags_on[build.ARC_FLAG])
+
+
+def test_arc_script_compares_data_bounded_string_not_truthiness() -> None:
+    """Scrutiny fix: getAttribute returns the STRING "false", which is truthy;
+    the unbounded-phase fallback is only reachable via === 'true'."""
+    view = build.render_arc_view(build.build_arc_payload(build.load_substances()), True)
+    assert "data-bounded') === 'true'" in view
+    # A full attribute-looking line still declares the bounded/unbounded pairs.
+    assert 'data-bounded="true"' in view and 'data-bounded="false"' in view
 
 
 def test_arc_view_embeds_payload_and_phase_data_attributes() -> None:

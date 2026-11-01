@@ -1090,6 +1090,18 @@ ARC_SECTION_DESC = (
 )
 
 
+def _invalidate_template_marker(template_html: str, token: str, context: str) -> None:
+    """Fail the build when a section template carries its own data token
+    anywhere but its payload script tag. The token must occur exactly once;
+    an occurrence elsewhere (typically an explanatory HTML comment) would
+    make the global .replace() duplicate a multi-KB payload inside a comment
+    in the built page."""
+    if template_html.count(token) != 1:
+        raise ValueError(
+            f"{context}: template must contain exactly one {token} payload marker, found {template_html.count(token)}"
+        )
+
+
 def render_arc_nav(enabled: bool) -> str:
     """The nav link for the arc view; compiled out when the flag is off."""
     if not enabled:
@@ -1105,6 +1117,7 @@ def render_arc_view(arc_payload: list[dict[str, Any]], enabled: bool) -> str:
         return ""
     with open(ARC_TEMPLATE) as f:
         template_html = f.read()
+    _invalidate_template_marker(template_html, "__ARC_DATA__", ARC_TEMPLATE)
     json_payload = json.dumps({"substances": arc_payload}, ensure_ascii=False, sort_keys=True)
     json_payload = json_payload.replace("<", "\\u003c").replace(">", "\\u003e")
     view = template_html.replace("__ARC_DATA__", json_payload)
@@ -1160,7 +1173,15 @@ _DIFF_LANGUAGE_HEADING = re.compile(r"linguistic\s+fingerprint", re.IGNORECASE)
 # skill-text substring after whitespace collapse.
 _DIMENSION_KEYWORDS: dict[str, tuple[str, ...]] = {
     "perceptual": ("percept", "visual", "geometr", "synesthe", "color", "reality"),
-    "temporal": ("temporal", "time dilation", "timeless", "duration", "onset", "arc", "hours"),
+    "temporal": (
+        "time dilation",
+        "timeless",
+        "duration",
+        "onset",
+        "arc",
+        "hours",
+        "temporal",
+    ),
     "cognitive": ("cognit", "thought", "thinking", "analysis", "cascad", "idea"),
     "emotional": ("emotional", "emotion", "feel", "love", "grief", "awe"),
     "ego": ("ego", "self"),
@@ -1186,6 +1207,32 @@ _DIMENSION_ROW_ALIASES: dict[str, str] = {
 # Values longer than this get a deterministic tail cut for readability; the
 # kept text stays a substring of the skill's own line.
 _DIFF_VALUE_LIMIT = 240
+
+# Lines in the keyword-fallback path follow the skills' labelled-line
+# convention: the dimension's own name opens the line ("Perceptual: ...",
+# "Ego: ..."). A stem matched inside a line that opens with a DIFFERENT
+# dimension's label is that other dimension's content, so it must never fill
+# this row (ibogaine's Perceptual bubble is not a Temporal value, salvia's
+# Cognitive line is not Ego behaviour).
+_DIFF_DIMENSION_LABELS: dict[str, tuple[str, ...]] = {
+    "perceptual": ("perceptual", "perception", "percept", "visual"),
+    "temporal": ("temporal", "time", "duration", "onset", "arc", "pace"),
+    "cognitive": ("cognitive", "cognition", "cognit"),
+    "emotional": ("emotional", "emotion"),
+    "ego": ("ego", "self"),
+    "mystical": ("mystical", "mystic", "relational", "spirit", "sacred"),
+    "somatic": ("somatic", "body", "physical"),
+}
+_DIFF_ALL_LABELS = tuple(label for labels in _DIFF_DIMENSION_LABELS.values() for label in labels)
+
+# A keyword stem directly preceded by a negation ("not mystical", "no ego
+# dissolution") means the line DENIES the dimension; quoting it for the
+# dimension row would assert the opposite of the skill's meaning.
+_DIFF_NEGATION = re.compile(
+    r"\b(?:not|no|never|neither|nor|without|isn't|aren't|wasn't|doesn't)\b"
+    r"(?:\s+\w+){0,2}\s*$",
+    re.IGNORECASE,
+)
 
 
 def _diff_body(text: str) -> str:
@@ -1220,32 +1267,116 @@ def _clean_skill_line(line: str) -> str:
     return " ".join(cleaned.split())
 
 
-def _keyword_line(body: str, keywords: tuple[str, ...], excluded: set[str] | None = None) -> str:
+_NEGATED_SECTION = re.compile(r"^#{1,6}\s.*(avoid|Forbidden)", re.IGNORECASE)
+
+
+def _in_avoid_section(body: str, line_start: int) -> bool:
+    """True when the candidate line sits under a "What to Avoid"-style
+    heading: such ``## What to Avoid`` bullets DENY the qualities they
+    name and must never fill a dimension row."""
+    heading_pos = body.rfind("\n#", 0, line_start)
+    if heading_pos < 0:
+        return False
+    line_end = body.find("\n", heading_pos + 1)
+    if line_end < 0:
+        line_end = len(body)
+    heading_line = body[heading_pos + 1 : line_end]
+    return bool(_NEGATED_SECTION.match(heading_line))
+
+
+def _diff_line_label(cleaned: str) -> str | None:
+    """The canonical dimension key whose own label word opens a cleaned skill
+    line ("Perceptual: ..." → "perceptual"), or None when the line carries no
+    dimension label."""
+    lowered = cleaned.lower()
+    for label in sorted(_DIFF_ALL_LABELS, key=len, reverse=True):
+        if lowered.startswith(label):
+            for key, words in _DIFF_DIMENSION_LABELS.items():
+                if label in words:
+                    return key
+    return None
+
+
+def _keyword_line(
+    body: str,
+    keywords: tuple[str, ...],
+    excluded: set[str] | None = None,
+    allowed_labels: set[str] | None = None,
+) -> str:
     """First clean skill line whose lowercase text contains any keyword stem
     and is not already quoted by another row. Returns "" (never invents text)
-    when no line matches."""
+    when no line matches.
+
+    Two guards keep the row honest. A stem match directly preceded by a
+    negation ("Relational, not mystical", "no ego dissolution") is skipped —
+    the line denies the dimension and would assert the opposite of the skill.
+    And when ``allowed_labels`` is given, a candidate line that opens with a
+    *different* dimension's own label ("Perceptual: dreamlike imagery ... is
+    not a Temporal value) is skipped too; unlabelled prose inside another
+    dimension's line cannot leak across rows."""
     forbidden = excluded or set()
     for stem in keywords:
-        search_from = 0
-        while True:
-            found = body.lower().find(stem, search_from)
-            if found < 0:
-                break
-            line_start = body.rfind("\n", 0, found) + 1
-            line_end = body.find("\n", found)
-            if line_end < 0:
-                line_end = len(body)
-            raw_line = body[line_start:line_end]
-            if raw_line.lstrip().startswith("#"):
-                search_from = found + len(stem)
-                continue  # a markdown heading is not a dimension description
-            cleaned = _clean_skill_line(raw_line)
-            if cleaned and cleaned.lower() not in forbidden:
-                if len(cleaned) > _DIFF_VALUE_LIMIT:
-                    cleaned = cleaned[: _DIFF_VALUE_LIMIT - 1].rstrip() + "…"
-                return cleaned
-            search_from = found + len(stem)
+        cleaned = _keyword_candidate(body, stem, forbidden, allowed_labels)
+        if cleaned:
+            return cleaned
     return ""
+
+
+def _keyword_candidate(
+    body: str,
+    stem: str,
+    forbidden: set[str],
+    allowed_labels: set[str] | None,
+) -> str:
+    """The first accepting match of one keyword stem — the guard chain in
+    _keyword_line's docstring — or "" when every occurrence is rejected."""
+    search_from = 0
+    while True:
+        found = body.lower().find(stem, search_from)
+        if found < 0:
+            return ""
+        search_from = found + len(stem)
+        if _keyword_match_rejected(body, found, forbidden, allowed_labels):
+            continue
+        line_start = body.rfind("\n", 0, found) + 1
+        line_end = body.find("\n", found)
+        if line_end < 0:
+            line_end = len(body)
+        cleaned = _clean_skill_line(body[line_start:line_end])
+        if not cleaned or cleaned.lower() in forbidden:
+            continue
+        if len(cleaned) > _DIFF_VALUE_LIMIT:
+            cleaned = cleaned[: _DIFF_VALUE_LIMIT - 1].rstrip() + "…"
+        return cleaned
+
+
+def _keyword_match_rejected(
+    body: str,
+    found: int,
+    forbidden: set[str],
+    allowed_labels: set[str] | None,
+) -> bool:
+    """Guard chain for one keyword-stem match: True when the matched line may
+    not provide this dimension's value (see _keyword_line's docstring)."""
+    if found > 0 and body[found - 1].isalpha():
+        return True  # mid-word match ("entity" inside "Identity"): no
+    negation_window = body[max(0, found - 120) : found]
+    if _DIFF_NEGATION.search(negation_window):
+        return True  # a negated mention never fills the denied row
+    line_start = body.rfind("\n", 0, found) + 1
+    line_end = body.find("\n", found)
+    if line_end < 0:
+        line_end = len(body)
+    raw_line = body[line_start:line_end]
+    if raw_line.lstrip().startswith("#") or _in_avoid_section(body, line_start):
+        return True  # a heading, or a "What to Avoid" bullet that denies
+    cleaned = _clean_skill_line(raw_line)
+    if not cleaned or cleaned.lower() in forbidden:
+        return True
+    if allowed_labels is None:
+        return False
+    label = _diff_line_label(cleaned)
+    return label is not None and label not in allowed_labels
 
 
 def _dimension_table(body: str) -> dict[str, str]:
@@ -1292,7 +1423,12 @@ def extract_diff_dimensions(skill_text: str) -> dict[str, str]:
     for key in DIFF_DIMENSIONS:
         value = table.get(key, "")
         if not value:
-            value = _keyword_line(body, _DIMENSION_KEYWORDS[key], excluded=quoted)
+            value = _keyword_line(
+                body,
+                _DIMENSION_KEYWORDS[key],
+                excluded=quoted,
+                allowed_labels=set(_DIFF_DIMENSION_LABELS[key]),
+            )
         dims[key] = value
         if value:
             quoted.add(value.lower())
@@ -1328,7 +1464,7 @@ def extract_diff_ego_behavior(skill_text: str, dimension_ego: str) -> str:
     dimension row does not already quote. Falls back to the dimension value
     when the skill keeps a single statement."""
     body = _diff_body(skill_text)
-    candidates = _keyword_line(body, ("ego",), excluded={dimension_ego.lower()})
+    candidates = _keyword_line(body, ("ego",), excluded={dimension_ego.lower()}, allowed_labels={"ego"})
     if not candidates and len(dimension_ego) > _DIFF_VALUE_LIMIT:
         return dimension_ego
     return candidates or dimension_ego
@@ -1386,6 +1522,7 @@ def render_diff_view(diff_payload: list[dict[str, Any]], enabled: bool) -> str:
         return ""
     with open(DIFF_TEMPLATE) as f:
         template_html = f.read()
+    _invalidate_template_marker(template_html, "__DIFF_DATA__", DIFF_TEMPLATE)
     json_payload = json.dumps({"substances": diff_payload}, ensure_ascii=False, sort_keys=True)
     json_payload = json_payload.replace("<", "\\u003c").replace(">", "\\u003e")
     return template_html.replace("__DIFF_DATA__", json_payload)
@@ -1661,6 +1798,7 @@ def render_quiz_view(quiz_payload: dict[str, Any], enabled: bool) -> str:
         return ""
     with open(QUIZ_TEMPLATE) as f:
         template_html = f.read()
+    _invalidate_template_marker(template_html, "__QUIZ_DATA__", QUIZ_TEMPLATE)
     json_payload = json.dumps(quiz_payload, ensure_ascii=False, sort_keys=True)
     json_payload = json_payload.replace("<", "\\u003c").replace(">", "\\u003e")
     return template_html.replace("__QUIZ_DATA__", json_payload)
@@ -1684,6 +1822,7 @@ def render_journal_view(payload: dict[str, Any], enabled: bool) -> str:
         return ""
     with open(JOURNAL_TEMPLATE) as f:
         template_html = f.read()
+    _invalidate_template_marker(template_html, "__JOURNAL_DATA__", JOURNAL_TEMPLATE)
     json_payload = json.dumps(payload, ensure_ascii=False, sort_keys=True)
     json_payload = json_payload.replace("<", "\\u003c").replace(">", "\\u003e")
     return template_html.replace("__JOURNAL_DATA__", json_payload)

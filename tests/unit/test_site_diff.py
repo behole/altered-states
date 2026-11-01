@@ -147,3 +147,75 @@ class TestFlagLifecycle:
     def test_diff_payload_is_deterministic(self) -> None:
         first = json.dumps(build.build_diff_payload(build.load_substances()), sort_keys=True)
         assert json.dumps(build.build_diff_payload(build.load_substances()), sort_keys=True) == first
+
+    def test_negated_mention_never_fills_the_dimension_it_denies(self) -> None:
+        """Scrutiny fix: 'Relational, not mystical' / 'no ego dissolution' / 'not
+        perceptual or cognitive' must not be quoted for the dimension they deny."""
+        body = "\n".join(
+            [
+                "## The Character",
+                "- Relational, not mystical. The connection is with specific people.",
+                "- Mystical flashes surface briefly at the peak.",
+                "- There are no hallucinations, no ego dissolution, no cosmic revelations.",
+                "- Softened, authentic self emerges.",
+                "- The transformation is emotional, not perceptual or cognitive.",
+                "- World looks normal, feels different.",
+            ]
+        )
+        got = build._keyword_line(body, ("mystic", "sacred"), allowed_labels={"mystical"})
+        assert got.startswith("Mystical flashes"), got
+        got_ego = build._keyword_line(body, ("ego",), allowed_labels={"ego"})
+        assert "no ego dissolution" not in got_ego.lower()
+        got_perceptual = build._keyword_line(body, ("percept", "visual", "reality"), allowed_labels={"perceptual"})
+        assert "not perceptual" not in got_perceptual.lower()
+
+    def test_what_to_avoid_section_is_never_quoted(self) -> None:
+        body = "\n".join(
+            [
+                "## The Peak",
+                "- Cosmic unity saturates the entire field.",
+                "",
+                "## What to Avoid",
+                "- Mystical framing (NOT this substance)",
+            ]
+        )
+        got = build._keyword_line(body, ("mystic", "cosmic"), allowed_labels={"mystical"})
+        assert got == "Cosmic unity saturates the entire field."
+
+    def test_no_cross_dimension_contamination(self) -> None:
+        """Scrutiny fix: a stem inside another dimension's labelled line is that
+        other dimension's content (ibogaine temporal <- Perceptual bubble;
+        salvia ego_behavior <- Cognitive line; ketamine temporal <- director
+        guidance)."""
+        body = "\n".join(
+            [
+                "- Perceptual: dreamlike imagery surfaces — doorways. Moments of timeless drift. Hours pass.",
+                "- Ibogaine onset is slow (1-3 hours). Duration is extreme (12-24 hours active).",
+                "- Hold the grounding. Remind them of safety, location, temporality.",
+                "- Ketamine onset is rapid (seconds to minutes). Duration is short (30-60 min).",
+            ]
+        )
+        temporal_keywords = ("time dilation", "timeless", "duration", "onset", "temporal", "arc", "hours")
+        got = build._keyword_line(body, temporal_keywords, allowed_labels={"temporal"})
+        assert got.startswith("Ibogaine onset"), got
+        assert "temporality" not in got.lower() and "hold the grounding" not in got.lower()
+        # the same guard picks ketamine's arc prose, not the director row
+        body_k = body.replace("Ibogaine onset is slow (1-3 hours). Duration is extreme (12-24 hours active).", "")
+        got_k = build._keyword_line(body_k, temporal_keywords, allowed_labels={"temporal"})
+        assert got_k.startswith("Ketamine onset"), got_k
+
+    def test_named_scrutiny_findings_are_fixed_in_the_real_payload(self) -> None:
+        payload = _payload_by_id()
+        # mdma: negated lines never quoted for the dimension they deny
+        assert "not mystical" not in payload["mdma"]["dimensions"]["mystical"].lower()
+        assert "no ego dissolution" not in payload["mdma"]["dimensions"]["ego"].lower()
+        assert "not perceptual" not in payload["mdma"]["dimensions"]["perceptual"].lower()
+        # ibogaine temporal is real temporal prose, not the Perceptual bubble
+        assert payload["ibogaine"]["dimensions"]["temporal"].lower().startswith("ibogaine onset")
+        # ketamine temporal: no director safety guidance inside the row
+        temporal = payload["ketamine"]["dimensions"]["temporal"].lower()
+        assert "hold the grounding" not in temporal
+        assert "onset is rapid" in temporal
+        # salvia ego behaviour is an Ego line, not a Cognitive one
+        ego_behavior = payload["salvia"]["ego_behavior"]
+        assert not ego_behavior.startswith("Cognitive:")

@@ -1,7 +1,7 @@
 <!--
   Dose-arc timeline view — injected into the SPA home by build.py behind the
   site.arc_timeline flag (compiled out entirely when the flag is off, payload
-  included). __ARC_DATA__ is filled with the build-time arc payload. Never
+  included). The script tag below carries the build-time arc payload. Never
   hand-edit built site/index.html; edit this template or build.py.
 -->
 <div id="view-arc" class="view-container">
@@ -154,7 +154,7 @@
     if (!arcDetail) return;
     var summary = seg.getAttribute('data-summary') || '';
     if (!summary) {
-      summary = seg.getAttribute('data-bounded') ? 'No summary text derived for this phase.' : NEUTRAL;
+      summary = seg.getAttribute('data-bounded') === 'true' ? 'No summary text derived for this phase.' : NEUTRAL;
     }
     arcDetail.innerHTML = '<strong>' + escHtml(seg.getAttribute('data-phase')) + '</strong>' +
       (seg.getAttribute('data-label') ? ' &middot; ' + escHtml(seg.getAttribute('data-label')) : '') +
