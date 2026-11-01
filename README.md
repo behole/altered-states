@@ -215,7 +215,7 @@ altered-states/
     ibogaine/SKILL.md    1.5
     router/SKILL.md      1.5
   experiments/
-    temporal-lab/        Autonomous persistent character system (OpenRouter)
+    temporal-lab/        Autonomous persistent character system (DeepSeek; provider-agnostic via LLM_BASE_URL)
     suno-prompts/        10 Custom Mode music prompts
     visual-fingerprints/ 10 p5.js portraits + index
     dialogues/           Paired substance conversations
