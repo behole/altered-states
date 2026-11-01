@@ -100,9 +100,10 @@ class TestLoadSubstances:
         expected = sorted(
             d.name
             for d in skills_dir.iterdir()
-            # Router is a dispatch skill; combos/* are blend overlay skills,
-            # not substances (they live one level deeper than skills/<slug>/SKILL.md).
-            if d.is_dir() and d.name not in (build.ROUTER_SLUG, "combos")
+            # Only dirs carrying a top-level SKILL.md are substances. Overlay
+            # lines (combos/*, tolerance/*) nest one level deeper and carry a
+            # README/policy file instead, so discovery skips them.
+            if d.is_dir() and (d / "SKILL.md").is_file() and d.name not in (build.ROUTER_SLUG,)
         )
         assert [s["id"] for s in build.load_substances()] == expected
         assert "combos" not in {s["id"] for s in build.load_substances()}

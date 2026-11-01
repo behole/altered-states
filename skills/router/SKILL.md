@@ -79,6 +79,9 @@ dossier (`research/2c-b/dossier.md` — naming note) and project surfaces:
 
 | Input Pattern | Routes To |
 |---|---|
+| "tolerance overlay" / "day-two psilocybin" / "psilocybin day two" / "the quiet teacher" | **psilocybin-day-two-altered-state** (skills/tolerance/psilocybin — attenuated re-encounter phenomenology; never spacing guidance) |
+| "day-two lsd" / "acid day two" / "the fading electric" / "cross-tolerance" | **lsd-day-two-altered-state** (skills/tolerance/lsd — attenuated re-encounter incl. psilocybin cross-state; never spacing guidance) |
+| "ketamine burnout" / "k burnout" / "the burnout" / "the flat hole" | **ketamine-burnout-altered-state** (skills/tolerance/ketamine — heavy-pattern attenuated dissociation; degraded state, never desirable) |
 | "psilocybin" / "mushroom" / "shrooms" / "magic mushrooms" / "the teacher" | **psilocybin-altered-state** |
 | "lsd" / "acid" / "lucy" / "tabs" / "the technician" | **lsd-altered-state** |
 | "mdma" / "molly" / "ecstasy" / "e" / "rolling" / "the connector" | **mdma-altered-state** |
@@ -216,6 +219,17 @@ If the user's intent is unclear:
    - "toad flip" / "5-MeO flip" (5-MeO-DMT + MDMA) → Route to `5-meo-dmt-altered-state` breakthrough. Blend note: "Incorporate MDMA's empathic warmth in the afterglow — the return from source is softer, more interpersonal. The dissolution itself is unchanged. MDMA colors the landing, not the launch."
    - "peyote flip" / "mescaline flip" (mescaline + MDMA) → Route to `mescaline-altered-state` medium. Blend note: "Incorporate MDMA's direct warmth — the elder's patience is gentler, the nature dialogue more interpersonal. Less reverence, more connection. Tonal overlay, not mode switch."
    - "the full spectrum" / "all substances" → Route to `5-meo-dmt-altered-state` breakthrough. Blend note: "5-MeO-DMT dominates all blends — total dissolution overrides everything. After the return, brief afterglow traces of each substance's character may surface as the mind reassembles: psilocybin's warmth, LSD's geometry, ayahuasca's narrative, mescaline's colors, MDMA's heart. These are echoes, not experiences."
+
+   **Tolerance overlays (repeat-exposure states):** When the user names a
+   re-encounter context — "day two," "burnout," attenuation wording on an
+   otherwise-substance request — route to the first-class tolerance overlay
+   under `skills/tolerance/`, which loads the base skill and shifts its
+   dimensions per the documented attenuation. The overlays are phenomenology
+   only: they describe how a state reads when its full character has not
+   returned, and they carry no spacing, persistence, or recovery content
+   (see `research/tolerance/sources.md`). If no overlay exists for the
+   requested substance, stay on the base skill and keep any attenuation
+   framing purely descriptive.
 
    **Unnamed combinations (general framework):**
    When a user requests a combination not listed above (e.g., "LSD and mushrooms," "DMT and MDMA"), determine the dominant substance using this priority:

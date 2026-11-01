@@ -161,6 +161,13 @@ The router parses natural language and loads the correct skill:
   (`skills/combos/candy-flip/`, `skills/combos/hippy-flip/`), which compose the two
   base substances' phenomenology with a documented structural/tonal interaction rule;
   other flips still route to the dominant substance with a blend note
+- **Tolerance overlays** — re-encounter contexts ("day-two psilocybin," "acid
+  day two," "ketamine burnout") route to first-class overlays under
+  `skills/tolerance/<substance>/`, describing how the base state reads when its
+  full phenomenology has not returned (research: `research/tolerance/sources.md`
+  — Isbell 1961 cross-tolerance; Raval 2021; de la Fuente Revenga 2022; Morgan &
+  Curran 2012 for the ketamine pattern). Phenomenology only: no spacing,
+  persistence, or recovery content, by design
 - **Set/setting passthrough** — emotional context forwarded to the loaded skill
 
 ---
@@ -202,6 +209,7 @@ altered-states/
     lsd/                 sources.md, dossier.md
     mdma/                sources.md, dossier.md
     2c-b/                sources.md, dossier.md
+    tolerance/           sources.md (repeat-exposure phenomenology line)
     dmt/                 sources.md, dossier.md
     ayahuasca/           sources.md, dossier.md
     5-meo-dmt/           sources.md, dossier.md, nlm/ (4 files)
@@ -223,6 +231,11 @@ altered-states/
     salvia/SKILL.md      1.5
     ibogaine/SKILL.md    1.5
     router/SKILL.md      1.5
+    combos/candy-flip/   Blend overlay skill (LSD + MDMA), v1.0
+    combos/hippy-flip/   Blend overlay skill (psilocybin + MDMA), v1.0
+    tolerance/SKILL.md   Tolerance overlay line registry, v1.0
+    tolerance/<substance>/SKILL.md  Day-two / burnout overlays (psilocybin,
+                         lsd, ketamine), v1.0 — phenomenology only
   experiments/
     temporal-lab/        Autonomous persistent character system (DeepSeek; provider-agnostic via LLM_BASE_URL)
     suno-prompts/        10 Custom Mode music prompts
@@ -377,7 +390,9 @@ Each substance is built from clinical research using validated instruments:
 
 - **5-MeO-DMT:** Davis et al. (2018, 2019), Uthaug et al. (2019, 2021), Reckweg et al. (2023), Lancelotta et al. (2019), Barsuglia et al. (2022)
 - **Mescaline:** Halberstadt et al. (2013, 2020), Uthaug et al. (2022), Caudevilla et al. (2021), Passie (2002/2019), Shulgin & Shulgin (1991), Trichter et al. (2009)
-- **Ketamine:** Zarate et al. (2006), Dakwar et al. (2014), Krystal et al. (2019), Vollenweider & Preller (2020), Collier et al. (2021), Shorter & Candidate (2018), Jonas & Bhatt (2022), Pomarol-Clotet et al. (2006)
+- **Ketamine:** Zarate et al. (2006), Dakwar et al. (2014), Krystal et al. (2019), Vollenweider & Preller (2020), Collier et al. (2021), Shorter & Candidate (2018), Jonas & Bhatt (2022), Pomarol-Clotet et al. (2006), Morgan & Curran (2012)
+
+- **Tolerance (overlay line):** Isbell et al. (1961), Raval et al. (2021), de la Fuente Revenga et al. (2022), Gresch et al. (2005), Nichols (2016), Morgan & Curran (2012)
 
 Full annotated bibliographies in `research/*/sources.md`.
 
