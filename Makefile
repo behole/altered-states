@@ -47,10 +47,10 @@ AUDIT_VENV ?= $(CURDIR)/.audit-venv
 AUDIT_LOCKFILES = bin/requirements.lock experiments/music/requirements.lock experiments/temporal-lab/requirements.lock
 
 .PHONY: verify check lint format format-check types dead-code duplicates \
-	test coverage security deps flags docs release alerts labels build \
+	test coverage security deps flags docs skills-check release alerts labels build \
 	install-hooks lock
 
-verify: check test security deps flags docs
+verify: check test security deps flags docs skills-check
 
 check: lint format-check types dead-code duplicates
 
@@ -95,6 +95,12 @@ flags:
 
 docs:
 	$(PYTHON) bin/check_agents_md.py
+
+# Skill-tree structural validator: front matter, Safety Override, dimension
+# matrix, dose arc, router alias resolution. Source of truth for the skill
+# schema; see bin/check_skills.py --new-skill for the authoring checklist.
+skills-check:
+	$(PYTHON) bin/check_skills.py
 
 alerts:
 	$(PY_YAML) bin/check_alerts.py --validate-only

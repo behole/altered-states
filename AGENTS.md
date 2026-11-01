@@ -28,10 +28,11 @@ project claims and refuses to claim.
 ## The 60-second version
 
 ```bash
-make verify        # everything CI runs: static analysis, tests, security, flags
+make verify        # everything CI runs: static analysis, tests, security, flags, skills-check
 make check         # static analysis only — use this while iterating
 make test          # unit + integration tests
 make build         # regenerate site/index.html
+make skills-check  # validate every SKILL.md (structure + safety furniture)
 ```
 
 If `make verify` is green, CI will be green.
@@ -108,6 +109,15 @@ lines of code.
 checks a function returns a non-`None` value is noise. Assert the actual
 contract: the exact string emitted, the exact exit code, the mutation that did
 or did not happen.
+
+### 6. Skills are validated, not hand-inspected
+
+Every `skills/**/SKILL.md` must pass `make skills-check` (`bin/check_skills.py`,
+stdlib-only): front-matter schema, Safety Override furniture, dimension matrix,
+dose arc, and router alias resolution. When authoring a new skill, run
+`python3 bin/check_skills.py --new-skill skills/<name>/SKILL.md` — it prints the
+full authoring checklist. Seeded-mutation tests in
+`tests/unit/test_skills_check.py` prove the failure paths fire.
 
 ### 7. The temporal-lab scripts are entry points, not a package
 

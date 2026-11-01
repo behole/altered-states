@@ -353,6 +353,7 @@ make lock           # regenerate hash-pinned lockfiles after editing a requireme
 make deps           # deptry: undeclared, unused, and transitive dependencies
 make security       # bandit + pip-audit against the lockfiles
 make docs           # validate AGENTS.md against the repository
+make skills-check   # validate every skills/**/SKILL.md (structure + safety furniture)
 make alerts         # validate the alert policy in alerts/alerts.yaml
 make labels         # dry-run the GitHub label taxonomy
 make verify         # all of the above plus the static checks and the tests
