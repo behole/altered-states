@@ -329,8 +329,9 @@ the root scripts (`build.py`, `watch.py`, `bin/`, `experiments/*.py`) and
 
 Install the dev toolchain once with `python3 -m pip install -r requirements-dev.txt`
 (Python 3.11+, because pre-commit and current coverage require it). The test
-matrix uses `requirements-test.txt` instead, which resolves on 3.10 through
-3.12 — the two files are locked separately for exactly that reason.
+matrix uses `requirements-test.txt` instead, which resolves on 3.11 through
+3.12 (the lock is compiled for Python 3.11 because the committed OG cards are
+rendered by pinned Pillow 13, which requires Python 3.11+).
 Run every check at once with:
 
 ```bash
