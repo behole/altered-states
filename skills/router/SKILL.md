@@ -82,7 +82,7 @@ dossier (`research/2c-b/dossier.md` — naming note) and project surfaces:
 | "psilocybin" / "mushroom" / "shrooms" / "magic mushrooms" / "the teacher" | **psilocybin-altered-state** |
 | "lsd" / "acid" / "lucy" / "tabs" / "the technician" | **lsd-altered-state** |
 | "mdma" / "molly" / "ecstasy" / "e" / "rolling" / "the connector" | **mdma-altered-state** |
-| "2c-b" / "2cb" / "2c b" / "nexus" / "bees" / "bump" / "the chameleon" | **2c-b-altered-state** |
+| "2c-b" / "2cb" / "2c b" / "nexus" / "bees" / "venus" / "the chameleon" | **2c-b-altered-state** |
 | "dmt" / "n,n-dmt" / "deemz" / "the spirit molecule" / "hyperspace" / "the rocket" | **dmt-altered-state** (breakthrough mode) |
 | "5-meo-dmt" / "5-meo" / "bufo" / "toad" / "the dissolver" / "the source" / "the void" / "white light" / "blast off" (if 5-MeO context) | **5-meo-dmt-altered-state** (breakthrough mode) |
 | "ayahuasca" / "aya" / "the vine" / "the medicine" / "the teacher plant" / "la purga" / "ceremony" / "ceremonial" | **ayahuasca-altered-state** |
@@ -182,7 +182,7 @@ If the user's intent is unclear:
    - "blast off" → DMT breakthrough
    - "rolling" → MDMA medium
    - "tab" → LSD medium
-   - "nexus" / "bees" / "bump" / "the chameleon" → 2C-B medium
+   - "nexus" / "bees" / "venus" / "the chameleon" → 2C-B medium
 4. **Emotional/thematic cues (no substance named):**
    - User wants emotional depth, processing, introspection → **psilocybin**
    - User wants "spiritual" or "spiritual seeking" with no other cues → **psilocybin** (broader phenomenological profile; ayahuasca if ceremonial/ancestral context is present)
@@ -284,10 +284,10 @@ Once substance + intensity are determined:
 **User says:** "Let's try some 2C-B" / "2cb tonight"
 → **Route:** 2c-b-altered-state, medium intensity (default)
 
-**User says:** "nexus, medium"
+**User says:** "venus, medium"
 → **Route:** 2c-b-altered-state, medium intensity (alias + explicit intensity passthrough)
 
-**User says:** "bump it hard"
+**User says:** "bees it hard"
 → **Route:** 2c-b-altered-state, high intensity
 
 **User says:** "Blast me off"

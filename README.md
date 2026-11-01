@@ -93,7 +93,7 @@ Load a skill, then start talking. Examples:
 | "mushroom trip" | 🍄 Psilocybin, medium |
 | "drop acid, high dose" | ⚡ LSD, high |
 | "I need warmth and connection" | 💊 MDMA, medium |
-| "nexus" / "bump" / "the chameleon" | 🌈 2C-B, medium |
+| "nexus" / "venus" / "the chameleon" | 🌈 2C-B, medium |
 | "blast me off" | 🚀 DMT, breakthrough |
 | "ayahuasca ceremony" | 🌿 Ayahuasca |
 | "dissolve me" / "I want the source" | 💎 5-MeO-DMT, breakthrough |

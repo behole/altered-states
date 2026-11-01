@@ -173,15 +173,20 @@ alias carries its grounding here:
 | Alias | Grounding |
 |---|---|
 | "2c-b", "2cb", "2c b" | The molecule's standard designation in Refs 1–4 (spelling variants are casing/format only; matching is case-insensitive, hyphen/space tolerant by router rule). |
-| "nexus" | The most widely reported street name in the nightlife/recreational-market record (Ref 1 owns the Spanish recreational-market survey in this dossier's source set; "Nexus" is the street name reliably attached to 2C-B in that market literature and in Shulgin's account, Ref 5). |
-| "bees" | A playful phonetic short form ("2C-B" → "2C-B(e)e(s)") documented in Shulgin-era community usage (Ref 5 context). [[sic - verify]] — informal community coinage, not a clinical term. |
-| "bump" | Common colloquial short form for 2C-B in recurring Ibiza/Balearics party-market reporting adjacent to Ref 1's sampling frame. [[sic - verify]] — marketing/scene usage; not attested in the peer-reviewed annotations. |
+| "nexus" | The most widely reported street name in the nightlife/recreational-market record (Ref 1 owns the Spanish recreational-market survey in this dossier's source set; "Nexus" is the street name reliably attached to 2C-B in that market literature and in Shulgin's account, Ref 5). VERIFIED: DEA Information Bulletin, "2C-B (Nexus) Reappears on the Club Drug Scene," May 2001 (justice.gov/archive/ndic/pubs0/665/665p.pdf — text-verified, Nexus also a legal brand name alongside Erox/Performax); Wikipedia 2C-B infobox "Trade names"; PsychonautWiki; Release UK; Erowid vault report titles. |
+| "bees" | A playful phonetic short form ("2C-B" → "2C-B(e)e(s)"). VERIFIED in community and harm-reduction sources, not in law-enforcement lexicons: Erowid Experience Vault index ("2C-B Reports (also Bees)", erowid.org/experiences/subs/exp_2CB.shtml), Wikipedia 2C-B infobox "Other names" (en.wikipedia.org/wiki/2C-B), Release UK nicknames ("2C-B, Nexus, Bees, Venus, Blue Mystic", release.org.uk/drugs/2c-b-other-2c-type-drugs), PsychonautWiki infobox (psychonautwiki.org/wiki/2C-B), CAHMA (cahma.org.au/article/safer-using-2c-b/). Community coinage, not a clinical term; the earlier "Shulgin-era community usage (Ref 5)" attribution is demoted — Ref 5 is no longer the citation anchor. |
+| "venus" | VERIFIED shorthand alias: DEA Information Bulletin "2C-B (Nexus) Reappears on the Club Drug Scene," May 2001 other-names list (justice.gov/archive/ndic/pubs0/665/665p.pdf) + PsychonautWiki 2C-B lede ("also known as … Venus") + Release UK nicknames + CAHMA. Added as the replacement for the dropped "bump". |
+| "tusi" / "tuci" | Explicitly **NOT** router aliases — disambiguation-only annotation: "pink cocaine" / tusi/tuci is a very different (and usually variable unknown-mixture) drug whose name visually resembles the 2C-x family; see Users News explainer (usersnews.com.au/home/2c-b-and-tusi-similar-names-very-different-drugs) and Release UK's "should not be confused with 'tuci'/'pink cocaine'". |
 | "the chameleon" | This project's own character name (dossier Section 3, factor 2) — not street slang; routes by project convention. |
 
-Policy: aliases marked [[sic - verify]] are scene/era vocabulary, included so
-the router recognizes real-world usage, and are explicitly NOT presented as
-clinical or geographic facts. No harm-reduction implication: the skills carry
-no dosage data (see `SAFETY.md`) — an alias is a routing cue only.
+Policy: alias verdicts were verified against slang lexicons and harm-reduction
+sources (`research/2cb-alias-verification.md` at the mission level): "bump"
+was DROPPED from the router — it is UNFOUND as a name for 2C-B (DEA 2001
+list, Urban Dictionary, Green's Dictionary of Slang, and harm-reduction
+sources attest it only as generic insufflation-dosing vocabulary); an
+annotation, not a router rule, records that the 2C-x family must not be
+confused with tusi/tuci ("pink cocaine"). No harm-reduction implication: the
+skills carry no dosage data (see `SAFETY.md`) — an alias is a routing cue only.
 
 ## 5. Skills Reusing This Dossier
 

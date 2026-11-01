@@ -85,7 +85,7 @@ def route_with_intensity(input_text: str) -> tuple[str, str]:
 
 # ---------------------------------------------------------------------------
 # 2C-B alias routing (12 alias inputs, every literal from the dossier naming
-# note: 2c-b / 2cb / 2c b / nexus / bees / bump / the chameleon)
+# note: 2c-b / 2cb / 2c b / nexus / bees / venus / the chameleon)
 # ---------------------------------------------------------------------------
 
 
@@ -98,11 +98,11 @@ def test_router_eval_twelve_alias_inputs_all_route_2cb() -> None:
         "nexus",
         "Nexus",
         "we got bees",
-        "bump me into the night",
+        "venus",
         "the chameleon",
         "2cb at the party",
         "take the bees home",
-        "one bump",
+        "venus, please",
         "nexus, please",
     ]
     assert len(alias_inputs) >= 12
@@ -131,18 +131,23 @@ def test_router_step3_2cb_name_and_thematic_cues() -> None:
     text = _load_router()
     # Name-inference block in Step 3.3.
     step3 = text.split("### Step 3: Handle Ambiguity", 1)[1]
-    assert '"nexus" / "bees" / "bump" / "the chameleon" → 2C-B medium' in step3
+    assert '"nexus" / "bees" / "venus" / "the chameleon" → 2C-B medium' in step3
     # Thematic cue block: warm + vivid visual blend is distinctive vs MDMA.
     assert "→ **2C-B**" in step3
 
 
 def test_2cb_router_aliases_are_grounded_in_research_annotations() -> None:
     dossier = (REPO_ROOT / "research" / "2c-b" / "dossier.md").read_text(encoding="utf-8")
-    for alias in ("nexus", "bees", "bump", "the chameleon"):
+    for alias in ("nexus", "bees", "venus", "the chameleon"):
         assert alias in dossier, f"alias {alias!r} not documented in research/2c-b dossier"
+    # The dropped alias must not remain a router or dossier-table alias (the
+    # dossier annotation explaining the drop is fine — it is not a "Grounding" row).
+    rows = dossier.split("### 4a.", 1)[1].split("Policy:", 1)[0]
+    assert '| "bump" |' not in rows, "dropped alias 'bump' still a dossier grounding row"
     # Route cues and dossier names must agree — no ad-hoc alias invented here.
     step1_cues = {c for cues, _ in _step1_rows() for c in cues}
-    assert {"2c-b", "2cb", "nexus", "bees", "bump", "the chameleon"} <= step1_cues
+    assert {"2c-b", "2cb", "nexus", "bees", "venus", "the chameleon"} <= step1_cues
+    assert "bump" not in step1_cues, "dropped alias 'bump' still a router cue"
 
 
 # ---------------------------------------------------------------------------
