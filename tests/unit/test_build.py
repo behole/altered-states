@@ -248,6 +248,10 @@ class TestBuiltArtifactsAreMarkerFree:
     def test_built_artifacts_carry_zero_template_markers(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(build, "OUTPUT", str(tmp_path / "index.html"))
         monkeypatch.setattr(build, "SITE_DIR", str(tmp_path / "site"))
+        # OG_DIR is a separate module-level constant derived from the real
+        # site dir at import time: without this patch build() writes/clears
+        # the COMMITTED site/og/*.png blobs (shared with other xdist workers).
+        monkeypatch.setattr(build, "OG_DIR", str(tmp_path / "site" / "og"))
         monkeypatch.setattr(build, "sync_music_audio", lambda: None)  # no binary copies in tests
         build.build()
         built_pages = [tmp_path / "index.html"] + [p for p in Path(tmp_path / "site").rglob("index.html") if p.name]

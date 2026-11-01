@@ -74,6 +74,14 @@ class TestSiteBuildPipeline:
         monkeypatch.setattr(build, "MUSIC_DIR", str(music_dir))
         monkeypatch.setattr(build, "TEMPLATE", str(template))
         monkeypatch.setattr(build, "OUTPUT", str(output))
+        # build() writes the per-substance pages and OG cards through the
+        # module-level SITE_DIR / OG_DIR constants. Without patching both, a
+        # parallel xdist worker rebuilds/clears the COMMITTED site/og/*.png
+        # blobs while other workers' committed-card tests are reading them
+        # (the release-hotfix flake in TestWriteOgCards).
+        test_site = tmp_path / "site"
+        monkeypatch.setattr(build, "SITE_DIR", str(test_site))
+        monkeypatch.setattr(build, "OG_DIR", str(test_site / "og"))
         return {"output": output, "template": template, "journals": journals_dir}
 
     def test_build_writes_a_complete_document(self, site_dirs: dict[str, Path]) -> None:
