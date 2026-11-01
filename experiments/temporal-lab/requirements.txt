@@ -4,5 +4,4 @@
 # Regenerate both with:  make lock
 
 openai==3.42.0        # OpenRouter/Groq/DeepSeek are OpenAI-API-compatible
-python-dotenv==1.2.4  # loads .env into os.environ
 sentry-sdk==2.44.0    # optional; only initialises when SENTRY_DSN is set

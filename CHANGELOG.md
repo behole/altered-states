@@ -30,6 +30,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `tests/unit/test_watch.py` gained offline tests proving a wedged
   connection does not block later requests and the server still shuts
   down cleanly.
+### Fixed
+- **CI's missing `python-dotenv` no longer breaks the release tests** —
+  `experiments/temporal-lab/scripts/llm_invoke.py` loaded the root `.env`
+  key file through `python-dotenv` inside a `try/except ImportError` that
+  silently no-oped when the package was absent (CI's test env), leaving
+  `DEEPSEEK_API_KEY` unset and failing
+  `tests/unit/test_llm_invoke_config.py::TestRootEnvIsTheSharedKeySource`.
+  The loader is now a stdlib parser (root `.env` first, lab-local fallback,
+  override semantics, quoted values and comment/blank lines honored) with
+  no dotenv import; `python-dotenv` was dropped from the temporal-lab
+  requirements (deptry-clean) and from the local `make test` env so local
+  and CI run with the same dependency set. Offline tests now prove the
+  loader works with the package deliberately unimportable.
 ### Added
 - **Skill-tree validator (VAL-TOOL-001, VAL-TOOL-002)** — `bin/check_skills.py`
   (stdlib-only) validates every `SKILL.md` under `skills/` — top-level

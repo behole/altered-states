@@ -391,7 +391,7 @@ def generate_cycle(
 
 
 # ---------------------------------------------------------------------------
-# Bootstrap dotenv if available
+# Bootstrap .env loading (stdlib parser; no python-dotenv required)
 # ---------------------------------------------------------------------------
 
 
@@ -402,23 +402,52 @@ ROOT_ENV_PATH = Path(__file__).resolve().parents[3] / ".env"
 LOCAL_ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 
 
+def _parse_env_file(path: Path) -> dict[str, str]:
+    """Parse a minimal dotenv file with the stdlib (no python-dotenv).
+
+    Honored syntax, matching the previous python-dotenv contract: blank lines
+    ignored, `#` comment lines ignored, `KEY=VALUE` pairs with optional
+    matching single- or double-quoted values. Unquoted values are taken
+    verbatim to the end of the line. Not a full python-dotenv implementation:
+    no inline comment stripping, no multi-line values, no `export ` prefix.
+    """
+    values: dict[str, str] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        key, sep, value = stripped.partition("=")
+        if not sep:
+            continue
+        key = key.strip()
+        value = value.strip()
+        is_quoted = len(value) > 1 and value[0] == value[-1] and value[0] in ("'", '"')
+        if is_quoted:
+            value = value[1:-1]
+        if key:
+            values[key] = value
+    return values
+
+
 def _load_dotenv() -> None:
     """Load .env from the repo root, falling back to experiments/temporal-lab/.
 
     The root `.env` is the shared key source for all three model-call
     surfaces; the lab-local file is the exception, used only when the root
-    file is absent. Both are loaded with override=True so the resolved `.env`
-    (not an ambient shell var like OPENROUTER_API_KEY) decides the config.
+    file is absent. Both behave like python-dotenv with override=True: file
+    values are written into os.environ, overriding anything already set
+    there, so the resolved `.env` (not an ambient shell var like
+    OPENROUTER_API_KEY) decides the config. Implemented with the stdlib so
+    the file loads even when python-dotenv is not installed (e.g. CI).
     """
-    try:
-        from dotenv import load_dotenv  # noqa: PLC0415
-    except ImportError:
-        return
     if ROOT_ENV_PATH.exists():
-        load_dotenv(ROOT_ENV_PATH, override=True)
+        env_values = _parse_env_file(ROOT_ENV_PATH)
+    elif LOCAL_ENV_PATH.exists():
+        env_values = _parse_env_file(LOCAL_ENV_PATH)
+    else:
         return
-    if LOCAL_ENV_PATH.exists():
-        load_dotenv(LOCAL_ENV_PATH, override=True)
+    for key, value in env_values.items():
+        os.environ[key] = value
 
 
 _load_dotenv()

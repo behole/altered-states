@@ -129,7 +129,7 @@ experiments/temporal-lab/
 ├── VAULT-INTEGRATION.md
 ├── .env.example                # template — copy to .env, add your key
 ├── .gitignore                  # ignores runtime/, .env, __pycache__
-├── requirements.txt            # openai SDK + python-dotenv
+├── requirements.txt            # openai SDK (.env loading is stdlib now)
 ├── references/
 │   └── example-experiment.md
 ├── scripts/

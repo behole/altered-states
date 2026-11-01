@@ -10,6 +10,7 @@ logs (VAL-EVAL-009).
 
 from __future__ import annotations
 
+import builtins
 import os
 import sys
 import types
@@ -196,6 +197,85 @@ class TestRootEnvIsTheSharedKeySource:
             # sentinels from leaking into the rest of the suite.
             for var in ("DEEPSEEK_API_KEY", "OPENROUTER_API_KEY", "LLM_API_KEY", "LLM_BASE_URL"):
                 os.environ.pop(var, None)
+
+
+class TestStdlibLoaderWithoutPythonDotenv:
+    """CI parity: the loader must work with python-dotenv absent (PR #8)."""
+
+    @staticmethod
+    def _forbid_dotenv_import(monkeypatch: pytest.MonkeyPatch) -> None:
+        """Make any `import dotenv` / `from dotenv import ...` raise ImportError."""
+
+        real_import = builtins.__import__
+
+        def _no_dotenv(name: str, *args: Any, **kwargs: Any) -> Any:
+            if name == "dotenv" or name.startswith("dotenv."):
+                raise ImportError("No module named 'dotenv' (simulated CI environment)")
+            return real_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", _no_dotenv)
+
+    def test_no_dotenv_import_anywhere_in_llm_invoke(self) -> None:
+        with open(llm_invoke.__file__) as f:
+            source = f.read()
+        assert "import dotenv" not in source
+        assert "from dotenv" not in source
+
+    def test_loader_sets_sentinel_without_python_dotenv(self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._forbid_dotenv_import(monkeypatch)
+        monkeypatch.setattr(llm_invoke, "ROOT_ENV_PATH", tmp_path / ".env")
+        monkeypatch.setattr(llm_invoke, "LOCAL_ENV_PATH", tmp_path / "does-not-exist.env")
+        _clear_llm_env(monkeypatch)
+        (tmp_path / ".env").write_text(f"DEEPSEEK_API_KEY={DEEPSEEK_SENTINEL}\n")
+
+        llm_invoke._load_dotenv()
+        assert os.environ["DEEPSEEK_API_KEY"] == DEEPSEEK_SENTINEL
+
+    def test_file_value_beats_ambient_env(self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._forbid_dotenv_import(monkeypatch)
+        monkeypatch.setattr(llm_invoke, "ROOT_ENV_PATH", tmp_path / ".env")
+        monkeypatch.setattr(llm_invoke, "LOCAL_ENV_PATH", tmp_path / "does-not-exist.env")
+        _clear_llm_env(monkeypatch)
+        monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-fake-ambient-shell-value")
+        (tmp_path / ".env").write_text(f"DEEPSEEK_API_KEY={DEEPSEEK_SENTINEL}\n")
+
+        llm_invoke._load_dotenv()
+        assert os.environ["DEEPSEEK_API_KEY"] == DEEPSEEK_SENTINEL
+
+    def test_root_preferred_when_both_files_exist(self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._forbid_dotenv_import(monkeypatch)
+        monkeypatch.setattr(llm_invoke, "ROOT_ENV_PATH", tmp_path / "root.env")
+        monkeypatch.setattr(llm_invoke, "LOCAL_ENV_PATH", tmp_path / "local.env")
+        _clear_llm_env(monkeypatch)
+        (tmp_path / "root.env").write_text("DEEPSEEK_API_KEY=sk-fake-from-root\n")
+        (tmp_path / "local.env").write_text("DEEPSEEK_API_KEY=sk-fake-from-local\nLLM_MODEL=root-only-model\n")
+
+        llm_invoke._load_dotenv()
+        assert os.environ["DEEPSEEK_API_KEY"] == "sk-fake-from-root"
+        # The losing local file contributes nothing once the root file wins.
+        assert "root-only-model" not in os.environ
+
+    def test_comments_quoted_values_and_blank_lines(self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._forbid_dotenv_import(monkeypatch)
+        monkeypatch.setattr(llm_invoke, "ROOT_ENV_PATH", tmp_path / ".env")
+        monkeypatch.setattr(llm_invoke, "LOCAL_ENV_PATH", tmp_path / "does-not-exist.env")
+        for var in ("FAKE_UNQUOTED", "FAKE_DOUBLE", "FAKE_SINGLE", "FAKE_STRIPPED"):
+            monkeypatch.delenv(var, raising=False)
+        (tmp_path / ".env").write_text(
+            "# a full-line comment\n"
+            "\n"
+            "   # an indented comment\n"
+            "FAKE_UNQUOTED=plain-value\n"
+            'FAKE_DOUBLE="quoted double"\n'
+            "FAKE_SINGLE='quoted single'\n"
+            "FAKE_STRIPPED=  spaced  \n"
+        )
+
+        llm_invoke._load_dotenv()
+        assert os.environ["FAKE_UNQUOTED"] == "plain-value"
+        assert os.environ["FAKE_DOUBLE"] == "quoted double"
+        assert os.environ["FAKE_SINGLE"] == "quoted single"
+        assert os.environ["FAKE_STRIPPED"] == "spaced"
 
 
 class TestNoAnthropicRuntimePath:
