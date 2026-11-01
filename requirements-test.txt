@@ -1,12 +1,21 @@
-# Test runner and plugins — the minimum needed to execute tests/ on any
-# supported interpreter (3.10 through 3.12).
+# Test runner and plugins — the minimum needed to execute tests/ on the CI
+# matrix interpreters (3.11 and 3.12).
 #
 # Split out from requirements-dev.txt on purpose. The dev toolchain includes
-# pre-commit, which needs 3.11+, and coverage releases that require 3.11+.
-# The test matrix installs this file instead, so a 3.10 job resolves to a
-# coverage that actually exists for 3.10 rather than failing at install time.
+# pre-commit and coverage releases that only matter to development, and CI's
+# test jobs install only this file.
 #
 #   make lock              # regenerate requirements-test.lock after editing
+#
+# pillow==13.0.0 is pinned to match the Pillow that rendered the committed
+# site/og/*.png cards: test_og_cards.py's committed-bytes guard byte-compares
+# them against a fresh render, so the test env must run the same Pillow
+# version as `make build` (which pins pillow==13.0.0 via bin/requirements.txt).
+
+# Pinned to match the Pillow 13.0.0 that rendered the committed site/og/*.png —
+# test_og_cards.py byte-compares the committed cards against a fresh render, so
+# the test env must run the same Pillow version as `make build` (bin/requirements.txt).
+pillow==13.0.0
 
 pytest==9.2.0
 pytest-cov==7.1.0
