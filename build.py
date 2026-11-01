@@ -61,8 +61,12 @@ OUTPUT = os.path.join(BASE, "site", "index.html")
 SKILLS_DIR = os.path.join(BASE, "skills")
 SUBSTANCE_TEMPLATE = os.path.join(BASE, "site", "substance.template.html")
 SITE_DIR = os.path.join(BASE, "site")
-# Skills dirs are substance sources EXCEPT the router, which is a dispatch skill.
+# Skills dirs are substance sources EXCEPT the dispatch/overlay skill dirs,
+# which carry SKILL.md but are not substances: the router (dispatch) and the
+# afterglow residue skill (a horizon overlay over all substances).
 ROUTER_SLUG = "router"
+AFTERGLOW_SLUG = "afterglow"
+NON_SUBSTANCE_SLUGS = frozenset({ROUTER_SLUG, AFTERGLOW_SLUG})
 
 # Feature flags that gate a whole rendered section. Evaluated once per build and
 # emitted into the page as a FLAGS map, so a disabled section costs the client
@@ -570,7 +574,8 @@ def load_substances() -> list[dict[str, Any]]:
     """Derive the site's substance list from ``skills/<substance>/SKILL.md``.
 
     Pure function of the skills directory plus the fixed PERSONAS identity
-    table: every substance skill dir (skills/* minus router) yields exactly one
+    table: every substance skill dir (skills/* minus the non-substance skill
+    dirs — router, afterglow) yields exactly one
     entry. Personas supply display name/emoji/character; front matter supplies
     description, version and tags. Slugs present on disk with no persona match
     still produce a page (fallback identity), so a new skill never silently
@@ -581,7 +586,7 @@ def load_substances() -> list[dict[str, Any]]:
         return substances
     for slug in sorted(os.listdir(SKILLS_DIR)):
         skill_path = os.path.join(SKILLS_DIR, slug, "SKILL.md")
-        if slug == ROUTER_SLUG or not os.path.isfile(skill_path):
+        if slug in NON_SUBSTANCE_SLUGS or not os.path.isfile(skill_path):
             continue
         persona = next((p for p in PERSONAS if p["id"] == slug), None)
         with open(skill_path) as f:
@@ -1151,7 +1156,8 @@ def render_arc_view(arc_payload: list[dict[str, Any]], enabled: bool) -> str:
 # DERIVED from skills/<sub>/SKILL.md — either lifted verbatim from a skill's
 # own 7-dimension table where one exists (psilocybin, ayahuasca, mescaline) or
 # taken as the first skill line describing a dimension. Nothing hand-typed:
-# the payload's substance set is exactly skills/* minus router.
+# the payload's substance set is exactly skills/* minus non-substance skill
+# dirs (router, afterglow).
 
 DIFF_FLAG = "site.diff_view"
 DIFF_TEMPLATE = os.path.join(BASE, "site", "diff.template.html")

@@ -103,10 +103,12 @@ class TestLoadSubstances:
             # Only dirs carrying a top-level SKILL.md are substances. Overlay
             # lines (combos/*, tolerance/*) nest one level deeper and carry a
             # README/policy file instead, so discovery skips them.
-            if d.is_dir() and (d / "SKILL.md").is_file() and d.name not in (build.ROUTER_SLUG,)
+            if d.is_dir() and (d / "SKILL.md").is_file() and d.name not in build.NON_SUBSTANCE_SLUGS
         )
         assert [s["id"] for s in build.load_substances()] == expected
-        assert "combos" not in {s["id"] for s in build.load_substances()}
+        excluded = {"combos", "tolerance", build.ROUTER_SLUG, build.AFTERGLOW_SLUG}
+        ids = {s["id"] for s in build.load_substances()}
+        assert not (excluded & ids), f"non-substance dirs leaked into payload: {excluded & ids}"
 
 
 class TestSubstanceLinks:

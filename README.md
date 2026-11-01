@@ -168,6 +168,11 @@ The router parses natural language and loads the correct skill:
   — Isbell 1961 cross-tolerance; Raval 2021; de la Fuente Revenga 2022; Morgan &
   Curran 2012 for the ketamine pattern). Phenomenology only: no spacing,
   persistence, or recovery content, by design
+- **Afterglow residue** — post-arc time ("the morning after," "day two feeling,"
+  "still landing") describes the 24-72h residue per substance
+  (`skills/afterglow/SKILL.md`, consistency checked against each base skill's
+  Descent & Exit in `skills/afterglow/consistency-matrix.md`). Descriptive only:
+  no regimen, recovery, or treatment content, by design
 - **Set/setting passthrough** — emotional context forwarded to the loaded skill
 
 ---
@@ -209,7 +214,9 @@ altered-states/
     lsd/                 sources.md, dossier.md
     mdma/                sources.md, dossier.md
     2c-b/                sources.md, dossier.md
-    tolerance/           sources.md (repeat-exposure phenomenology line)
+    tolerance/           README.md (repeat-exposure phenomenology line)
+    afterglow/           SKILL.md (24-72h post-trip residue, descriptive only)
+                         + consistency-matrix.md (descent/exit agreement check)
     dmt/                 sources.md, dossier.md
     ayahuasca/           sources.md, dossier.md
     5-meo-dmt/           sources.md, dossier.md, nlm/ (4 files)
@@ -233,9 +240,11 @@ altered-states/
     router/SKILL.md      1.5
     combos/candy-flip/   Blend overlay skill (LSD + MDMA), v1.0
     combos/hippy-flip/   Blend overlay skill (psilocybin + MDMA), v1.0
-    tolerance/SKILL.md   Tolerance overlay line registry, v1.0
+    tolerance/README.md  Tolerance overlay line registry, v1.0
     tolerance/<substance>/SKILL.md  Day-two / burnout overlays (psilocybin,
                          lsd, ketamine), v1.0 — phenomenology only
+    afterglow/           Post-trip 24-72h residue overlay skill + consistency
+                         matrix, v1.0 — descriptive only, not routed as an arc
   experiments/
     temporal-lab/        Autonomous persistent character system (DeepSeek; provider-agnostic via LLM_BASE_URL)
     suno-prompts/        10 Custom Mode music prompts
