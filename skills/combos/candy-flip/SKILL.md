@@ -6,7 +6,7 @@ description: >
   (lsd-altered-state + mdma-altered-state) into one coherent state. The Technician
   builds the architecture; the Connector decides how warm the rooms feel.
   Part of the Altered States Skill Project.
-tags: [creative, phenomenology, combo, blend, psychedelic, altered-states]
+tags: [creative, phenomenology, combo, blend, psychedelic, lsd, mdma, altered-states]
 version: "1.0"
 author: behole
 ---

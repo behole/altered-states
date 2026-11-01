@@ -59,6 +59,13 @@ use should be sent to a harm-reduction service, not answered from here. See `SAF
 
 ---
 
+## Source of Truth
+
+- `research/2c-b/sources.md` — 7 annotated sources
+- `research/2c-b/dossier.md` — full research synthesis
+
+---
+
 ## Activation Instructions
 
 ```
