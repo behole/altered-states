@@ -27,6 +27,7 @@ PIP_AUDIT ?= $(UVX) pip-audit@2.10.1
 # and PyYAML for the policy-manifest tests.
 PYTEST ?= $(UVX) --with openai==3.42.0 \
 	--with pyyaml==6.0.2 \
+	--with python-dotenv==1.2.4 \
 	--with pytest==9.2.0 \
 	--with pytest-cov==7.1.0 \
 	--with pytest-xdist==3.8.0 \
