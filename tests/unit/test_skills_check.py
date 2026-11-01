@@ -177,6 +177,60 @@ def _delete_row(tree: Path, rel: str) -> None:
     path.write_text("".join(out), encoding="utf-8")
 
 
+# --- dimension-table column integrity (VAL-TOOL-001) ---------------------------
+
+
+def _delete_dimension_column(tree: Path, rel: str) -> None:
+    """Delete the last column of the dimension table (header AND data rows)."""
+    path = tree / rel
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    out, table_cells, dropped = [], [], 0
+    for line in lines:
+        if line.strip().startswith("|"):
+            stripped = line.rstrip("\n").strip().strip("|")
+            cells = [c.strip() for c in stripped.split("|")]
+            if cells[0] != "---" and len(cells) > 2:
+                dropped += 1
+                new_cells = cells[:-1]
+                table_cells.append(len(new_cells))
+                line = "| " + " | ".join(new_cells) + " |\n"  # noqa: PLW2901
+        out.append(line)
+    assert dropped, f"fixture drift: no dimension table found in {rel}"
+    # both header and every data row lost exactly one cell
+    assert len(set(table_cells)) == 1, table_cells
+    path.write_text("".join(out), encoding="utf-8")
+
+
+def _delete_dimension_header_cells(tree: Path, rel: str) -> None:
+    """Delete intensity header cells only: header row shrinks, data rows keep
+    their full cell count."""
+    path = tree / rel
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    out, header_seen = [], False
+    for line in lines:
+        if not header_seen and line.strip().startswith("| #"):
+            line = "| # | Dimension |\n"  # noqa: PLW2901
+            header_seen = True
+        out.append(line)
+    assert header_seen, f"fixture drift: no '| #' header row in {rel}"
+    path.write_text("".join(out), encoding="utf-8")
+
+
+_DIM_MUTATORS = [_delete_dimension_column, _delete_dimension_header_cells]
+
+
+@pytest.mark.parametrize("mutator", _DIM_MUTATORS, ids=["full-column-deletion", "header-cell-only"])
+def test_seeded_dimension_column_deletion_fails(tmp_path: Path, mutator: Callable[..., None]) -> None:
+    """Deleting an intensity/dimension table COLUMN — fully (header + rows) or
+    just the header cells — must exit nonzero citing file + dimensions section."""
+    tree = copied_skills(tmp_path)
+    mutator(tree, "mescaline/SKILL.md")
+    result = run_validator(tree)
+    assert result.returncode != 0, f"validator passed with a column deleted:\n{result.stdout}"
+    assert "mescaline/SKILL.md" in result.stdout
+    assert "dimension" in result.stdout.lower()
+
+
 # --- seeded mutations (failure paths must fire) --------------------------------
 
 

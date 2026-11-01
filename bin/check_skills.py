@@ -78,6 +78,7 @@ OVERLAY_LINES = ("combos", "tolerance")
 OVERLAY_SLUGS = ("afterglow",)
 
 REQUIRED_DIMENSION_ROWS = 7
+MIN_HEADER_CELLS = 3  # '# | Dimension | <at least one intensity column>'
 MIN_PROFILE_COVERAGE = 4
 DIMENSION_NAMES = [
     "Perceptual",
@@ -372,15 +373,54 @@ def _fail_no_matrix(file: SkillFile) -> str:
     )
 
 
+def _check_row_widths(file: SkillFile, header_cells: list[str], rows: list[list[str]]) -> list[str]:
+    """Every data row must have exactly as many cells as the header — a
+    deleted column (header or full) shows up as a width mismatch."""
+    expected = len(header_cells)
+    problems: list[str] = []
+    for row in rows:
+        if len(row) == expected:
+            continue
+        index = row[0]
+        which = DIMENSION_NAMES[int(index) - 1] if 1 <= int(index) <= len(DIMENSION_NAMES) else "?"
+        problems.append(
+            fail(
+                file.path,
+                SEC_DIMENSIONS,
+                f"row {index} ({which}) has {len(row)} cells, expected {expected} (intensity column deleted?)",
+                "every dimension row must line up with the header count; "
+                "restore the full '# | Dimension | Low | Medium | High' header "
+                "and all intensity columns",
+            )
+        )
+    return problems
+
+
 def _check_dimension_table(file: SkillFile, table_section: str) -> list[str]:
+    header_cells: list[str] | None = None
     rows: list[list[str]] = []
     for line in table_section.splitlines():
         if not line.strip().startswith("|"):
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if header_cells is None and not re.match(r"^\d+$", cells[0]) and cells[0] != "---":
+            header_cells = cells
         if re.match(r"^\d+$", cells[0]):
             rows.append(cells)
     problems: list[str] = []
+    if header_cells is None or len(header_cells) < MIN_HEADER_CELLS:
+        problems.append(
+            fail(
+                file.path,
+                SEC_DIMENSIONS,
+                "dimension table header is missing its intensity columns "
+                "(expected '# | Dimension | Low | Medium | High' or the "
+                "skill's equivalent intensity/profile columns)",
+                "the header must declare at least one intensity column beyond #/Dimension; restore the full header row",
+            )
+        )
+    elif header_cells is not None:
+        problems.extend(_check_row_widths(file, header_cells, rows))
     if len(rows) < REQUIRED_DIMENSION_ROWS:
         problems.append(
             fail(

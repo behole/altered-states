@@ -40,7 +40,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `make skills-check` (part of `make verify`); failures exit nonzero naming
   file + section; `--new-skill <path>` prints the same rules as an authoring
   checklist. Seeded-mutation tests in `tests/unit/test_skills_check.py` prove
-  the failure paths fire.
+  the failure paths fire. `_check_dimension_table` now also guards the table
+  shape itself: the header row must carry its intensity columns (at least one
+  column beyond `#`/Dimension) and every data row must have the header's cell
+  count — deleting a dimension-table COLUMN (fully or header-cells-only) exits
+  nonzero citing file + dimensions section instead of passing.
 - **Content safety lint (VAL-TOOL-003, VAL-TOOL-004)** — `bin/safety_lint.py`
   (stdlib-only) scans every Markdown file under `skills/` AND the built
   `site/index.html` for forbidden patterns: dose figures with dosing verbs,

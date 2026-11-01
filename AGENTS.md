@@ -38,6 +38,10 @@ make safety-lint   # content-safety scan: skills Markdown + built site/index.htm
 
 If `make verify` is green, CI will be green.
 
+`make build` renders the OG share cards (`site/og/*.png`) as well as the page;
+it runs under the pinned recipe `BUILD_PY ?= uvx --with pillow==13.0.0 python3`,
+because the committed PNG bytes come from that exact Pillow version.
+
 ---
 
 ## Layout
