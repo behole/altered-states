@@ -1,6 +1,9 @@
 # Dry-run fixture journals (committed build fixtures)
 
-These ten JSON journals are **committed offline fixtures**, not live data:
+These eleven JSON journals are **committed offline fixtures**, not live data (ten
+originals plus the deterministic 2C-B fixture added when the 11th substance's
+persona landed in `build.py` — the build must have a journal fixture for every
+persona id):
 
 - Shape: exactly the schema the temporal lab writes (`scripts/temporal_init.py`
   `run_cycle` / `initialize_character`): a cycle-0 initial entry without an

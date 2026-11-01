@@ -3,7 +3,7 @@
 > **Project:** Altered States Skill Project
 > **Version:** 1.0
 > **Last updated:** 2026-10-31
-> **Sources:** 7 (see sources.md; entry 7 is flagged [[sic - verify]])
+> **Sources:** 7 (see sources.md; entry 7 is analytical, replacing the unfound Heinzen 1994 citation)
 
 ---
 
@@ -69,7 +69,7 @@ low-terror experiences relative to confusable-ring-era analogues.
   tone: watercolor rather than electric-fractal.
 - **High:** immersive visual field; immersive-to-persistent eyes-open imagery
   that reshapes (but does not replace) the room. Notable that no consistent
-  report in the human record (Refs 1, 7) describes 2C-B's high range
+  report in the human record (Refs 1, 2) describes 2C-B's high range
   approaching the *reality replacement* of DMT or the dimensional folding of
   salvia — the visual field stays recognizable/reachable.
 - **Synesthesia as a documented thread** (Ref 4): sound→vision, music→motion
@@ -97,7 +97,7 @@ low-terror experiences relative to confusable-ring-era analogues.
   profiles (Ref 1).
 - Affect is positive-leaning overall but does *not* imply smoothness: mood
   follows user state fast (the famous **sensitivity/signature mirror**, Refs
-  1, 7).
+  1, 5).
 
 ### Dimension 5: Self / Ego
 - Softening rather than dissolution. Ego becomes permeable — playful identity,
@@ -130,7 +130,7 @@ low-terror experiences relative to confusable-ring-era analogues.
    simultaneity. This is the #1 disambiguating feature *vs all 10 existing
    skills* in this project.
 2. **High sensitivity / fast mirror.** Reports repeatedly describe effects
-   heavily recruiting of setting and companion tone (Refs 1, 7). The skill's
+   heavily recruiting of setting and companion tone (Refs 1, 5). The skill's
    Set & Setting Response Matrix is therefore *stronger and faster-acting*
    than any existing skill's — the chameleon.
 3. **Coherence preserved.** Language stays well-formed (Ref 1's reports;

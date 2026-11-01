@@ -2,8 +2,7 @@
 
 > **Project:** Altered States Skill Project
 > **Last updated:** 2026-10-31
-> **Sources:** 7 (4 peer-reviewed, 1 book/qualitative with caveats, 1 case report,
-> 1 flagged-for-verification)
+> **Sources:** 7 (4 peer-reviewed, 1 book/qualitative with caveats, 1 case report, 1 analytical)
 
 ## Citation Checklist (curated; offline verification status per entry)
 
@@ -20,7 +19,7 @@ orchestrator follow-up before external publication.
 - [ ] Entry 4 — Yanakieva et al. (2019) — **[verified]** against PMID 31025060 / doi.org/10.1007/s00213-019-05242-y (listed as "Cited by" of Entry 2 on PubMed)
 - [ ] Entry 5 — Shulgin & Shulgin (1991), *PIHKAL* — **[verified]** as a published book (Transform Press); qualitative claims only, do not treat quantities as clinical data (see limitation note)
 - [ ] Entry 6 — de Boer et al. (1999) — **[verified]** against PubMed PMID 10369336 listing (J Anal Toxicol 23:227–228)
-- [ ] Entry 7 — Heinzen et al. (1994) — **[[sic - verify]]** — a widely-echoed secondary citation for early human 2C-B case data (attributed to a Swiss study of 2C-B experiences); the primary record could not be confirmed offline from bibliographic metadata available to this worker. Do not deploy any claim that relies on Entry 7 alone until verified.
+- [ ] Entry 7 — Giroud et al. (1998) — **[verified]** against PubMed PMID 9737327 / doi.org/10.1093/jat/22.5.345 (full author list and J Anal Toxicol 22(5):345–354 confirmed; analytical only — replaces the unverifiable "Heinzen et al. 1994" citation, which was searched and UNFOUND)
 
 ---
 
@@ -145,27 +144,33 @@ in contrast-skill stories.
 
 ---
 
-## 7. Heinzen et al. (1994) — Early Swiss 2C-B Study **[[sic - verify]]**
+## 7. Giroud et al. (1998) — Analytical Identification of 2C-B in Swiss Ecstasy Tablets
 
-**Title:** [unverified — commonly rendered as an early Swiss report of 2C-B experiences / a 2,5-dimethoxy-4-bromophenethylamine human experience series]
-**Authors:** H. Heinzen et al. (as cited in secondary literature)
-**Journal:** unconfirmed
-**Year:** 1994 (as cited)
-**URL:** unconfirmed
-**Tags:** [human] [early] [needs-verification]
+**Title:** 2C-B: A new psychoactive phenylethylamine recently discovered in
+Ecstasy tablets sold on the Swiss black market
+**Authors:** C. Giroud, M. Augsburger, L. Rivier, P. Mangin, F. Sadeghipour,
+E. Varesio, J.-L. Veuthey, P. Kamalaprija
+**Journal:** *Journal of Analytical Toxicology*, 22(5), 345–354
+**Year:** 1998
+**DOI:** 10.1093/jat/22.5.345 (PMID 9737327)
+**URL:** https://pubmed.ncbi.nlm.nih.gov/9737327/
+**Tags:** [analytical] [Swiss] [context]
 
-**Annotation:** Retained because it is the crucial early-human record regularly
-echoed in 2C-B literature (human first-use-experience data from the Swiss
-periods when 2C-B was legally available; usually attributed to Heinzen et al.,
-1994) — the source most frequently cited for the "sensitive, quickly
-responsive-to-setting" claim in the skill's titles. **However, this worker
-could not confirm the exact title/journal/URL from offline bibliographic
-metadata.** All phenomenological claims in this skill currently trace to
-Entries 1–4 and are *not* dependent on Entry 7. Deployed for orchestrator
-verification — if the citation cannot be verified, remove this entry and fall
-back purely on Entries 1–6 (the dossier does not rely on it).
+**Annotation:** Forensic identification of 2C-B in two sets of tablets seized
+on the Swiss black market, with HPLC-DAD/CE-DAD quantitation (3–8 mg per
+tablet, in the range of the minimum effective dose). The Swiss primary record
+of 2C-B's mid-1990s appearance on the European grey market, complementing
+de Boer et al. (1999, Entry 6). Strictly analytical — it carries no
+phenomenological or human-experience data, so the skill's
+sensitivity/setting claims rest on Entries 1 and 5, not here.
 
-curated checklist above flags it and the dossier has no dependency on it.
+**Provenance note:** this entry replaces a previously flagged citation,
+"Heinzen et al. (1994)", an early-human Swiss report widely echoed in
+secondary literature. Bibliographic searches (PubMed author query, Crossref,
+Semantic Scholar, secondary reviews including Cole/Lea/Oxley 2002 and the
+"2C or Not 2C" survey) found no such publication; it is treated as a
+phantom/misattributed citation and was dropped. No claim in the dossier or
+skill ever depended on it.
 
 ---
 
@@ -182,5 +187,4 @@ curated checklist above flags it and the dossier has no dependency on it.
 | **Somatic** | 1 (Caudevilla), 2 (Páleníček) |
 | **Dose-Response** | 2 (Páleníček), 5 (Shulgin — informal labels only) |
 | **Mechanisms** | 2 (Páleníček), 3 (Glennon), 4 (Yanakieva) |
-| **Analytical / framing** | 6 (de Boer) |
-| **Early-human (flagged)** | 7 (Heinzen [[sic - verify]]) |
+| **Analytical / framing** | 6 (de Boer), 7 (Giroud — analytical only) |
