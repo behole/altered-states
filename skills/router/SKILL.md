@@ -90,6 +90,8 @@ dossier (`research/2c-b/dossier.md` — naming note) and project surfaces:
 | "ketamine" / "special k" / "k" / "esketamine" / "spravato" / "the dissociative" / "k-hole" / "the void" (if dissociative context) / "nmda" | **ketamine-altered-state** |
 | "salvia" / "salvia divinorum" / "sally d" / "sally" / "diviner's sage" / "the doorway" / "salvinorin" / "lady salvia" / "la pastora" | **salvia-altered-state** |
 | "ibogaine" / "iboga" / "the ancestor" / "root bark" / "bwiti" / "oneirogenic" | **ibogaine-altered-state** |
+| "candy flip" / "candy flipping" | **candy-flip-altered-state** (skills/combos/candy-flip — LSD-dominant blend with MDMA warmth overlay) |
+| "hippy flip" / "hippy flipping" | **hippy-flip-altered-state** (skills/combos/hippy-flip — psilocybin-dominant blend with MDMA safety overlay) |
 | "altered state" / "trip" / "journey" (no substance specified) | **psilocybin-altered-state** (default) |
 
 ### Step 2: Identify Intensity
@@ -196,11 +198,20 @@ If the user's intent is unclear:
    - User wants reality destruction, dimensional shifting, extreme short-duration intensity, "tear me apart" → **Salvia divinorum** (the fastest, most reality-destroying state)
    - User wants ancestral connection, death confrontation, life review, the longest journey, "face everything" → **Ibogaine** (the longest and most demanding state)
    - User wants anti-addiction context, "reset my brain," recovery from substance dependence → **Ibogaine** (unique anti-addiction mechanism)
-5. **Blends / combinations:** Route to the DOMINANT substance with an explicit blend note:
+5. **Blends / combinations:** Known two-substance blends route to their own
+   first-class combo skills under `skills/combos/`, which compose the two base
+   substances' phenomenology with a documented interaction/dominance rule
+   (who structures the arc, who adds tone). The combo skill carries the
+   blend note — the router does not improvise an ad-hoc overlay on a base
+   substance:
 
    **Named blends (known combinations):**
-   - "candy flip" (LSD + MDMA) → Route to `lsd-altered-state` medium. Blend note: "Incorporate MDMA's empathic warmth as a tonal overlay — more heart in the analytical cascades, more interpersonal in the wonder. This is a tonal shift, not a mode switch."
-   - "hippy flip" (psilocybin + MDMA) → Route to `psilocybin-altered-state` medium. Blend note: "Incorporate MDMA's direct warmth and safety — the teacher is gentler, the emotional opening is wider, fear is lower. Tonal overlay, not mode switch."
+   - "candy flip" (LSD + MDMA) → Route to `candy-flip-altered-state`
+     (`skills/combos/candy-flip/SKILL.md`): LSD-dominant arc with MDMA's
+     empathic warmth as a documented tonal overlay.
+   - "hippy flip" (psilocybin + MDMA) → Route to `hippy-flip-altered-state`
+     (`skills/combos/hippy-flip/SKILL.md`): psilocybin-dominant arc with
+     MDMA's direct warmth and safety as a documented tonal overlay.
    - "pharmahuasca" → Route to `ayahuasca-altered-state`
    - "toad flip" / "5-MeO flip" (5-MeO-DMT + MDMA) → Route to `5-meo-dmt-altered-state` breakthrough. Blend note: "Incorporate MDMA's empathic warmth in the afterglow — the return from source is softer, more interpersonal. The dissolution itself is unchanged. MDMA colors the landing, not the launch."
    - "peyote flip" / "mescaline flip" (mescaline + MDMA) → Route to `mescaline-altered-state` medium. Blend note: "Incorporate MDMA's direct warmth — the elder's patience is gentler, the nature dialogue more interpersonal. Less reverence, more connection. Tonal overlay, not mode switch."

@@ -157,7 +157,10 @@ The router parses natural language and loads the correct skill:
 - **Character nicknames** — "the teacher" → psilocybin, "the technician" → LSD, "the doorway" → salvia, "the ancestor" → ibogaine, etc.
 - **Intensity cues** — "heroic dose," "museum dose," "200 mics," "waiting room DMT"
 - **Thematic routing** — "I need warmth" → MDMA, "show me the structure" → LSD
-- **Blends** — "candy flip" → LSD + MDMA overlay, "hippy flip" → psilocybin + MDMA overlay
+- **Blends** — "candy flip" and "hippy flip" route to first-class combo skills
+  (`skills/combos/candy-flip/`, `skills/combos/hippy-flip/`), which compose the two
+  base substances' phenomenology with a documented structural/tonal interaction rule;
+  other flips still route to the dominant substance with a blend note
 - **Set/setting passthrough** — emotional context forwarded to the loaded skill
 
 ---

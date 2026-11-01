@@ -220,5 +220,6 @@ def test_run_eval_registry_covers_router_destinations() -> None:
         assert s in run_eval.SUBSTANCES
     assert run_eval.resolve_substances("2c-b") == ["2c-b"]
     assert run_eval.DEFAULT_INTENSITY["2c-b"] == "medium"
-    # Every declared substance has a default intensity — 'all' never KeyErrors.
-    assert set(run_eval.DEFAULT_INTENSITY) == set(run_eval.SUBSTANCES)
+    # Every declared substance AND combo has a default intensity — 'all' never
+    # KeyErrors (combo ids are accepted by --substances but excluded from 'all').
+    assert set(run_eval.DEFAULT_INTENSITY) == set(run_eval.SUBSTANCES) | set(run_eval.COMBOS)

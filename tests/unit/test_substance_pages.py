@@ -97,8 +97,15 @@ class TestLoadSubstances:
 
     def test_repo_has_one_substance_per_skill_dir(self) -> None:
         skills_dir = Path(build.SKILLS_DIR)
-        expected = sorted(d.name for d in skills_dir.iterdir() if d.is_dir() and d.name != build.ROUTER_SLUG)
+        expected = sorted(
+            d.name
+            for d in skills_dir.iterdir()
+            # Router is a dispatch skill; combos/* are blend overlay skills,
+            # not substances (they live one level deeper than skills/<slug>/SKILL.md).
+            if d.is_dir() and d.name not in (build.ROUTER_SLUG, "combos")
+        )
         assert [s["id"] for s in build.load_substances()] == expected
+        assert "combos" not in {s["id"] for s in build.load_substances()}
 
 
 class TestSubstanceLinks:

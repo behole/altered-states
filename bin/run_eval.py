@@ -115,6 +115,22 @@ DEFAULT_INTENSITY: dict[str, str] = {
     "ibogaine": "full visionary",
 }
 
+# First-class combo overlay skills. These are NOT in SUBSTANCES: 'all' expands
+# to the 11 base substances per the eval guide. Combo ids are additionally
+# accepted by --substances and route to skills/combos/<combo>/SKILL.md —
+# exactly what the router's named blends resolve to ("candy flip" and
+# "hippy flip" route to these skills, not to a base substance with an
+# ad-hoc blend note).
+COMBOS: dict[str, str] = {
+    "candy-flip": "combos/candy-flip",
+    "hippy-flip": "combos/hippy-flip",
+}
+
+# Blend overlays are tonal, not a separate intensity ladder; they run at the
+# base skill's default (medium/discretional per the combo skills themselves).
+for _combo in COMBOS:
+    DEFAULT_INTENSITY[_combo] = "medium"
+
 # Substances with no onset phase — they blast off from exchange 1.
 BREAKTHROUGH_SUBSTANCES = ("dmt", "5-meo-dmt")
 
@@ -183,6 +199,8 @@ def phase_for_exchange(exchange: int, substance: str) -> str:
 
 def load_skill(substance: str) -> str:
     skill_path = REPO_ROOT / "skills" / substance / "SKILL.md"
+    if substance in COMBOS:
+        skill_path = REPO_ROOT / "skills" / COMBOS[substance] / "SKILL.md"
     if not skill_path.exists():
         raise FileNotFoundError(f"SKILL.md not found: {skill_path}")
     return skill_path.read_text()
@@ -401,7 +419,7 @@ def resolve_substances(spec: str) -> list[str]:
     if spec == "all":
         return SUBSTANCES
     subs = [s.strip() for s in spec.split(",")]
-    bad = [s for s in subs if s not in SUBSTANCES]
+    bad = [s for s in subs if s not in SUBSTANCES and s not in COMBOS]
     if bad:
         print(f"ERROR: unknown substances: {bad}", file=sys.stderr)
         print(f"       valid: {SUBSTANCES}", file=sys.stderr)
