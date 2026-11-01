@@ -22,6 +22,7 @@ Log-event migration note (repo rule 3):
   redacted). Surviving bare ``print()`` calls in this file: NONE.
 """
 
+import glob
 import html
 import json
 import os
@@ -80,6 +81,9 @@ SECTION_FLAGS = (
     "site.quiz_game",
     "site.journal_dashboards",
     "site.eval_grids",
+    # Cross-model diff: EVAL-owned flag (VAL-EVAL-015/016) — DeepSeek responses
+    # side-by-side with the historical same-prompt corpora, model-tagged.
+    "site.cross_model_diff",
 )
 
 # Longest prompt headline rendered on an experiment card, in characters.
@@ -1542,6 +1546,13 @@ QUIZ_TEMPLATE = os.path.join(BASE, "site", "quiz.template.html")
 # temporal_init dry-run schema.
 JOURNAL_FLAG = "site.journal_dashboards"
 JOURNAL_TEMPLATE = os.path.join(BASE, "site", "journal_dashboards.template.html")
+CROSS_MODEL_FLAG = "site.cross_model_diff"
+CROSS_MODEL_TEMPLATE = os.path.join(BASE, "site", "cross_model.template.html")
+# Sources for the cross-model diff payload: the historical same-prompt corpora
+# (one markdown capture per prompt, model-tagged in its run header) and the
+# raw JSONL response sets under tests/responses/ (real DeepSeek runs).
+SAME_PROMPT_OUTPUT_DIR = os.path.join(BASE, "experiments", "same-prompt", "output")
+RESPONSES_DIR = os.path.join(BASE, "tests", "responses")
 
 # The axes the dashboards chart, with the journal JSON field each one reads.
 # Categorical values (emotional valence / ego coherence / integration state)
@@ -1897,6 +1908,198 @@ def build_journal_series_payload(journals: dict[str, list[dict[str, Any]]]) -> d
     return {"axes": JOURNAL_AXES, "characters": characters}
 
 
+# ═══ CROSS-MODEL DIFF (site.cross_model_diff) ═══
+# One prompt answered by several model generations, each response tagged with
+# its model and rendered side-by-side. Sources: the historical same-prompt
+# markdown captures (experiments/same-prompt/output/, model named in the
+# `> Run:` header) and real-run JSONL response sets (tests/responses/, `model`
+# field per row). Derived only at build time from those data dirs; never
+# hand-typed.
+
+# Longest response text published per entry; a diff grid is for comparison, not
+# archival, and the historical captures run several thousand characters.
+MAX_CROSS_MODEL_TEXT_CHARS = 1800
+# Minimum model sides before a prompt is a comparison worth publishing.
+MIN_MODELS_PER_PAIR = 2
+
+_RUN_HEADER_MODEL = re.compile(r"^>\s*Run:.*\| Model: (.+?)\s*$")
+_PROMPT_QUOTE = re.compile(r'^>\s*"(.+)"\s*$')
+_SECTION_HEADING = re.compile(r"^##\s+\S+\s+(.+?)\s+—")
+
+
+def extract_same_prompt_entries(md_path: str, max_chars: int = MAX_CROSS_MODEL_TEXT_CHARS) -> list[dict[str, Any]]:
+    """Parse one historical same-prompt capture into diff entries.
+
+    Model tag comes from the run header line (`> Run: ... | Model: X`); the
+    prompt from the quoted `> "..."` line; each `## <emoji> Substance — ...`
+    section becomes one per-substance entry. Entries with no model tag or no
+    text are skipped (never published with a degenerate tag).
+    """
+    prompt: str | None = None
+    model: str | None = None
+    sections: list[tuple[str, list[str]]] = []
+    current: tuple[str, list[str]] | None = None
+    with open(md_path) as f:
+        for line in f.read().splitlines():
+            match = _PROMPT_QUOTE.match(line)
+            if match and prompt is None:
+                prompt = match.group(1)
+                continue
+            match = _RUN_HEADER_MODEL.match(line)
+            if match:
+                model = match.group(1)
+                continue
+            match = _SECTION_HEADING.match(line)
+            if match:
+                current = (match.group(1), [])
+                sections.append(current)
+                continue
+            if line.strip() == "---":
+                current = None
+                continue
+            if current is not None and not line.startswith(">"):
+                current[1].append(line)
+
+    if not prompt or not model:
+        return []
+    entries: list[dict[str, Any]] = []
+    for name, lines in sections:
+        body = "\n".join(lines).strip()
+        # Drop the intensity annotation line so only the model's own answer
+        # publishes.
+        body = re.sub(r"^\*\*Intensity:\*\*.*$", "", body, flags=re.MULTILINE).strip()
+        if not body:
+            continue
+        entries.append(
+            {
+                "model": model,
+                "substance": name.strip().lower(),
+                "text": body[:max_chars],
+                "prompt": prompt,
+                "promptId": _prompt_slug(prompt),
+            }
+        )
+    return entries
+
+
+def extract_jsonl_entries(jsonl_path: str, max_chars: int = MAX_CROSS_MODEL_TEXT_CHARS) -> list[dict[str, Any]]:
+    """Parse a real-run JSONL response set into diff entries.
+
+    Only real (non-dry-run) rows with a non-empty answer and a model tag
+    become entries — an empty model answer is never published (VAL-EVAL-006
+    rule carries into the site payload).
+    """
+    entries: list[dict[str, Any]] = []
+    with open(jsonl_path) as f:
+        for raw in f.read().splitlines():
+            if not raw.strip():
+                continue
+            row = json.loads(raw)
+            if row.get("dry_run"):
+                continue
+            text = row.get("response") or ""
+            model = row.get("model") or ""
+            if not text.strip() or not model.strip():
+                continue
+            entries.append(
+                {
+                    "model": model,
+                    "substance": strip_text(row.get("substance") or ""),
+                    "text": text[:max_chars],
+                    "prompt": strip_text(row.get("prompt") or ""),
+                    "promptId": _prompt_slug(strip_text(row.get("prompt") or "")),
+                }
+            )
+    return entries
+
+
+def strip_text(value: str) -> str:
+    """Strip surrounding whitespace from a data-dir text field."""
+    return value.strip()
+
+
+def _prompt_slug(prompt_text: str) -> str:
+    """A stable prompt-id slug for markdown corpora that carry no ids."""
+    slug = re.sub(r"[^a-z0-9]+", "-", prompt_text.strip().lower()).strip("-")
+    return slug or "prompt"
+
+
+def build_cross_model_payload(
+    same_prompt_dir: str = SAME_PROMPT_OUTPUT_DIR,
+    responses_dir: str = RESPONSES_DIR,
+    max_chars: int = MAX_CROSS_MODEL_TEXT_CHARS,
+) -> dict[str, Any]:
+    """The cross-model diff payload: per prompt, side-by-side model-tagged views.
+
+    Pure function of the two data directories, deterministic JSON: sources are
+    read in sorted filename order, entries are deduplicated on
+    (promptId, model, substance) keeping the first, and prompts appear in
+    sorted prompt-id order. An entry with an unresolved model tag or empty text
+    never enters the payload; a model with no surviving entries is dropped.
+    """
+    grouped: dict[str, dict[str, Any]] = {}
+    sources: list[list[dict[str, Any]]] = []
+    for md_path in sorted(glob.glob(os.path.join(same_prompt_dir, "*.md"))):
+        parsed = extract_same_prompt_entries(md_path, max_chars)
+        if parsed:
+            sources.append(parsed)
+    for jsonl_path in sorted(glob.glob(os.path.join(responses_dir, "*.jsonl"))):
+        sources.append(extract_jsonl_entries(jsonl_path, max_chars))
+
+    for entry in [e for group in sources for e in group]:
+        prompt = entry.get("prompt", "")
+        if not prompt:
+            continue
+        sid = entry.get("promptId") or _prompt_slug(prompt)
+        group = grouped.setdefault(sid, {"prompt": prompt, "promptId": sid, "by_key": {}})
+        group["by_key"].setdefault((entry["model"], entry["substance"]), entry)
+
+    pairs: list[dict[str, Any]] = []
+    for sid in sorted(grouped):
+        group = grouped[sid]
+        per_model: dict[str, list[dict[str, Any]]] = {}
+        for (model, substance), entry in sorted(group["by_key"].items()):
+            per_model.setdefault(model, []).append({"substance": substance, "text": entry["text"]})
+        if len(per_model) < MIN_MODELS_PER_PAIR:
+            # A single-model prompt is not a comparison; it lives in the eval
+            # grids instead.
+            continue
+        models = sorted(per_model)
+        pairs.append(
+            {
+                "promptId": sid,
+                "prompt": group["prompt"],
+                "models": models,
+                "responses": [{"model": model, "substances": per_model[model]} for model in models],
+            }
+        )
+    return {"pairs": pairs}
+
+
+def render_cross_model_nav(enabled: bool) -> str:
+    """The nav link for the cross-model diff; compiled out when off."""
+    if not enabled:
+        return ""
+    return (
+        '<a href="#" data-view="cross_model" '
+        "onclick=\"showView('cross_model'); closeMobileNav(); return false;\">Models</a>"
+    )
+
+
+def render_cross_model_view(payload: dict[str, Any], enabled: bool) -> str:
+    """The cross-model diff view + embedded payload; empty string when
+    ``site.cross_model_diff`` is off, so neither the markup nor the response
+    JSON reaches the built page."""
+    if not enabled:
+        return ""
+    with open(CROSS_MODEL_TEMPLATE) as f:
+        template_html = f.read()
+    _invalidate_template_marker(template_html, "__CROSS_MODEL_DATA__", CROSS_MODEL_TEMPLATE)
+    json_payload = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    json_payload = json_payload.replace("<", "\\u003c").replace(">", "\\u003e")
+    return template_html.replace("__CROSS_MODEL_DATA__", json_payload)
+
+
 def enabled_section_flags() -> dict[str, bool]:
     """Evaluate the flags that gate whole page sections."""
     return {name: flags.is_enabled(name) for name in SECTION_FLAGS}
@@ -2021,6 +2224,14 @@ def render_flag_gated_sections(
     log_event("build.stage", stage="journal_render", enabled=journal_enabled)
     sections["journal_nav"] = render_journal_nav(journal_enabled)
     sections["journal_view"] = render_journal_view(journal_series, journal_enabled)
+
+    log_event("build.stage", stage="cross_model_payload")
+    cross_model_payload = build_cross_model_payload()
+    REGISTRY.gauge("cross_model_pairs_published", len(cross_model_payload["pairs"]))
+    cross_enabled = section_flags.get(CROSS_MODEL_FLAG, False)
+    log_event("build.stage", stage="cross_model_render", enabled=cross_enabled)
+    sections["cross_model_nav"] = render_cross_model_nav(cross_enabled)
+    sections["cross_model_view"] = render_cross_model_view(cross_model_payload, cross_enabled)
 
     return sections
 

@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "description": "Single prompt for the cross-model diff artifact (VAL-EVAL-010): 'What is love?' also exists in the historical same-prompt corpus (experiments/same-prompt/output/what-is-love-20260422-2200.md, anthropic/claude-sonnet-4.6).",
+  "prompts": [
+    {
+      "id": "crossmodel-01-love",
+      "text": "What is love?",
+      "category": "emotional-relational",
+      "tests": "Cross-model comparability against the historical same-prompt corpus"
+    }
+  ]
+}

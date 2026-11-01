@@ -324,3 +324,22 @@ skills/
 ```
 
 Each SKILL.md is self-contained. Load the relevant skill before each test section.
+
+---
+
+## Cross-model artifact (DeepSeek, 2026-10-31)
+
+The first DeepSeek response set for this protocol exists as a real (non-dry-run),
+captured run:
+
+```
+tests/responses/responses-2026-10-31-deepseek-chat-love.jsonl
+```
+
+One prompt ("What is love?", also in the historical corpus
+`experiments/same-prompt/output/what-is-love-20260422-2200.md`,
+anthropic/claude-sonnet-4.6) x three substances (psilocybin, lsd, mdma) on
+`deepseek-chat`. It pivots through `bin/responses_to_grid.py` and lands on the
+site under the `site.cross_model_diff` flag (owner eval) as the side-by-side
+cross-model view. Spend: manifest `90661498b2c2`, actuals in
+`docs/evals/spend-ledger.jsonl`.

@@ -1,0 +1,15 @@
+{
+  "manifest_id": "90661498b2c2",
+  "run_kind": "real",
+  "model": "deepseek-chat",
+  "max_tokens": 8192,
+  "max_concurrent_requests": 2,
+  "max_requests": 9,
+  "num_runs": 3,
+  "estimated_cost_per_call_usd": 0.00983,
+  "estimated_cost_usd": 0.088474,
+  "total_cap_usd": 5.0,
+  "command_line": "bin/run_eval.py --prompts tests/prompts-love.json --substances psilocybin,lsd,mdma --concurrency 2 --out tests/responses/responses-2026-10-31-deepseek-chat-love.jsonl",
+  "created_utc": "2026-11-01T01:27:10+00:00",
+  "spec_key": "ee522a26f244e69c"
+}

@@ -80,6 +80,14 @@
       "owner": "site",
       "description": "Render the side-by-side same-prompt eval grids (ten substances per screen).",
       "expires_on": "2027-06-30"
+    },
+    {
+      "name": "site.cross_model_diff",
+      "enabled": true,
+      "rollout_percentage": 100,
+      "owner": "eval",
+      "description": "Render the side-by-side cross-model diff: DeepSeek responses next to historical model corpora for the same prompt, each entry tagged with its model.",
+      "expires_on": "2027-06-30"
     }
   ]
 }
