@@ -13,6 +13,18 @@ Anthropic/OpenRouter path: ambient OPENROUTER_API_KEY never reroutes this runner
 DeepSeek context caching is automatic (server-side); usage carries prompt/
 completion tokens only — no cache_control parameters are sent.
 
+Reasoning models (``deepseek-v4-pro``): the chain-of-thought arrives in
+``message.reasoning_content`` and is recorded as its own JSONL field, never
+concatenated into ``response``. The objective reasoning diagnostic on every
+row is ``reasoning_content_chars`` (int, non-zero whenever reasoning occurred)
+plus ``usage.reasoning_tokens`` when the API exposes it; ``finish_reason`` is
+recorded as ``stop_reason``. A response with empty ``content`` is never
+persisted as an answer: the retry path lifts ``max_tokens`` (the reasoning
+burnout is a budget problem) and, when attempts are exhausted, yields an
+explicit error row whose notes name ``finish_reason="length"`` and the
+reasoning-token count. Prose answers have a hard floor of
+``MIN_RESPONSE_CHARS`` (200) characters, matching the eval contract.
+
 Interpreter: run with the repo's pinned interpreter, ``.venv/bin/python3``
 (Python 3.13, relative to the repo root); any system ``python3`` >= 3.10 with
 the locked deps importable works identically.
@@ -171,6 +183,17 @@ def make_client() -> Any:
     return AsyncOpenAI(base_url=DEEPSEEK_BASE_URL, api_key=api_key)
 
 
+def _reasoning_tokens(usage: Any) -> int:
+    """Pull the reasoning token count out of an OpenAI-shaped usage object.
+
+    DeepSeek reports chain-of-thought tokens as
+    ``usage.completion_tokens_details.reasoning_tokens``; non-reasoning models
+    (and test fakes) omit the detail object, which reads as 0.
+    """
+    details = getattr(usage, "completion_tokens_details", None)
+    return int(getattr(details, "reasoning_tokens", 0) or 0) if details is not None else 0
+
+
 async def _attempt(
     client: Any,
     run: EvalRun,
@@ -196,21 +219,28 @@ async def _attempt(
     choice = resp.choices[0]
     message = choice.message
     text = message.content or ""
+    usage = resp.usage
+    reasoning_text = message.reasoning_content or ""
+    reasoning_tokens = _reasoning_tokens(usage)
     row = build_row(run, model, text or None)
-    if text == "" and (message.reasoning_content or "").strip():
+    if text == "" and reasoning_text.strip():
         # Reasoning exhausted the token budget: no prose was produced. Never
         # persist this as a silent empty answer.
-        raise RuntimeError(
+        exc = RuntimeError(
             f"empty content with finish_reason={choice.finish_reason!r}; "
-            f"reasoning consumed the token budget (max_tokens={max_tokens})"
+            f"reasoning consumed the token budget (max_tokens={max_tokens}, "
+            f"reasoning_content_chars={len(reasoning_text)}, reasoning_tokens={reasoning_tokens})"
         )
+        exc.finish_reason = choice.finish_reason  # type: ignore[attr-defined]
+        raise exc
     row["reasoning_content"] = message.reasoning_content
+    row["reasoning_content_chars"] = len(reasoning_text)
     row["stop_reason"] = choice.finish_reason
-    usage = resp.usage
     row["usage"] = {
         "output_tokens": usage.completion_tokens if usage else 0,
         "total_tokens": usage.total_tokens if usage else 0,
         "prompt_tokens": usage.prompt_tokens if usage else 0,
+        "reasoning_tokens": reasoning_tokens,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
     }
@@ -250,10 +280,12 @@ async def run_one(
             try:
                 row = await _attempt(client, run, model, system_text, max_tokens=max_tokens)
                 if len(row.get("response") or "") < MIN_RESPONSE_CHARS:
-                    raise RuntimeError(
+                    exc = RuntimeError(
                         f"response under {MIN_RESPONSE_CHARS} chars "
                         f"(finish_reason={row.get('stop_reason')!r}) — retrying with a larger token budget"
                     )
+                    exc.finish_reason = row.get("stop_reason")  # type: ignore[attr-defined]
+                    raise exc
                 REGISTRY.observe("llm_latency_seconds", time.perf_counter() - started_at, substance=run.substance)
                 return row
             except Exception as exc:
@@ -269,6 +301,9 @@ async def run_one(
                     substance=run.substance,
                     prompt_id=run.prompt["id"],
                     error=type(exc).__name__,
+                    # _attempt attaches finish_reason when the provider
+                    # answered (empty-content / short-prose diagnostics):
+                    finish_reason=getattr(exc, "finish_reason", None),
                 )
                 capture_exception(exc)
                 if attempt + 1 < RETRY_ATTEMPTS:
@@ -318,11 +353,13 @@ def dry_run_rows(runs: list[EvalRun], model: str) -> list[dict[str, Any]]:
         row = build_row(run, model, text)
         row["dry_run"] = True
         row["reasoning_content"] = None
+        row["reasoning_content_chars"] = 0
         row["stop_reason"] = "dry_run"
         row["usage"] = {
             "output_tokens": 0,
             "total_tokens": 0,
             "prompt_tokens": 0,
+            "reasoning_tokens": 0,
             "cache_read_input_tokens": 0,
             "cache_creation_input_tokens": 0,
         }

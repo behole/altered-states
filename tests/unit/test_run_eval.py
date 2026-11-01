@@ -22,11 +22,23 @@ class FakeMessage:
         self.reasoning_content = reasoning
 
 
+class FakeUsageDetails:
+    def __init__(self, reasoning_tokens: int) -> None:
+        self.reasoning_tokens = reasoning_tokens
+
+
 class FakeUsage:
-    def __init__(self, prompt_tokens: int = 111, completion_tokens: int = 222) -> None:
+    def __init__(
+        self,
+        prompt_tokens: int = 111,
+        completion_tokens: int = 222,
+        reasoning_tokens: int | None = None,
+    ) -> None:
         self.prompt_tokens = prompt_tokens
         self.completion_tokens = completion_tokens
         self.total_tokens = prompt_tokens + completion_tokens
+        if reasoning_tokens is not None:
+            self.completion_tokens_details = FakeUsageDetails(reasoning_tokens)
 
 
 class FakeChoice:
@@ -129,6 +141,7 @@ class TestAttempt:
             "output_tokens": 321,
             "total_tokens": 371,
             "prompt_tokens": 50,
+            "reasoning_tokens": 0,
             "cache_read_input_tokens": 0,
             "cache_creation_input_tokens": 0,
         }
@@ -151,13 +164,28 @@ class TestAttempt:
             responses=[
                 FakeResponse(
                     [FakeChoice(FakeMessage("the final prose answer, roundly stated and substantive", reasoning))],
-                    FakeUsage(900, 1200),
+                    FakeUsage(900, 1200, reasoning_tokens=1170),
                 )
             ]
         )
         row = run_async(run_eval._attempt(FakeClient(completions), a_run(), "deepseek-v4-pro", "SYSTEM"))
         assert row["response"] == "the final prose answer, roundly stated and substantive"
         assert row["reasoning_content"] == reasoning
+        # The objective reasoning diagnostic predicate (VAL-EVAL-005):
+        # non-zero reasoning_content_chars int, plus usage.reasoning_tokens.
+        assert row["reasoning_content_chars"] == len(reasoning)
+        assert isinstance(row["reasoning_content_chars"], int) and row["reasoning_content_chars"] > 0
+        assert row["usage"]["reasoning_tokens"] == 1170
+        # Semantic usage keys stay OpenAI-shaped, never Anthropic-shaped.
+        assert "cache_creation_input_tokens" not in row["usage"] or row["usage"]["cache_creation_input_tokens"] == 0
+        assert set(row["usage"]) == {
+            "output_tokens",
+            "total_tokens",
+            "prompt_tokens",
+            "reasoning_tokens",
+            "cache_read_input_tokens",
+            "cache_creation_input_tokens",
+        }
 
     def test_empty_content_with_reasoning_raises_never_persists(self) -> None:
         completions = FakeCompletions(
@@ -192,6 +220,48 @@ class TestRunOne:
         assert row["response"] is None
         assert row["score"] == "error"
         assert "RuntimeError" in (row["notes"] or "")
+
+    def test_reasoning_burnout_retries_with_lifted_budget_then_error_row_never_empty(
+        self, no_sleep: list[float]
+    ) -> None:
+        """VAL-EVAL-006: reasoning exhausts max_tokens on every attempt.
+
+        The persisted row is either a substantive answer or an explicit error
+        row naming finish_reason + reasoning tokens — never a silent
+        ``response == ""`` with a non-error score.
+        """
+        burnout = FakeResponse([FakeChoice(FakeMessage("", "all reasoning no prose"), "length")])
+        completions = FakeCompletions(responses=[burnout, burnout, burnout, burnout])
+        budgets: list[int] = []
+        original_create = completions.create
+
+        async def spy_create(**kwargs: Any) -> FakeResponse:
+            budgets.append(kwargs["max_tokens"])
+            return await original_create(**kwargs)
+
+        completions.create = spy_create  # type: ignore[method-assign]
+        row = run_async(run_eval.run_one(FakeClient(completions), asyncio.Semaphore(1), a_run(), "deepseek-v4-pro"))
+        # The budget was lifted between attempts (budget-raise retry).
+        assert len(budgets) == run_eval.RETRY_ATTEMPTS
+        assert budgets[1] == run_eval.DEFAULT_MAX_TOKENS * 4
+        assert budgets[1] > budgets[0]
+        # The persisted row carries a diagnostic, never a silent empty answer.
+        assert row["response"] is None
+        assert row["score"] == "error"
+        assert 'finish_reason="length"' in (row["notes"] or "") or "finish_reason='length'" in (row["notes"] or "")
+        assert "reasoning_content_chars=" in (row["notes"] or "")
+        assert row["response"] != ""  # the asserted-dead branch stays dead
+
+    def test_retry_log_carries_finish_reason(self, no_sleep: list[float], capsys: Any) -> None:
+        burnout = FakeResponse([FakeChoice(FakeMessage("", "chain of thought only"), "length")])
+        completions = FakeCompletions(responses=[burnout])
+        run_async(run_eval.run_one(FakeClient(completions), asyncio.Semaphore(1), a_run(), "deepseek-v4-pro"))
+        stderr = capsys.readouterr().err
+        retry_lines = [ln for ln in stderr.splitlines() if "eval.retry" in ln]
+        assert retry_lines, "expected an eval.retry log line"
+        logged = json.loads(retry_lines[0])
+        assert logged["finish_reason"] == "length"
+        assert logged["error"] == "RuntimeError"
 
     def test_transient_error_backs_off_and_retries(self, no_sleep: list[float]) -> None:
         completions = FakeCompletions(
@@ -245,6 +315,7 @@ class TestDryRunRows:
         runs = [a_run("lsd", 1), a_run("mdma", 3)]
         real_keys = set(run_eval.build_row(runs[0], "deepseek-chat", "text")) | {
             "reasoning_content",
+            "reasoning_content_chars",
             "stop_reason",
             "usage",
         }
