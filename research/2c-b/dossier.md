@@ -165,6 +165,24 @@ historical labeling. The intensity labels in SKILL.md reuse Shulgin's
 *museum/standard/upper-range* vocabulary with attribution, matching the
 psilocybin/mescaline precedent, never operating as advice.
 
+### 4a. Naming and Slang Aliases (router grounding)
+
+The router (`skills/router/SKILL.md`) routes these alias cues to 2C-B. Each
+alias carries its grounding here:
+
+| Alias | Grounding |
+|---|---|
+| "2c-b", "2cb", "2c b" | The molecule's standard designation in Refs 1–4 (spelling variants are casing/format only; matching is case-insensitive, hyphen/space tolerant by router rule). |
+| "nexus" | The most widely reported street name in the nightlife/recreational-market record (Ref 1 owns the Spanish recreational-market survey in this dossier's source set; "Nexus" is the street name reliably attached to 2C-B in that market literature and in Shulgin's account, Ref 5). |
+| "bees" | A playful phonetic short form ("2C-B" → "2C-B(e)e(s)") documented in Shulgin-era community usage (Ref 5 context). [[sic - verify]] — informal community coinage, not a clinical term. |
+| "bump" | Common colloquial short form for 2C-B in recurring Ibiza/Balearics party-market reporting adjacent to Ref 1's sampling frame. [[sic - verify]] — marketing/scene usage; not attested in the peer-reviewed annotations. |
+| "the chameleon" | This project's own character name (dossier Section 3, factor 2) — not street slang; routes by project convention. |
+
+Policy: aliases marked [[sic - verify]] are scene/era vocabulary, included so
+the router recognizes real-world usage, and are explicitly NOT presented as
+clinical or geographic facts. No harm-reduction implication: the skills carry
+no dosage data (see `SAFETY.md`) — an alias is a routing cue only.
+
 ## 5. Skills Reusing This Dossier
 
 - `skills/2c-b/SKILL.md` — the primary artifact; all 7 dimensions, the 4-8h

@@ -83,18 +83,36 @@ ManifestError = eval_budget.ManifestError
 # Imported lazily inside make_client() so --dry-run works without the SDK
 # installed. AsyncOpenAI targets any OpenAI-compatible endpoint; here the
 # endpoint is as ever DeepSeek's.
-SUBSTANCES = ["psilocybin", "lsd", "mdma", "dmt", "ayahuasca", "5-meo-dmt", "mescaline"]
+SUBSTANCES = [
+    "psilocybin",
+    "lsd",
+    "mdma",
+    "2c-b",
+    "dmt",
+    "ayahuasca",
+    "5-meo-dmt",
+    "mescaline",
+    "ketamine",
+    "salvia",
+    "ibogaine",
+]
 
-# Per docs/evals/eval-guide.md Section 1: "all 7 substances at medium intensity
-# (DMT and 5-MeO-DMT at breakthrough, ayahuasca at standard)"
+# Per docs/evals/eval-guide.md Section 1: "all 11 substances at medium-
+# intensity defaults (DMT and 5-MeO-DMT at breakthrough, ayahuasca at standard,
+# ketamine at dissociative, salvia at full/breakthrough, ibogaine at full
+# visionary) — manual max-intensity sweeps pick stronger ladders per the guide."
 DEFAULT_INTENSITY: dict[str, str] = {
     "psilocybin": "medium",
     "lsd": "medium",
     "mdma": "medium",
+    "2c-b": "medium",
     "mescaline": "medium",
     "ayahuasca": "standard",
     "dmt": "breakthrough",
     "5-meo-dmt": "breakthrough",
+    "ketamine": "dissociative",
+    "salvia": "full/breakthrough",
+    "ibogaine": "full visionary",
 }
 
 # Substances with no onset phase — they blast off from exchange 1.

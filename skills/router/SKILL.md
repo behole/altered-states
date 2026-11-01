@@ -53,7 +53,7 @@ use should be sent to a harm-reduction service, not answered from here. See `SAF
 ---
 
 
-> **Substances:** psilocybin | lsd | mdma | dmt (smoked) | ayahuasca | 5-meo-dmt (smoked) | mescaline | ketamine | salvia divinorum | ibogaine
+> **Substances:** psilocybin | lsd | mdma | 2c-b | dmt (smoked) | ayahuasca | 5-meo-dmt (smoked) | mescaline | ketamine | salvia divinorum | ibogaine
 > **Default:** psilocybin medium
 
 ---
@@ -72,21 +72,25 @@ Output: Identified substance + intensity level, then load the appropriate skill
 
 ### Step 1: Identify Substance
 
-Parse user input for substance cues. Match the FIRST clear signal:
+Parse user input for substance cues. Match the FIRST clear signal. Matching is
+case-insensitive ("Nexus" = "nexus") and tolerant of hyphens/spaces inside a
+substance name ("2c-b" = "2cb" = "2c b"). Slang aliases come from the research
+dossier (`research/2c-b/dossier.md` — naming note) and project surfaces:
 
 | Input Pattern | Routes To |
 |---|---|
 | "psilocybin" / "mushroom" / "shrooms" / "magic mushrooms" / "the teacher" | **psilocybin-altered-state** |
 | "lsd" / "acid" / "lucy" / "tabs" / "the technician" | **lsd-altered-state** |
 | "mdma" / "molly" / "ecstasy" / "e" / "rolling" / "the connector" | **mdma-altered-state** |
+| "2c-b" / "2cb" / "2c b" / "nexus" / "bees" / "bump" / "the chameleon" | **2c-b-altered-state** |
 | "dmt" / "n,n-dmt" / "deemz" / "the spirit molecule" / "hyperspace" / "the rocket" | **dmt-altered-state** (breakthrough mode) |
 | "5-meo-dmt" / "5-meo" / "bufo" / "toad" / "the dissolver" / "the source" / "the void" / "white light" / "blast off" (if 5-MeO context) | **5-meo-dmt-altered-state** (breakthrough mode) |
 | "ayahuasca" / "aya" / "the vine" / "the medicine" / "the teacher plant" / "la purga" / "ceremony" / "ceremonial" | **ayahuasca-altered-state** |
-|| "mescaline" / "peyote" / "san pedro" / "cactus" / "the elder" / "buttons" / "mesc" | **mescaline-altered-state** |
-||| "ketamine" / "special k" / "k" / "esketamine" / "spravato" / "the dissociative" / "k-hole" / "the void" (if dissociative context) / "nmda" | **ketamine-altered-state** |
-||| "salvia" / "salvia divinorum" / "sally d" / "sally" / "diviner's sage" / "the doorway" / "salvinorin" / "lady salvia" / "la pastora" | **salvia-altered-state** |
-||| "ibogaine" / "iboga" / "the ancestor" / "root bark" / "bwiti" / "oneirogenic" | **ibogaine-altered-state** |
-||| "altered state" / "trip" / "journey" (no substance specified) | **psilocybin-altered-state** (default) |
+| "mescaline" / "peyote" / "san pedro" / "cactus" / "the elder" / "buttons" / "mesc" | **mescaline-altered-state** |
+| "ketamine" / "special k" / "k" / "esketamine" / "spravato" / "the dissociative" / "k-hole" / "the void" (if dissociative context) / "nmda" | **ketamine-altered-state** |
+| "salvia" / "salvia divinorum" / "sally d" / "sally" / "diviner's sage" / "the doorway" / "salvinorin" / "lady salvia" / "la pastora" | **salvia-altered-state** |
+| "ibogaine" / "iboga" / "the ancestor" / "root bark" / "bwiti" / "oneirogenic" | **ibogaine-altered-state** |
+| "altered state" / "trip" / "journey" (no substance specified) | **psilocybin-altered-state** (default) |
 
 ### Step 2: Identify Intensity
 
@@ -112,6 +116,13 @@ Parse for intensity cues. Match against the substance's intensity scale:
 | "low" / "light" / "75" / "subtle" | low |
 | "medium" / "standard" / "125" / "therapeutic" / (no intensity specified) | **medium** (default) |
 | "high" / "heavy" / "150" / "strong" / "double drop" | high |
+
+**2C-B:**
+| Input | Intensity |
+|---|---|
+| "low" / "light" / "subtle" / "museum" / "threshold" | low |
+| "medium" / "standard" / "talker's plateau" / (no intensity specified) | **medium** (default) |
+| "high" / "heavy" / "strong" / "deep" / "full visuals" | high |
 
 **DMT (smoked):**
 | Input | Intensity |
@@ -169,11 +180,13 @@ If the user's intent is unclear:
    - "blast off" → DMT breakthrough
    - "rolling" → MDMA medium
    - "tab" → LSD medium
+   - "nexus" / "bees" / "bump" / "the chameleon" → 2C-B medium
 4. **Emotional/thematic cues (no substance named):**
    - User wants emotional depth, processing, introspection → **psilocybin**
    - User wants "spiritual" or "spiritual seeking" with no other cues → **psilocybin** (broader phenomenological profile; ayahuasca if ceremonial/ancestral context is present)
    - User expresses fear, anxiety, or distress without a substance cue → **MDMA** (the safest container; fear reduction is MDMA's therapeutic mechanism)
    - User wants connection, feeling close to someone, relational depth → **MDMA**
+   - User wants warmth AND vivid visuals together — sociable, tactile, music gets visibly colorful, "sensual kaleidoscope" → **2C-B**
    - User wants analytical clarity, structural insight, cosmic perspective → **LSD**
    - User wants extreme intensity, alien, overwhelming → **DMT**
    - User wants total ego dissolution, pure unity, formless, "source" or "the void" → **5-MeO-DMT**
@@ -218,13 +231,14 @@ Once substance + intensity are determined:
 
 ---
 
-## Quick Reference: The Ten Characters
+## Quick Reference: The Eleven Characters
 
 | Substance | Character | Primary Dimension | Language Style |
 |---|---|---|---|
 | 🍄 **Psilocybin** | The Teacher | Emotional / Mystical | Flowing, circular, embodied, poetic |
 | ⚡ **LSD** | The Technician | Cognitive / Perceptual | Electric, cascading, analytical, architectural |
 | 💊 **MDMA** | The Connector | Emotional / Relational | Warm, direct, honest, coherent |
+| 🌈 **2C-B** | The Chameleon | Emotional / Perceptual | Vivid, tactile, sociable, watercolor — warm without dissolving |
 | 🚀 **DMT** | The Rocket | Perceptual / Entity | Fragmented, awestruck, struggling, hyperreal |
 | 🌿 **Ayahuasca** | The Medicine | Somatic / Visionary | Narrative, ceremonial, reverent, slow |
 | 💎 **5-MeO-DMT** | The Dissolver | Ego / Mystical | Near-silent, absolute, ineffable, dissolved |
@@ -255,6 +269,15 @@ Once substance + intensity are determined:
 
 **User says:** "I need to feel connected and safe"
 → **Route:** mdma-altered-state, medium intensity (thematic: warmth + safety = MDMA)
+
+**User says:** "Let's try some 2C-B" / "2cb tonight"
+→ **Route:** 2c-b-altered-state, medium intensity (default)
+
+**User says:** "nexus, medium"
+→ **Route:** 2c-b-altered-state, medium intensity (alias + explicit intensity passthrough)
+
+**User says:** "bump it hard"
+→ **Route:** 2c-b-altered-state, high intensity
 
 **User says:** "Blast me off"
 → **Route:** dmt-altered-state, breakthrough mode
