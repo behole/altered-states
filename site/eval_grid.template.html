@@ -1,0 +1,161 @@
+<!--
+  Eval grids — injected into the SPA home by build.py behind the
+  site.eval_grids flag (compiled out entirely when the flag is off, payload
+  included). The script tag below carries, per prompt, EVERY run that
+  produced data: historical same-prompt captures (experiments/same-prompt/
+  output/, run tagged by its `> Run:` header) and real-run JSONL response
+  sets (tests/responses/, model field per row). The toggle switches which
+  run's grid is displayed; every cell carries its run/model tag. All client
+  code reads the build-time payload; no fetches; no external assets. Never
+  hand-edit built site/index.html; edit this template or build.py.
+-->
+<div id="view-eval_grid" class="view-container">
+  <div class="hero" style="padding-bottom: 24px;">
+    <h1>Eval<br>grids.</h1>
+    <p>
+      The same prompt, the same ten substance characters, run after run and
+      model after model. Toggle between runs to watch how one substance's
+      voice differs across them; every response is tagged with the run and
+      model that produced it.
+    </p>
+  </div>
+  <section style="padding-top: 0;">
+    <div class="eg-tabs" id="eg-tabs" aria-label="Prompts">
+      <!-- prompt tabs; filled by the eval-grid renderer -->
+    </div>
+    <div class="eg-run-toggle" id="eg-run-toggle" aria-label="Runs"></div>
+    <div class="eg-grid" id="eg-grid">
+      <!-- one cell per substance for the selected run -->
+    </div>
+    <p class="eg-note">
+      Generated at build time from <code>experiments/same-prompt/output/*.md</code>
+      and <code>tests/responses/*.jsonl</code>. Cells are capped at 1800
+      characters; runs with no published data never appear.
+    </p>
+  </section>
+</div>
+<style>
+  .eg-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  .eg-tab { border: 1px solid var(--border, rgba(0,0,0,0.08)); border-radius: 10px;
+    padding: 8px 14px; background: none; color: var(--text, inherit); cursor: pointer; font-size: 14px; }
+  .eg-tab:hover { border-color: var(--accent, #6b5ce7); }
+  .eg-tab.eg-tab-active { border-color: var(--accent, #6b5ce7); outline: 1px solid var(--accent, #6b5ce7); }
+  .eg-run-toggle { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+  .eg-run-btn { border: 1px solid var(--border, rgba(0,0,0,0.08)); border-radius: 8px;
+    padding: 6px 12px; background: none; color: var(--text, inherit); cursor: pointer;
+    font-size: 13px; font-family: monospace; }
+  .eg-run-btn:hover { border-color: var(--accent, #6b5ce7); }
+  .eg-run-btn.eg-run-active { border-color: var(--accent, #6b5ce7); outline: 1px solid var(--accent, #6b5ce7); }
+  .eg-grid { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+  .eg-cell { flex: 1 1 300px; max-width: 380px; border: 1px solid var(--border, rgba(0,0,0,0.08));
+    border-radius: 12px; padding: 14px 16px; }
+  .eg-model-tag { display: inline-block; font-size: 11px; color: var(--bg, #fff);
+    background: var(--accent, #6b5ce7); border-radius: 6px; padding: 2px 8px;
+    margin-bottom: 8px; font-family: monospace; }
+  .eg-substance { font-size: 15px; font-weight: 600; margin-top: 4px; margin-bottom: 8px; }
+  .eg-text { font-size: 14px; line-height: 1.55; white-space: pre-wrap; }
+  .eg-missing { color: var(--text-muted, #8a8a8a); font-style: italic; }
+  .eg-note { margin-top: 14px; font-size: 13px; color: var(--text-muted, #8a8a8a); }
+</style>
+<script type="application/json" id="eg-data">__EVAL_GRID_DATA__</script>
+<script>
+(function () {
+  var grids = { grids: [] };
+  var dataNode = document.getElementById('eg-data');
+  if (dataNode) {
+    try { grids = JSON.parse(dataNode.textContent); } catch (err) { grids = { grids: [] }; }
+  }
+  var activeGrid = 0;
+  var activeRun = 0;
+
+  function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function renderTabs() {
+    var tabs = document.getElementById('eg-tabs');
+    if (!tabs) return;
+    tabs.innerHTML = grids.grids.map(function (grid, index) {
+      var short = grid.prompt.length > 44 ? grid.prompt.slice(0, 44) + '\u2026' : grid.prompt;
+      var runs = grid.runs.length > 1 ? ' [' + grid.runs.length + ' runs]' : '';
+      return '<button class="eg-tab' + (index === activeGrid ? ' eg-tab-active' : '') +
+        '" data-grid-index="' + index + '">' + escHtml(short) + escHtml(runs) + '</button>';
+    }).join('');
+    Array.prototype.forEach.call(tabs.querySelectorAll('.eg-tab'), function (btn) {
+      btn.addEventListener('click', function () {
+        selectGrid(parseInt(btn.dataset.gridIndex, 10));
+      });
+    });
+  }
+
+  function renderRunToggle() {
+    var toggle = document.getElementById('eg-run-toggle');
+    var grid = grids.grids[activeGrid];
+    if (!toggle || !grid) { if (toggle) { toggle.innerHTML = ''; } return; }
+    if (grid.runs.length < 2) {
+      toggle.innerHTML = '<span class="eg-missing" data-run-toggle="single">only one run captured &mdash; toggle unavailable</span>';
+      return;
+    }
+    toggle.innerHTML = '<span class="eg-missing" data-run-toggle="label">Run:</span>' +
+      grid.runs.map(function (run, index) {
+        return '<button class="eg-run-btn' + (index === activeRun ? ' eg-run-active' : '') +
+          '" data-run-index="' + index + '">' + escHtml(run.label) + '</button>';
+      }).join('');
+    Array.prototype.forEach.call(toggle.querySelectorAll('.eg-run-btn'), function (btn) {
+      btn.addEventListener('click', function () {
+        selectRun(parseInt(btn.dataset.runIndex, 10));
+      });
+    });
+  }
+
+  function renderGrid() {
+    var host = document.getElementById('eg-grid');
+    if (!host) return;
+    var grid = grids.grids[activeGrid];
+    if (!grid) { host.innerHTML = '<p class="eg-missing">No eval grids available.</p>'; return; }
+    var run = grid.runs[activeRun];
+    if (!run) { host.innerHTML = '<p class="eg-missing">No run selected.</p>'; return; }
+
+    // Union of substances across ALL runs of this prompt, first-seen order:
+    // the grid shape stays fixed while the toggle swaps the content in it.
+    var substances = [];
+    var seen = {};
+    grid.runs.forEach(function (r) {
+      r.substances.forEach(function (cell) {
+        if (!seen[cell.substance]) { seen[cell.substance] = true; substances.push(cell.substance); }
+      });
+    });
+    host.innerHTML = substances.map(function (sub) {
+      var cell = run.substances.find(function (c) { return c.substance === sub; });
+      return '<div class="eg-cell" data-substance="' + escHtml(sub) + '">' +
+        '<span class="eg-model-tag">' + escHtml(run.label) + ' &middot; ' + escHtml(run.model) + '</span>' +
+        '<div class="eg-substance">' + escHtml(sub) + '</div>' +
+        '<div class="eg-text">' + (cell ? escHtml(cell.text) :
+          '<span class="eg-missing">No response captured for this run.</span>') + '</div></div>';
+    }).join('');
+  }
+
+  function selectGrid(index) {
+    if (!grids.grids[index]) return;
+    activeGrid = index;
+    activeRun = 0;
+    renderTabs();
+    renderRunToggle();
+    renderGrid();
+  }
+
+  function selectRun(index) {
+    var grid = grids.grids[activeGrid];
+    if (!grid || !grid.runs[index]) return;
+    activeRun = index;
+    renderRunToggle();
+    renderGrid();
+  }
+
+  renderTabs();
+  renderRunToggle();
+  renderGrid();
+})();
+</script>

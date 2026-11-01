@@ -1548,6 +1548,13 @@ JOURNAL_FLAG = "site.journal_dashboards"
 JOURNAL_TEMPLATE = os.path.join(BASE, "site", "journal_dashboards.template.html")
 CROSS_MODEL_FLAG = "site.cross_model_diff"
 CROSS_MODEL_TEMPLATE = os.path.join(BASE, "site", "cross_model.template.html")
+# Eval grids (site.eval_grids): the same side of the data the cross-model view
+# refuses — every same-prompt run, including single-model ones, laid out as one
+# grid per prompt. Runs (one per source capture / JSONL response set) are
+# toggleable, and the toggle carries every run that produced data for the
+# prompt, model-tagged per cell.
+EVAL_GRID_FLAG = "site.eval_grids"
+EVAL_GRID_TEMPLATE = os.path.join(BASE, "site", "eval_grid.template.html")
 # Sources for the cross-model diff payload: the historical same-prompt corpora
 # (one markdown capture per prompt, model-tagged in its run header) and the
 # raw JSONL response sets under tests/responses/ (real DeepSeek runs).
@@ -2100,6 +2107,151 @@ def render_cross_model_view(payload: dict[str, Any], enabled: bool) -> str:
     return template_html.replace("__CROSS_MODEL_DATA__", json_payload)
 
 
+# ═══ EVAL GRIDS (site.eval_grids) ═══
+# Every same-prompt run of the corpora — historical captures and real-run
+# JSONL response sets alike — as one grid per prompt. Where the cross-model
+# diff publishes only prompts answered by ≥ 2 models, the grids publish every
+# prompt that produced data, and a prompt's run toggle carries ALL runs
+# producing data for it. Each cell is model/run-tagged from the underlying
+# artifact: md corpus cells get the `> Run:` header, JSONL cells get the row's
+# `model` field. Never hand-typed.
+
+# Full run-header parse: `> Run: <timestamp> | Model: <id>` in the md corpus.
+_RUN_HEADER_FULL = re.compile(r"^>\s*Run:\s*(.+?)\s*\|\s*Model:\s*(.+?)\s*$")
+# JSONL run filename shape: responses-<YYYY-MM-DD>-<rest>.jsonl.
+_JSONL_RUN_STEM = re.compile(r"^responses-(\d{4}-\d{2}-\d{2})-(.+)$")
+
+
+def md_run_meta(md_path: str) -> tuple[str, str] | None:
+    """(run timestamp, model) from a same-prompt capture's run header, or
+    None when the file carries no parseable `> Run:` header."""
+    with open(md_path) as f:
+        for line in f.read().splitlines():
+            match = _RUN_HEADER_FULL.match(line)
+            if match:
+                return match.group(1), match.group(2)
+    return None
+
+
+def jsonl_run_meta(jsonl_path: str) -> dict[str, str]:
+    """Run classification for one JSONL response set: an id from the filename
+    stem, a readable label (`date · tag`), and the model the stem names.
+    The row's own `model` field still tags each published cell."""
+    stem = os.path.splitext(os.path.basename(jsonl_path))[0]
+    match = _JSONL_RUN_STEM.match(stem)
+    label = f"{match.group(1)} · {match.group(2)}" if match else stem
+    return {"runId": stem, "label": label, "model": stem}
+
+
+def _grid_bucket(
+    grouped: dict[str, dict[str, Any]],
+    entry: dict[str, Any],
+    run_key: tuple[str, str],
+    run_meta: dict[str, str],
+) -> None:
+    """Fold one published entry into its prompt's run bucket; first capture of
+    a substance within a run wins (a repeated substance is the same answer)."""
+    prompt = entry.get("prompt", "")
+    if not prompt:
+        return
+    prompt_id = entry.get("promptId") or _prompt_slug(prompt)
+    group = grouped.setdefault(prompt_id, {"prompt": prompt, "promptId": prompt_id, "by_run": {}})
+    run = group["by_run"].setdefault(run_key, {"meta": run_meta, "substances": {}})
+    run["substances"].setdefault(
+        entry["substance"],
+        {"substance": entry["substance"], "text": entry["text"]},
+    )
+
+
+def build_eval_grid_payload(
+    same_prompt_dir: str = SAME_PROMPT_OUTPUT_DIR,
+    responses_dir: str = RESPONSES_DIR,
+    max_chars: int = MAX_CROSS_MODEL_TEXT_CHARS,
+) -> dict[str, Any]:
+    """The eval-grid payload: per prompt, every run that produced data.
+
+    Pure function of the two data directories, deterministic JSON. Sources are
+    read in sorted filename order; a prompt's runs are sorted by label; a
+    model with no surviving entries never becomes a run (an empty model tag or
+    empty text is never published — VAL-SITE-014).
+    """
+    grouped: dict[str, dict[str, Any]] = {}
+    runs_meta: dict[tuple[str, str], dict[str, str]] = {}
+
+    for md_path in sorted(glob.glob(os.path.join(same_prompt_dir, "*.md"))):
+        header = md_run_meta(md_path)
+        if header is None:
+            continue
+        ts, model = header
+        run_id = os.path.splitext(os.path.basename(md_path))[0]
+        run_meta = {"runId": run_id, "label": f"{ts} ({model})", "model": model}
+        runs_meta[(run_id, model)] = run_meta
+        for entry in extract_same_prompt_entries(md_path, max_chars):
+            _grid_bucket(grouped, entry, (run_id, model), run_meta)
+
+    for jsonl_path in sorted(glob.glob(os.path.join(responses_dir, "*.jsonl"))):
+        base_meta = jsonl_run_meta(jsonl_path)
+        entries = extract_jsonl_entries(jsonl_path, max_chars)
+        if not entries:
+            continue
+        for entry in entries:
+            model = entry["model"]
+            key = (base_meta["runId"], model)
+            run_meta = runs_meta.setdefault(
+                key,
+                {**base_meta, "model": model, "label": f"{base_meta['label']} ({model})"},
+            )
+            _grid_bucket(grouped, entry, key, run_meta)
+
+    runs_all = sorted(runs_meta.values(), key=lambda m: (m["label"], m["runId"], m["model"]))
+    grids: list[dict[str, Any]] = []
+    for prompt_id in sorted(grouped):
+        group = grouped[prompt_id]
+        runs: list[dict[str, Any]] = []
+        for key in sorted(group["by_run"], key=lambda k: (runs_meta[k]["label"], k)):
+            meta = runs_meta[key]
+            run = group["by_run"][key]
+            runs.append(
+                {
+                    "runId": meta["runId"],
+                    "label": meta["label"],
+                    "model": meta["model"],
+                    "substances": list(run["substances"].values()),
+                }
+            )
+        grids.append(
+            {
+                "promptId": prompt_id,
+                "prompt": group["prompt"],
+                "runs": runs,
+            }
+        )
+    return {"runs": runs_all, "grids": grids}
+
+
+def render_eval_grid_nav(enabled: bool) -> str:
+    """The nav link for the eval grids; compiled out when off."""
+    if not enabled:
+        return ""
+    return (
+        '<a href="#" data-view="eval_grid" onclick="showView(\'eval_grid\'); closeMobileNav(); return false;">Grids</a>'
+    )
+
+
+def render_eval_grid_view(payload: dict[str, Any], enabled: bool) -> str:
+    """The eval-grid view + embedded payload; empty string when
+    ``site.eval_grids`` is off, so neither the markup nor the response JSON
+    reaches the built page."""
+    if not enabled:
+        return ""
+    with open(EVAL_GRID_TEMPLATE) as f:
+        template_html = f.read()
+    _invalidate_template_marker(template_html, "__EVAL_GRID_DATA__", EVAL_GRID_TEMPLATE)
+    json_payload = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    json_payload = json_payload.replace("<", "\\u003c").replace(">", "\\u003e")
+    return template_html.replace("__EVAL_GRID_DATA__", json_payload)
+
+
 def enabled_section_flags() -> dict[str, bool]:
     """Evaluate the flags that gate whole page sections."""
     return {name: flags.is_enabled(name) for name in SECTION_FLAGS}
@@ -2232,6 +2384,15 @@ def render_flag_gated_sections(
     log_event("build.stage", stage="cross_model_render", enabled=cross_enabled)
     sections["cross_model_nav"] = render_cross_model_nav(cross_enabled)
     sections["cross_model_view"] = render_cross_model_view(cross_model_payload, cross_enabled)
+
+    log_event("build.stage", stage="eval_grid_payload")
+    eval_grid_payload = build_eval_grid_payload()
+    REGISTRY.gauge("eval_grids_published", len(eval_grid_payload["grids"]))
+    REGISTRY.gauge("eval_run_tags_published", len(eval_grid_payload["runs"]))
+    eval_grid_enabled = section_flags.get(EVAL_GRID_FLAG, False)
+    log_event("build.stage", stage="eval_grid_render", enabled=eval_grid_enabled)
+    sections["eval_grid_nav"] = render_eval_grid_nav(eval_grid_enabled)
+    sections["eval_grid_view"] = render_eval_grid_view(eval_grid_payload, eval_grid_enabled)
 
     return sections
 

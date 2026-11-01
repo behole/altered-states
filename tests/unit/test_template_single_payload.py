@@ -23,6 +23,7 @@ TOKEN_RENDER_CASES: tuple[tuple[str, str, Any], ...] = (
     ("diff.template.html", "__DIFF_DATA__", [{"id": "payload-a"}]),
     ("quiz.template.html", "__QUIZ_DATA__", {"items": [1]}),
     ("journal_dashboards.template.html", "__JOURNAL_DATA__", {"axes": ["a"]}),
+    ("eval_grid.template.html", "__EVAL_GRID_DATA__", {"grids": []}),
 )
 
 
@@ -50,6 +51,8 @@ def _render(template_name: str, payload: Any) -> str:
         return build.render_diff_view(list_payload, True)
     if template_name == "quiz.template.html":
         return build.render_quiz_view({"items": ["unique-payload-marker"]}, True)
+    if template_name == "eval_grid.template.html":
+        return build.render_eval_grid_view({"grids": [{"runs": [], "json": "unique-payload-marker"}]}, True)
     return build.render_journal_view({"axes": ["unique-payload-marker"]}, True)
 
 
