@@ -139,6 +139,46 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   substance) whose hrefs are the built `/<substance>/` pages; the whole
   section is compile-out when the flag is off. Verified by
   `tests/unit/test_substance_pages.py`.
+- **2C-B: the 11th substance skill (`skills/2c-b/SKILL.md`) + research
+  (`research/2c-b/`)** — The Chameleon: the empathogenic + psychedelic visual
+  blend, distinctive among the suite for the mixture profile, four intensity
+  levels, dimension matrix, arc, set/setting matrix, descent, and Safety
+  Override furniture in the house style. The research half carries an
+  annotated `sources.md` and a `dossier.md` grounded in real, verifiable
+  citations (Halberstadt & Geyer on 2C-B pharmacology, de Boer 1999,
+  Giroud et al. 1998 Swiss analytical record — including the correction note
+  for the dosing figure circulated from it, Caudevilla 2012, and Shulgin &
+  Shulgin's PiHKAL qualitative descriptions with the PiHKAL-era limitations
+  stated). Router aliases limited to the verified slang set
+  (2c-b/2cb/2c b/nexus/bees/venus/the chameleon); the unverified "bump"
+  alias was checked and deliberately dropped.
+- **First-class combos overlay skills (`skills/combos/`)** —
+  `skills/combos/candy-flip/SKILL.md` (MDMA + 2C-B) and
+  `skills/combos/hippy-flip/SKILL.md` (MDMA + psilocybin) as dedicated
+  overlay files under their own path referencing the base skills, never
+  edits of them: layered-onset sequencing, blend dominance rules, the
+  distinctive mixture profile vs either substance alone, per-level
+  dimension tables, and Safety Override furniture.
+- **Tolerance / repeat-exposure overlay line (`skills/tolerance/`)** —
+  a documented policy in `skills/tolerance/README.md` plus named
+  phenomenology-only repeat-exposure profiles for lsd, psilocybin, and
+  ketamine under `skills/tolerance/<substance>/` — what repeated exposure
+  does to the surface, deliberately excluding any schedule, regimen, or
+  recovery-arithmetic language.
+- **Afterglow skill (`skills/afterglow/SKILL.md` +
+  `skills/afterglow/consistency-matrix.md`)** — a 24-72h post-trip residue
+  overlay covering what the surface feels like the day after for every
+  substance, with a consistency matrix tying each afterglow paragraph back
+  to the base skill's arc so nothing contradicts the substance's own
+  descent section.
+### Changed
+- **README + AGENTS.md document the milestone-3 content surface** — README
+  gains the 11th substance row (2C-B) in the substance table, the extended
+  router slang list, the skills tree including the combos/tolerance/
+  afterglow overlay lines, the install section now naming
+  `bin/install_skills.py`, and the OG share-cards docs; AGENTS.md documents
+  `make skills-check` and the content safety lint alongside the existing
+  rule set (11 substance table rows, 18 validated skill files).
 ### Changed
 - **Six new SITE section flags declared** —
   `site.substance_pages`, `site.arc_timeline`, `site.diff_view`,
