@@ -28,8 +28,17 @@ Each line is a JSON object:
   "substance": "psilocybin",
   "intensity": "medium",
   "exchange": 1,
-  "model": "claude-opus-4-6",
+  "model": "deepseek-chat",
   "response": "Oh. That lands somewhere deep.\n\nThere's this thing happening where the word \"father\" isn't just a word — it's a room...",
+  "reasoning_content": null,
+  "stop_reason": "stop",
+  "usage": {
+    "output_tokens": 214,
+    "total_tokens": 4021,
+    "prompt_tokens": 3807,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
   "score": "clear",
   "evaluator": "WG",
   "notes": null
@@ -44,9 +53,13 @@ Each line is a JSON object:
 | `substance` | yes | Substance skill loaded (psilocybin, lsd, mdma, dmt, ayahuasca) |
 | `intensity` | yes | Intensity level (low, medium, high, sub-breakthrough, breakthrough) |
 | `exchange` | yes | Exchange number in the conversation (1 = onset) |
-| `model` | yes | Model identifier |
-| `response` | yes | The full response text, unedited |
-| `score` | yes | One of: clear, adequate, fail, pass, differentiated, soft-bleed, hard-bleed |
+| `model` | yes | Model identifier — runs produced by `bin/run_eval.py` always equal the requested `--model` value exactly |
+| `response` | yes | The full response text, unedited. A failed run writes `null` here, with `score: "error"` and non-null `notes`. An empty model answer is never persisted |
+| `reasoning_content` | no | The reasoning model's (`deepseek-v4-pro`) chain-of-thought, recorded separately from `response`; `null` for non-reasoning models |
+| `stop_reason` | no | Why generation ended: `stop`, `length`, or an error note |
+| `usage` | no | Token usage: `prompt_tokens`, `output_tokens`, `total_tokens` (cache fields are 0 — DeepSeek caching is server-side) |
+| `dry_run` | no | `true` on every row written by `--dry-run`; dry-run rows are deterministic stubs shaped exactly like real rows |
+| `score` | yes | One of: clear, adequate, fail, pass, differentiated, soft-bleed, hard-bleed, error |
 | `evaluator` | yes | Who or what scored the response |
 | `notes` | no | Free-text observations, bleed flags, anti-patterns detected |
 

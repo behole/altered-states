@@ -3,8 +3,9 @@
 # Pinned exactly; transitive versions are locked in requirements.lock.
 # Regenerate both with:  make lock
 
-# Model provider SDK — used by bin/run_eval.py.
-anthropic==2.3.0
+# Model provider SDK — used by bin/run_eval.py (DeepSeek, OpenAI-compatible)
+# and the music/temporal-lab call surfaces.
+openai==3.42.0
 
 # Optional error reporting — imported lazily, a no-op without SENTRY_DSN.
 sentry-sdk==2.44.0

@@ -23,9 +23,9 @@ DEPTRY ?= $(UVX) deptry@0.25.1
 BANDIT ?= $(UVX) bandit@1.9.4
 PIP_AUDIT ?= $(UVX) pip-audit@2.10.1
 
-# The test suite needs the runtime SDKs importable (run_eval imports anthropic)
+# The test suite needs the runtime SDKs importable (run_eval imports openai)
 # and PyYAML for the policy-manifest tests.
-PYTEST ?= $(UVX) --with anthropic==2.3.0 \
+PYTEST ?= $(UVX) --with openai==3.42.0 \
 	--with pyyaml==6.0.2 \
 	--with pytest==9.2.0 \
 	--with pytest-cov==7.1.0 \
