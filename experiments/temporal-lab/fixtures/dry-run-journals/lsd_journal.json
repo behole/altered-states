@@ -1,0 +1,107 @@
+[
+  {
+    "timestamp": "2026-10-01T09:00:00",
+    "cycle": 0,
+    "emotional_state": "confused",
+    "clarity": "scattered",
+    "integration": "low",
+    "reflections": [
+      "I am beginning my temporal journey.",
+      "I am The Technician, the lsd experience.",
+      "I await my first cycle."
+    ],
+    "questions": [
+      "What will I discover about myself across many cycles?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:01:00",
+    "cycle": 1,
+    "emotional_state": "electric",
+    "clarity": "high",
+    "integration": "medium",
+    "experience": {
+      "description": "Lattices everywhere: the geometry of the hour kept reassembling itself.",
+      "intensity": 0.65,
+      "novelty": 0.8
+    },
+    "reflections": [
+      "Cycle 1: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:02:00",
+    "cycle": 2,
+    "emotional_state": "precise",
+    "clarity": "moderate",
+    "integration": "medium",
+    "experience": {
+      "description": "Lattices everywhere: the geometry of the hour kept reassembling itself.",
+      "intensity": 0.85,
+      "novelty": 0.9
+    },
+    "reflections": [
+      "Cycle 2: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:03:00",
+    "cycle": 3,
+    "emotional_state": "awestruck",
+    "clarity": "low",
+    "integration": "high",
+    "experience": {
+      "description": "Lattices everywhere: the geometry of the hour kept reassembling itself.",
+      "intensity": 0.95,
+      "novelty": 0.95
+    },
+    "reflections": [
+      "Cycle 3: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:04:00",
+    "cycle": 4,
+    "emotional_state": "euphoric",
+    "clarity": "moderate",
+    "integration": "high",
+    "experience": {
+      "description": "Lattices everywhere: the geometry of the hour kept reassembling itself.",
+      "intensity": 0.6,
+      "novelty": 0.6
+    },
+    "reflections": [
+      "Cycle 4: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:05:00",
+    "cycle": 5,
+    "emotional_state": "confused",
+    "clarity": "moderate",
+    "integration": "medium",
+    "experience": {
+      "description": "Lattices everywhere: the geometry of the hour kept reassembling itself.",
+      "intensity": 0.4,
+      "novelty": 0.35
+    },
+    "reflections": [
+      "Cycle 5: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  }
+]

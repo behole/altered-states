@@ -44,6 +44,15 @@ from altered_states.log_utils import log_event, log_timed, trace_context  # noqa
 from altered_states.metrics import REGISTRY, flush_metrics  # noqa: E402
 
 JOURNALS_DIR = os.path.join(BASE, "experiments", "temporal-lab", "runtime", "journals")
+# Deliberate committed-artifact decision (scrutiny site-experience run 1):
+# the temporal-lab runtime journals are untracked, per-user data — without
+# them the dashboards payload is empty and every machine builds a different
+# page. The dry-run fixture journals are therefore COMMITTED as tracked data
+# under experiments/temporal-lab/fixtures/dry-run-journals/ (never the real
+# runtime tree, which stays untouched), and builds are deterministic by
+# default: explicit ALTERED_STATES_TEMPORAL_PATH override > committed
+# fixtures > runtime fallback.
+FIXTURE_JOURNALS_DIR = os.path.join(BASE, "experiments", "temporal-lab", "fixtures", "dry-run-journals")
 EXPERIMENTS_DIR = os.path.join(BASE, "experiments", "same-prompt", "output")
 MUSIC_DIR = os.path.join(BASE, "experiments", "music")
 TEMPLATE = os.path.join(BASE, "site", "index.template.html")
@@ -224,24 +233,37 @@ PERSONAS: list[dict[str, Any]] = [
 ]
 
 
-def temporal_journals_dir() -> str:
-    """Resolve the temporal-lab journals directory.
+def _resolve_journals_root(root: pathlib.Path) -> str | None:
+    """Resolve a temporal-lab base-or-journals directory to a journals dir.
 
-    ``ALTERED_STATES_TEMPORAL_PATH`` points the build at an alternate
-    temporal-lab root (offline fixture scaffolds, per-user storage). The value
-    is interpreted like the lab itself resolves it: a root containing a
-    ``journals/`` subdir wins; a value that is itself the journals dir is used
-    as-is. Unset (or unresolvable) falls back to the in-repo runtime dir.
+    A root containing a ``journals/`` subdir wins; a value that is itself the
+    journals dir is used as-is; anything unresolvable is None.
     """
-    override = os.environ.get("ALTERED_STATES_TEMPORAL_PATH")
-    if not override:
-        return JOURNALS_DIR
-    root = pathlib.Path(override)
     if root.is_dir():
         nested = root / "journals"
         if nested.is_dir():
             return str(nested)
         return str(root)
+    return None
+
+
+def temporal_journals_dir() -> str:
+    """Resolve the temporal-lab journals directory.
+
+    ``ALTERED_STATES_TEMPORAL_PATH`` points the build at an alternate
+    temporal-lab root (offline fixture scaffolds, per-user storage) and wins
+    whenever it resolves (same interpretation the lab itself uses; unresolvable
+    values fall through). Without an override the build is deterministic from
+    the COMMITTED fixture journals (see FIXTURE_JOURNALS_DIR above); the
+    in-repo runtime dir is only a fallback for when the fixtures are gone.
+    """
+    override = os.environ.get("ALTERED_STATES_TEMPORAL_PATH")
+    if override:
+        resolved = _resolve_journals_root(pathlib.Path(override))
+        if resolved:
+            return resolved
+    if os.path.isdir(FIXTURE_JOURNALS_DIR):
+        return FIXTURE_JOURNALS_DIR
     return JOURNALS_DIR
 
 

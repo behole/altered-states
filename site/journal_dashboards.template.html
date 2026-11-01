@@ -107,6 +107,18 @@
     };
   }
 
+  // The payload point for one cycle index, looked up in the same series the
+  // chart was built from — never by node enumeration order (scrutiny blocker
+  // fix: the wiring used to key readouts by node idx into the cycle array,
+  // which misaligns because nodes are one per (axis, cycle) pair).
+  function pointForCycle(seriesCycles, cycleAttr) {
+    var found = null;
+    Array.prototype.forEach.call(seriesCycles, function (p) {
+      if (found === null && String(p.cycle) === cycleAttr) found = p;
+    });
+    return found;
+  }
+
   function yScale(min, max) {
     var span = Math.max(max - min, 0.001);
     var plotH = HEIGHT - PAD.top - PAD.bottom;
@@ -166,12 +178,16 @@
     });
 
     // Interactive points colored by index so each numeric axis is legible.
+    // Every node carries its own cycle + axis attributes from the emit loop
+    // scope, so the readout wiring below never depends on node enumeration
+    // order.
     var axisIndex = 0;
     axisDef.forEach(function (a) {
       cycles.forEach(function (p) {
         if (p[a.key] == null) return;
         var color = segs[axisIndex % segs.length];
-        parts += '<g class="jdash-point" data-cycle="' + escHtml(p.cycle) + '" tabindex="0">' +
+        parts += '<g class="jdash-point" data-cycle="' + escHtml(p.cycle) +
+          '" data-axis="' + a.key + '" tabindex="0">' +
           '<circle cx="' + x(p.cycle) + '" cy="' + y(p[a.key]) + '" r="6" stroke="' + color + '"/>' +
           '</g>';
       });
@@ -180,17 +196,24 @@
     parts += '</svg>';
     host.innerHTML = parts;
 
-    // Wire hover/tap readouts, with the point data embedded on the node.
+    // Wire hover/tap readouts: each node resolves its point + axis from its
+    // OWN data attributes (set in the emit loop above), so every point reads
+    // its own cycle even when nodes and cycles are enumerated differently.
     var pointNodes = host.querySelectorAll('.jdash-point');
-    Array.prototype.forEach.call(pointNodes, function (node, idx) {
-      node._jdash = { char: char, point: cycles[idx] };
+    Array.prototype.forEach.call(pointNodes, function (node) {
+      var spec = {
+        char: char,
+        point: pointForCycle(char.cycles, node.getAttribute('data-cycle')),
+        axis: node.getAttribute('data-axis'),
+      };
+      node._jdash = spec;
       function activate(ev) {
         Array.prototype.forEach.call(pointNodes, function (n) {
           n.classList.remove('jdash-point-active');
         });
         node.classList.add('jdash-point-active');
-        activePoint = node._jdash;
-        readout(activePoint.char, activePoint.point);
+        activePoint = spec;
+        readout(spec.char, spec.point);
         if (ev && ev.type === 'click') ev.preventDefault();
       }
       node.addEventListener('mouseenter', activate);
@@ -198,7 +221,12 @@
       node.addEventListener('click', activate);
       function deactivate() {
         node.classList.remove('jdash-point-active');
-        readout(activePoint && activePoint.char, activePoint && activePoint.point);
+        // Leaving the point that is currently read resets to the idle hint,
+        // so the readout never describes an unhighlighted point.
+        if (activePoint === spec) {
+          activePoint = null;
+          readout(null, null);
+        }
       }
       node.addEventListener('mouseleave', deactivate);
       node.addEventListener('blur', deactivate);

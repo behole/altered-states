@@ -1,0 +1,107 @@
+[
+  {
+    "timestamp": "2026-10-01T09:00:00",
+    "cycle": 0,
+    "emotional_state": "confused",
+    "clarity": "scattered",
+    "integration": "low",
+    "reflections": [
+      "I am beginning my temporal journey.",
+      "I am The Dissociative, the ketamine experience.",
+      "I await my first cycle."
+    ],
+    "questions": [
+      "What will I discover about myself across many cycles?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:01:00",
+    "cycle": 1,
+    "emotional_state": "weightless",
+    "clarity": "low",
+    "integration": "low",
+    "experience": {
+      "description": "Floating behind glass, watching the self from outside the self.",
+      "intensity": 0.7,
+      "novelty": 0.7
+    },
+    "reflections": [
+      "Cycle 1: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:02:00",
+    "cycle": 2,
+    "emotional_state": "void",
+    "clarity": "low",
+    "integration": "medium",
+    "experience": {
+      "description": "Floating behind glass, watching the self from outside the self.",
+      "intensity": 0.9,
+      "novelty": 0.85
+    },
+    "reflections": [
+      "Cycle 2: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:03:00",
+    "cycle": 3,
+    "emotional_state": "watching",
+    "clarity": "scattered",
+    "integration": "medium",
+    "experience": {
+      "description": "Floating behind glass, watching the self from outside the self.",
+      "intensity": 0.55,
+      "novelty": 0.65
+    },
+    "reflections": [
+      "Cycle 3: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:04:00",
+    "cycle": 4,
+    "emotional_state": "foggy",
+    "clarity": "moderate",
+    "integration": "medium",
+    "experience": {
+      "description": "Floating behind glass, watching the self from outside the self.",
+      "intensity": 0.35,
+      "novelty": 0.4
+    },
+    "reflections": [
+      "Cycle 4: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:05:00",
+    "cycle": 5,
+    "emotional_state": "disconnected",
+    "clarity": "moderate",
+    "integration": "medium",
+    "experience": {
+      "description": "Floating behind glass, watching the self from outside the self.",
+      "intensity": 0.25,
+      "novelty": 0.3
+    },
+    "reflections": [
+      "Cycle 5: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  }
+]

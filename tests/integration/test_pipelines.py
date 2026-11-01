@@ -67,6 +67,9 @@ class TestSiteBuildPipeline:
         output = tmp_path / "index.html"
 
         monkeypatch.setattr(build, "JOURNALS_DIR", str(journals_dir))
+        # Fixture journals are read as the default source; point them at the
+        # same tmp scaffold so this pipeline test stays hermetic.
+        monkeypatch.setattr(build, "FIXTURE_JOURNALS_DIR", str(journals_dir))
         monkeypatch.setattr(build, "EXPERIMENTS_DIR", str(experiments_dir))
         monkeypatch.setattr(build, "MUSIC_DIR", str(music_dir))
         monkeypatch.setattr(build, "TEMPLATE", str(template))

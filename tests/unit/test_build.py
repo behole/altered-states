@@ -210,6 +210,7 @@ class TestLoadDirectories:
 
     def test_load_journals_gives_every_persona_a_list(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(build, "JOURNALS_DIR", str(tmp_path))
+        monkeypatch.setattr(build, "FIXTURE_JOURNALS_DIR", str(tmp_path))
         journals = build.load_journals()
         assert len(journals) == len(build.PERSONAS)
         assert all(value == [] for value in journals.values())
@@ -219,6 +220,7 @@ class TestLoadDirectories:
     ) -> None:
         (tmp_path / "lsd_journal.json").write_text(json.dumps({"not": "a list"}))
         monkeypatch.setattr(build, "JOURNALS_DIR", str(tmp_path))
+        monkeypatch.setattr(build, "FIXTURE_JOURNALS_DIR", str(tmp_path))
         assert build.load_journals()["lsd"] == []
 
 
