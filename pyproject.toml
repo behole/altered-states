@@ -192,14 +192,32 @@ filterwarnings = ["error::DeprecationWarning:bin.*"]
 
 [tool.coverage.run]
 branch = true
+# Subprocess measurement: the unit suites exercise several bin/ CLIs through
+# `subprocess.run([sys.executable, script, ...])` (check_skills, install_skills,
+# safety_lint, sync_labels). Without subprocess coverage those exercised paths
+# read as misses. With parallel=true, a subprocess starting under
+# COVERAGE_PROCESS_START (set by `make coverage` and CI) writes a suffixed data
+# file via coverage's shipped .pth bootstrap, which pytest-cov then combines.
+parallel = true
 # experiments/same-prompt is deliberately NOT in this list: its runner
 # (run-ten-ways.py) is exercised in a subprocess by
 # tests/integration/test_same_prompt_dry_run.py, which coverage cannot see.
 # Adding it here would pull 133 uncovered statements into the total and sink
 # the 75% floor. Revisit only if the runner gains importable, unit-testable
 # logic.
+# The drivers below are in `source`'s roots but are interactive or cron entry
+# points that no offline test drives (same rationale as same-prompt above):
+# `experiments/music/generate.py` performs paid API song generation,
+# `temporal-dashboard.py` serves an HTML dashboard on localhost, and
+# `run-all-cycles.py` orchestrates real model runs.
 source = ["altered_states", "build.py", "watch.py", "bin", "experiments/temporal-lab/scripts", "experiments/music"]
-omit = ["*/tests/*", "*/site/*"]
+omit = [
+    "*/tests/*",
+    "*/site/*",
+    "*/experiments/music/generate.py",
+    "*/experiments/temporal-lab/scripts/temporal-dashboard.py",
+    "*/experiments/temporal-lab/scripts/run-all-cycles.py",
+]
 
 [tool.coverage.report]
 fail_under = 75

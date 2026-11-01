@@ -76,7 +76,9 @@ test:
 	$(PYTEST)
 
 coverage:
-	$(PYTEST) --cov --cov-report=term-missing --cov-report=xml
+	@# COVERAGE_PROCESS_START turns on the subprocess-measurement bootstrap: the
+	@# bin/ CLIs are exercised via subprocess.run and otherwise read as misses.
+	COVERAGE_PROCESS_START=$(CURDIR)/pyproject.toml $(PYTEST) --cov --cov-report=term-missing --cov-report=xml
 
 security: safety-lint
 	$(BANDIT) --quiet -c pyproject.toml -r $(BANDIT_TARGETS)

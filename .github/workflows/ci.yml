@@ -99,6 +99,8 @@ jobs:
           python -m pip install -r bin/requirements.lock
 
       - name: Run unit and integration tests with coverage
+        env:
+          COVERAGE_PROCESS_START: ${{ github.workspace }}/pyproject.toml
         run: pytest --cov --cov-report=term-missing --cov-report=xml --durations=25
 
       - name: Upload coverage report
