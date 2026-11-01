@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 import build
+from altered_states import og
 
 SKILL_MD = """---
 name: lsd-altered-state
@@ -145,7 +146,11 @@ class TestRenderSubstancePage:
         assert "<title>LSD — Altered States</title>" in page
         assert 'property="og:title"' in page
         assert 'property="og:description"' in page
-        assert 'content="/og/placeholder.svg"' in page
+        assert 'property="og:url" content="https://altered-states.pages.dev/lsd/"' in page
+        assert (
+            'property="og:image" content="https://altered-states.pages.dev/og/lsd.' + og.card_extension() + '"'
+        ) in page
+        assert "placeholder.svg" not in page
         assert 'href="/"' in page  # home back-link
         assert build.SUBSTANCE_PAGE_MARKER in page
 

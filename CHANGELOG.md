@@ -31,6 +31,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   connection does not block later requests and the server still shuts
   down cleanly.
 ### Added
+- **Build-time OG share cards (VAL-TOOL-007)** — `make build` now renders one
+  share card per substance skill into `site/og/<substance>.png` (11 cards
+  today, incl. 2C-B), deterministic and byte-identical across delete+rebuild.
+  The committed `site/og/placeholder.svg` placeholder is retired: a build
+  clears every top-level `<slug>.png`/`<slug>.svg` from `site/og/` before
+  regenerating, so stale cards cannot survive. Cards carry the substance
+  name, its one-line character, and the leading sentence of its description.
+  **Format choice (documented, not silent):** PNG rendered with
+  Pillow (`pillow==13.0.0`, pinned in `bin/requirements.txt` +
+  `bin/requirements.lock`) — the pip-audit-clean line; because major
+  crawlers (Facebook, Twitter/X, iMessage) ignore inline SVG as
+  `og:image`; in an environment without
+  Pillow the generator falls back to a deterministic SVG and logs
+  `build.og_cards format=svg` so the deviation is observable. Card bytes
+  are stable within a given Pillow version (delete+rebuild
+  byte-identical); the pinned version defines the committed card bytes,
+  so the Python that builds the site must have the locked Pillow.
+  Pillow 13 requires Python >= 3.11, so `bin/requirements.lock` now
+  resolves for 3.11 (the oldest interpreter that installs it — CI test
+  matrix moved 3.10 -> 3.11; ruff/mypy still lint Python 3.10 syntax).
+  Per-substance pages now embed **absolute** OG URLs built from the
+  canonical deploy base documented in `build.py`
+  (`CANONICAL_BASE_URL = "https://altered-states.pages.dev"`): both
+  `og:url` (`.../<substance>/`) and `og:image` (`.../og/<substance>.png`)
+  are spec-compliant absolute URLs, replacing the previously relative
+  values. Verified by the new `tests/unit/test_og_cards.py`.
 - **Per-substance eval-grid sections (Cross-model & Grids views)** —
   `site/index.html` now ships two data-driven sections: the cross-model
   diff (`site.cross_model_diff`, owner eval) showing DeepSeek responses

@@ -249,6 +249,7 @@ per_rule_ignores = { DEP002 = ["sentry-sdk"] }
 [tool.deptry.package_module_name_map]
 python-dotenv = "dotenv"
 pyyaml = "yaml"
+pillow = "PIL"
 
 # ---------------------------------------------------------------------------
 # bandit — static security analysis

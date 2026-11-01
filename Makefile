@@ -23,10 +23,11 @@ DEPTRY ?= $(UVX) deptry@0.25.1
 BANDIT ?= $(UVX) bandit@1.9.4
 PIP_AUDIT ?= $(UVX) pip-audit@2.10.1
 
-# The test suite needs the runtime SDKs importable (run_eval imports openai)
-# and PyYAML for the policy-manifest tests.
+# The test suite needs the runtime SDKs importable (run_eval imports openai),
+# PyYAML for the policy-manifest tests, and Pillow for the OG-card tests.
 PYTEST ?= $(UVX) --with openai==3.42.0 \
 	--with pyyaml==6.0.2 \
+	--with pillow==13.0.0 \
 	--with python-dotenv==1.2.4 \
 	--with pytest==9.2.0 \
 	--with pytest-cov==7.1.0 \
@@ -125,9 +126,12 @@ install-hooks:
 	$(UVX) pre-commit@4.7.0 install
 
 # Regenerate the hash-pinned lock files after editing a requirements.txt.
+# bin/requirements.lock resolves for 3.11 (the oldest interpreter any consumer
+# of it installs on — CI test matrix and the labels/alerts jobs are all 3.11+):
+# the OG-card dependency Pillow 13 (the pip-audit-clean line) requires >= 3.11.
 lock:
 	$(UVX) uv pip compile bin/requirements.txt -o bin/requirements.lock \
-		--python-version 3.10 --universal --generate-hashes --quiet
+		--python-version 3.11 --universal --generate-hashes --quiet
 	$(UVX) uv pip compile experiments/music/requirements.txt \
 		-o experiments/music/requirements.lock \
 		--python-version 3.10 --universal --generate-hashes --quiet

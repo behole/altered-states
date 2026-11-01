@@ -72,9 +72,7 @@ PLATFORM_TABLE = (
 )
 
 
-def planned_installs(
-    root: Path, names: list[str] | None
-) -> tuple[list[tuple[str, Path, Path]], list[str]]:
+def planned_installs(root: Path, names: list[str] | None) -> tuple[list[tuple[str, Path, Path]], list[str]]:
     """Resolve (cli-name, source, destination) triples, or list failures."""
     if names is None:
         selected: list[tuple[str, str, str]] = list(DEFAULT_INSTALLS)
@@ -96,9 +94,7 @@ def planned_installs(
     return resolved, missing_dirs
 
 
-def do_install(
-    plan: list[tuple[str, Path, Path]], dest_root: Path, symlink: bool
-) -> tuple[list[str], list[str]]:
+def do_install(plan: list[tuple[str, Path, Path]], dest_root: Path, symlink: bool) -> tuple[list[str], list[str]]:
     """Execute the plan; returns (action lines, problems). Dest is created."""
     lines: list[str] = []
     problems: list[str] = []
@@ -125,8 +121,10 @@ def do_install(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description=("One command that installs every Altered States skill "
-                     "into the platform-dest skills directory; dry run by default."),
+        description=(
+            "One command that installs every Altered States skill "
+            "into the platform-dest skills directory; dry run by default."
+        ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=PLATFORM_TABLE,
     )
@@ -237,9 +235,7 @@ def print_plan(plan: list[tuple[str, Path, Path]], dest: Path) -> None:
     print()
 
 
-def do_apply(
-    plan: list[tuple[str, Path, Path]], dest: Path, symlink: bool
-) -> int:
+def do_apply(plan: list[tuple[str, Path, Path]], dest: Path, symlink: bool) -> int:
     if dest.resolve() == SKILLS_DIR.resolve():
         print("error: refusing to install the skills tree into itself", file=sys.stderr)
         return 2

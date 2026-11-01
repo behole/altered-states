@@ -71,9 +71,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 3.10 is what the application targets; 3.12 is the newest interpreter
-        # the runtime SDKs support. Both must stay green.
-        python-version: ["3.10", "3.12"]
+        # 3.11 is the oldest interpreter the runtime lock resolves for
+        # (Pillow 13, the pip-audit-clean OG-card dependency, needs >= 3.11;
+        # lint still targets Python 3.10 syntax per ruff/mypy). 3.12 is the
+        # newest interpreter the runtime SDKs support. Both must stay green.
+        python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
         with:
