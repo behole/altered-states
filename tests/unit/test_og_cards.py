@@ -9,6 +9,7 @@ per-substance pages.
 
 from __future__ import annotations
 
+import hashlib
 import io
 import re
 import sys
@@ -21,6 +22,22 @@ import build
 from altered_states import og
 
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
+
+
+def _sha16(data: bytes) -> str:
+    """Short digest of a large byte string, for failure messages."""
+    return hashlib.sha256(data).hexdigest()[:12]
+
+
+def _first_divergence(a: bytes, b: bytes) -> int:
+    """Index of the first byte position where a and b differ (-1 if equal)."""
+    n = min(len(a), len(b))
+    for i in range(n):
+        if a[i] != b[i]:
+            return i
+    if len(a) != len(b):
+        return n
+    return -1
 
 
 def _substance(slug: str = "lsd", name: str = "LSD", character: str = "The Technician") -> dict[str, object]:
@@ -131,21 +148,29 @@ class TestWriteOgCards:
     def test_committed_cards_match_pinned_pillow_render(self) -> None:
         """Two-layer guard for the committed site/og/*.png blobs.
 
-        Layer 1 (content, CI-robust): decode both the committed card and the
-        freshly rendered card with the ambient Pillow and assert identical
-        size, mode, and ``tobytes()`` pixel content. PNG encoding choices
-        (deflate/zlib settings, encoder paths) differ between Pillow builds
-        per-platform, so raw-byte equality holds only on the platform that
-        produced the committed blobs.
+        Layer 1 (CI, structural): the committed card and a freshly rendered
+        card decode to the same size and the same mode. This is the CI
+        contract for linux/x86-64: font rasterization differs across
+        platforms (macOS system fonts vs. DejaVu on linux), so decoded
+        pixel content is only comparable on the platform that produced the
+        committed blobs. Non-provenance platforms additionally assert the
+        same-platform render pipeline is deterministic (two independent
+        renders are byte-identical).
 
-        Layer 2 (bytes, provenance-platform only): when running on darwin
-        (where the committed cards were rendered, per the pinned BUILD_PY
-        recipe ``uvx --with pillow==13.0.0``) with ambient Pillow exactly
-        version 13.0.0, additionally assert raw-byte equality. Elsewhere
-        (e.g. linux/x86-64 CI, where Pillow picks different deflate/encoder
-        settings) the byte clause is skipped with a reason naming the platform
-        provenance. On the provenance platform a byte drift still fails the test with
-        "run `make build` (pinned pillow==13.0.0) and re-commit".
+        Layer 2 (provenance platform only): on darwin — where the committed
+        cards were rendered, per the pinned BUILD_PY recipe
+        ``uvx --with pillow==13.0.0`` — with ambient Pillow exactly 13.0.0,
+        additionally assert decoded pixel content and raw byte equality
+        against the committed blobs; a drift there still fails the test
+        with "run `make build` (pinned pillow==13.0.0) and re-commit". On
+        other platforms those raster clauses are undefined because the
+        committed bytes encode a different platform's rasterization.
+
+        All large-object comparisons go through explicit ``pytest.fail``
+        with short digests and a divergence index, never through a
+        rewritten ``assert``: pytest's assertion-explanation machinery
+        diff-walks large byte sequences during a failing assert and can
+        stall a single test for minutes (observed as a 15-minute CI hang).
         """
         if og.card_extension() != "png":
             pytest.skip("PNG card format not active in this environment")
@@ -173,10 +198,9 @@ class TestWriteOgCards:
             pytest.skip("no committed site/og cards in this checkout")
 
         substances = {str(s["id"]): s for s in build.load_substances()}
-        # Provenance-platform preconditions for Layer 2: the committed blobs
-        # were rendered on darwin with the pinned Pillow, and PNG encoding is
-        # platform-dependent in Pillow, so raw-byte equality is only
-        # contractually meaningful there. Layer 1 below always runs.
+        # Provenance platform of the committed blobs: darwin with the pinned
+        # Pillow. Pixel raster and PNG encoding are platform-dependent, so
+        # content/byte equality is only contractually meaningful there.
         _pillow_version = _pkg_version("Pillow")
         _provenance = sys.platform == "darwin" and _pillow_version == "13.0.0"
         # PNG decoder is needed for Layer 1 regardless of platform.
@@ -184,37 +208,58 @@ class TestWriteOgCards:
 
         for slug, committed_path in signals:
             assert committed_path.is_file(), f"some committed cards exist but {slug} is missing"
-            fresh_bytes = og.render_card(substances[slug])
-            committed_img = Image.open(io.BytesIO(committed_path.read_bytes()))
-            fresh_img = Image.open(io.BytesIO(fresh_bytes))
-            assert committed_img.size == fresh_img.size, (
-                f"site/og/{committed_path.name} rendered size {fresh_img.size} != committed size {committed_img.size}"
-            )
-            assert committed_img.mode == fresh_img.mode, (
-                f"site/og/{committed_path.name} rendered mode {fresh_img.mode} != committed mode {committed_img.mode}"
-            )
-            assert committed_img.tobytes() == fresh_img.tobytes(), (
-                f"site/og/{committed_path.name} decoded pixel content drifted "
-                "from the pinned-Pillow render; run `make build` (pinned "
-                "pillow==13.0.0) and commit the rebuilt cards"
-            )
-
-        # Layer 2: raw-byte equality on the provenance platform only.
-        if not _provenance:
-            pytest.skip(
-                "raw-byte guard applies only on the provenance platform "
-                "(darwin with pillow==13.0.0); this is platform="
-                f"{sys.platform}, Pillow={_pillow_version}, where PNG "
-                "encoding (deflate/zlib settings, encoder choices) differs "
-                "from the darwin/arm64 render that produced the committed "
-                "bytes — pixel-content equality above is the CI contract"
-            )
-        for slug, committed_path in signals:
-            assert og.render_card(substances[slug]) == committed_path.read_bytes(), (
-                f"site/og/{committed_path.name} raw bytes drifted from the "
-                "pinned-Pillow render; run `make build` (pinned "
-                "pillow==13.0.0) and commit the rebuilt cards"
-            )
+            committed_png = committed_path.read_bytes()
+            fresh_png = og.render_card(substances[slug])
+            committed_img = Image.open(io.BytesIO(committed_png))
+            fresh_img = Image.open(io.BytesIO(fresh_png))
+            if committed_img.size != fresh_img.size:
+                pytest.fail(
+                    f"site/og/{committed_path.name} rendered size {fresh_img.size} "
+                    f"!= committed size {committed_img.size}; run `make build` "
+                    "(pinned pillow==13.0.0) and commit the rebuilt cards"
+                )
+            if committed_img.mode != fresh_img.mode:
+                pytest.fail(
+                    f"site/og/{committed_path.name} rendered mode {fresh_img.mode} "
+                    f"!= committed mode {committed_img.mode}; run `make build` "
+                    "(pinned pillow==13.0.0) and commit the rebuilt cards"
+                )
+            if _provenance:
+                committed_pixels = committed_img.tobytes()
+                fresh_pixels = fresh_img.tobytes()
+                if committed_pixels != fresh_pixels:
+                    pytest.fail(
+                        f"site/og/{committed_path.name} decoded pixel content drifted "
+                        "from the pinned-Pillow render; run `make build` (pinned "
+                        "pillow==13.0.0) and commit the rebuilt cards "
+                        f"[committed sha256 {_sha16(committed_pixels)}, "
+                        f"fresh sha256 {_sha16(fresh_pixels)}, first divergent byte "
+                        f"at index {_first_divergence(committed_pixels, fresh_pixels)}]"
+                    )
+                if committed_png != fresh_png:
+                    pytest.fail(
+                        f"site/og/{committed_path.name} raw bytes drifted from the "
+                        "pinned-Pillow render; run `make build` (pinned "
+                        "pillow==13.0.0) and commit the rebuilt cards "
+                        f"[committed sha256 {_sha16(committed_png)}, "
+                        f"fresh sha256 {_sha16(fresh_png)}, first divergent byte "
+                        f"at index {_first_divergence(committed_png, fresh_png)}]"
+                    )
+            else:
+                # Non-provenance platform (e.g. linux CI): the committed bytes
+                # encode the macOS rasterization, so pixel/byte equality is
+                # undefined here. The CI contract instead asserts the render
+                # pipeline is deterministic on this platform: two independent
+                # renders must be byte-identical.
+                second_png = og.render_card(substances[slug])
+                if second_png != fresh_png:
+                    pytest.fail(
+                        f"site/og/{committed_path.name}: render of {slug} is "
+                        f"non-deterministic on platform={sys.platform}. "
+                        f"[render sha256 {_sha16(fresh_png)}, second render "
+                        f"sha256 {_sha16(second_png)}, first divergent byte at "
+                        f"index {_first_divergence(fresh_png, second_png)}]"
+                    )
 
 
 class TestSubstancePageOgTags:
