@@ -126,7 +126,7 @@ jobs:
               elapsed = time.time() - t0
               buf = io.StringIO()
               pstats.Stats(prof, stream=buf).sort_stats("cumulative").print_stats(15)
-              print(f"TEMP-DEBUG card {s.get('slug')} wall={elapsed:.3f}s")
+              print(f"TEMP-DEBUG card {s.get('id')} wall={elapsed:.3f}s")
               print(buf.getvalue())
           PY
 
