@@ -1,0 +1,94 @@
+{
+  "inputs": {
+    "journals": "f4e5e8ee4f54e0bab8d21ae7c7cf64db40398c2431f9e218e62b17f14eb41d4a"
+  },
+  "payload": {
+    "axes": {
+      "intensity": {
+        "journalField": "experience.intensity",
+        "kind": "number",
+        "label": "Phenomenology intensity",
+        "scale": "0-1"
+      },
+      "novelty": {
+        "journalField": "experience.novelty",
+        "kind": "number",
+        "label": "Novelty",
+        "scale": "0-1"
+      },
+      "emotionalState": {
+        "journalField": "emotional_state",
+        "kind": "category",
+        "label": "Emotional valence"
+      },
+      "clarity": {
+        "journalField": "clarity",
+        "kind": "category",
+        "label": "Ego coherence"
+      },
+      "integration": {
+        "journalField": "integration",
+        "kind": "category",
+        "label": "Integration"
+      }
+    },
+    "characters": [
+      {
+        "id": "psilocybin",
+        "name": "Psilocybin",
+        "emoji": "🍄",
+        "character": "The Teacher",
+        "cycles": [
+          {
+            "cycle": 1,
+            "intensity": 0.3,
+            "novelty": 0.55,
+            "emotionalState": "curious",
+            "clarity": "high",
+            "integration": "low"
+          },
+          {
+            "cycle": 2,
+            "intensity": 0.42,
+            "novelty": 0.71,
+            "emotionalState": "awed",
+            "clarity": "moderate",
+            "integration": "low"
+          },
+          {
+            "cycle": 3,
+            "intensity": null,
+            "novelty": null,
+            "emotionalState": "settled",
+            "clarity": "high",
+            "integration": "medium"
+          }
+        ]
+      },
+      {
+        "id": "lsd",
+        "name": "LSD",
+        "emoji": "⚡",
+        "character": "The Technician",
+        "cycles": [
+          {
+            "cycle": 1,
+            "intensity": 0.6,
+            "novelty": 0.4,
+            "emotionalState": "focused",
+            "clarity": "high",
+            "integration": "none"
+          },
+          {
+            "cycle": 2,
+            "intensity": null,
+            "novelty": null,
+            "emotionalState": "wired",
+            "clarity": "moderate",
+            "integration": "low"
+          }
+        ]
+      }
+    ]
+  }
+}

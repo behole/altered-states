@@ -327,6 +327,17 @@ def get_persona_state(journals: dict[str, list[dict[str, Any]]]) -> dict[str, di
     return states
 
 
+def build_persona_payload(journals: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    """Assemble the persona-card payload injected as ``__PERSONAS__``.
+
+    Pure function of ``journals``; the camelCase keys (``chatPrompt``,
+    ``currentState``, ``cycleCount``) are the template's contract and are
+    pinned by the golden snapshot tests (tests/unit/test_golden_snapshots.py).
+    """
+    states = get_persona_state(journals)
+    return [{**persona, **states.get(persona["id"], {})} for persona in PERSONAS]
+
+
 def parse_experiment_md(filepath: str) -> dict[str, Any]:
     """Parse a same-prompt-ten-ways markdown file into structured data."""
     with open(filepath) as f:
@@ -2432,8 +2443,7 @@ def build() -> None:
             sync_music_audio()
 
             log_event("build.stage", stage="persona_states")
-            states = get_persona_state(journals)
-            persona_data = [{**persona, **states.get(persona["id"], {})} for persona in PERSONAS]
+            persona_data = build_persona_payload(journals)
             journal_data = {
                 sid: [journal_entry_to_dict(entry) for entry in entries if not entry.get("error")]
                 for sid, entries in journals.items()

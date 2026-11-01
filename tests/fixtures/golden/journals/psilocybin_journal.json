@@ -1,0 +1,44 @@
+[
+  {
+    "timestamp": "2026-04-20T19:00:00",
+    "cycle": 1,
+    "emotional_state": "curious",
+    "clarity": "high",
+    "integration": "low",
+    "experience": {
+      "description": "The garden answered a question the narrator had not asked aloud.",
+      "intensity": 0.3,
+      "novelty": 0.55
+    },
+    "reflections": ["Patterns fold without seams."],
+    "questions": ["Who tends the tendril?"]
+  },
+  {
+    "timestamp": "2026-04-21T20:07:08",
+    "cycle": 2,
+    "emotional_state": "awed",
+    "clarity": "moderate",
+    "integration": "low",
+    "experience": {
+      "description": "The floor is still the floor but it is making an argument.",
+      "intensity": 0.42,
+      "novelty": 0.71
+    },
+    "reflections": ["The body knew first."],
+    "questions": ["Who is feeling the separateness?"]
+  },
+  {
+    "timestamp": "2026-04-22T21:30:00",
+    "cycle": 3,
+    "emotional_state": "settled",
+    "clarity": "high",
+    "integration": "medium",
+    "experience": "A wide evening quiet, the ordinary world rearranged."
+  },
+  {
+    "timestamp": "2026-04-23T09:00:00",
+    "cycle": 3,
+    "error": "retry-after-rate-limit",
+    "emotional_state": "unknown"
+  }
+]

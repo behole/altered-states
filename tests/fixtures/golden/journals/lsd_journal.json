@@ -1,0 +1,23 @@
+[
+  {
+    "timestamp": "2026-04-20T08:00:00",
+    "cycle": 1,
+    "emotional_state": "focused",
+    "clarity": "high",
+    "integration": "none",
+    "experience": {
+      "description": "Geometry repeats until the eyes accept it as language.",
+      "intensity": 0.6,
+      "novelty": 0.4
+    },
+    "reflections": ["Lattice upon lattice."]
+  },
+  {
+    "timestamp": "2026-04-21T09:15:00",
+    "cycle": 2,
+    "emotional_state": "wired",
+    "clarity": "moderate",
+    "integration": "low",
+    "experience": "Every corridor in the mind is a shortcut and they all arrive at once."
+  }
+]
