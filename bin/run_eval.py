@@ -232,7 +232,11 @@ async def _attempt(
     message = choice.message
     text = message.content or ""
     usage = resp.usage
-    reasoning_text = message.reasoning_content or ""
+    # `reasoning_content` is a non-standard field (DeepSeek extension): the
+    # OpenAI SDK does not declare it on ChatCompletionMessage, so it only
+    # reaches us via the object's extra fields. Never access it as an
+    # attribute or non-DeepSeek-shaped responses raise AttributeError.
+    reasoning_text = getattr(message, "reasoning_content", None) or ""
     reasoning_tokens = _reasoning_tokens(usage)
     row = build_row(run, model, text or None)
     if text == "" and reasoning_text.strip():
@@ -245,7 +249,7 @@ async def _attempt(
         )
         exc.finish_reason = choice.finish_reason  # type: ignore[attr-defined]
         raise exc
-    row["reasoning_content"] = message.reasoning_content
+    row["reasoning_content"] = getattr(message, "reasoning_content", None)
     row["reasoning_content_chars"] = len(reasoning_text)
     row["stop_reason"] = choice.finish_reason
     row["usage"] = {

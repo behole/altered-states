@@ -203,7 +203,10 @@ def chargeable_ledger_entries(ledger_path: Path) -> list[dict[str, Any]]:
     for i, entry in enumerate(read_ledger_entries(ledger_path), start=1):
         if entry.get("run_kind") != "real":
             continue
-        if not entry.get("manifest_id") or not entry.get("actual_cost_usd"):
+        cost = entry.get("actual_cost_usd")
+        # A $0.00 actual (e.g. a run that failed before any API call) is a
+        # valid annotated entry; only a *missing* annotation is fatal.
+        if not entry.get("manifest_id") or cost is None or isinstance(cost, bool):
             raise ManifestError(f"ledger line {i} is a real-run entry without manifest annotation")
         chargeable.append(entry)
     return chargeable
