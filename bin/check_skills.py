@@ -77,6 +77,28 @@ OVERLAY_LINES = ("combos", "tolerance")
 # figures by construction).
 OVERLAY_SLUGS = ("afterglow",)
 
+# Expected intensity/scale column labels for every skill whose dimension
+# matrix is a table (keys are relpaths with the `skills/` prefix, matching
+# SkillFile.relpath). Labels are compared case-insensitively against the
+# header's columns AFTER '# | Dimension'. A label removed from every row AND
+# the header is a consistent whole-column deletion — coherent in size, wrong
+# in scale — which the width checks cannot see, so the label set must match
+# exactly: a missing or unexpected label fails file+section+fix. Labels are
+# read from the live files; adding a table-carrying skill means adding its
+# entry here (unregistered table-carrying skills are still width-checked).
+EXPECTED_TABLE_SCALES: dict[str, list[str]] = {
+    "skills/2c-b/SKILL.md": ["low", "medium", "high"],
+    "skills/psilocybin/SKILL.md": ["low", "medium", "high"],
+    "skills/ayahuasca/SKILL.md": ["character"],
+    "skills/mescaline/SKILL.md": ["character"],
+    "skills/combos/candy-flip/SKILL.md": ["dominant (lsd)", "overlay shift (mdma)"],
+    "skills/combos/hippy-flip/SKILL.md": ["dominant (psilocybin)", "overlay shift (mdma)"],
+    "skills/afterglow/SKILL.md": ["hours 0-24", "hours 24-48", "hours 48-72"],
+    "skills/tolerance/lsd/SKILL.md": ["base (medium)", "day-two shift"],
+    "skills/tolerance/ketamine/SKILL.md": ["base (medium)", "burnout shift"],
+    "skills/tolerance/psilocybin/SKILL.md": ["base (medium)", "day-two shift"],
+}
+
 REQUIRED_DIMENSION_ROWS = 7
 MIN_HEADER_CELLS = 3  # '# | Dimension | <at least one intensity column>'
 MIN_PROFILE_COVERAGE = 4
@@ -396,6 +418,36 @@ def _check_row_widths(file: SkillFile, header_cells: list[str], rows: list[list[
     return problems
 
 
+def _check_table_scale(file: SkillFile, header_cells: list[str]) -> list[str]:
+    """The header must declare exactly the registered scale columns. Catches
+    the CONSISTENT whole-column deletion class (size checks agree, labels
+    don't) and inconsistent relabeling alike."""
+    expected = EXPECTED_TABLE_SCALES.get(str(file.relpath))
+    if expected is None:
+        return []
+    actual = [c.strip().lower() for c in header_cells[2:]]
+    missing = [label for label in expected if label not in actual]
+    unexpected = sorted(set(actual) - set(expected))
+    if not missing and not unexpected:
+        return []
+    detail = []
+    if missing:
+        detail.append(f"missing scale column(s) {missing}")
+    if unexpected:
+        detail.append(f"unexpected scale column(s) {unexpected}")
+    return [
+        fail(
+            file.path,
+            SEC_DIMENSIONS,
+            f"dimension table header declares {actual}; {', '.join(detail)} "
+            f"(expected {expected} — 'consistently deleted' columns shrink the "
+            "table coherently but break the skill's scale)",
+            f"restore the full header row to {expected}, with every data row "
+            "carrying a cell in each scale column (see skills/psilocybin/SKILL.md for the shape)",
+        )
+    ]
+
+
 def _check_dimension_table(file: SkillFile, table_section: str) -> list[str]:
     header_cells: list[str] | None = None
     rows: list[list[str]] = []
@@ -421,6 +473,7 @@ def _check_dimension_table(file: SkillFile, table_section: str) -> list[str]:
         )
     elif header_cells is not None:
         problems.extend(_check_row_widths(file, header_cells, rows))
+        problems.extend(_check_table_scale(file, header_cells))
     if len(rows) < REQUIRED_DIMENSION_ROWS:
         problems.append(
             fail(

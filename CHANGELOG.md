@@ -44,7 +44,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   shape itself: the header row must carry its intensity columns (at least one
   column beyond `#`/Dimension) and every data row must have the header's cell
   count — deleting a dimension-table COLUMN (fully or header-cells-only) exits
-  nonzero citing file + dimensions section instead of passing.
+  nonzero citing file + dimensions section instead of passing. A per-skill
+  scale registry (`EXPECTED_TABLE_SCALES`) additionally pins the exact
+  header column labels of every table-carrying skill case-insensitively, so
+  the run-3 VAL-TOOL-001 class — a whole intensity column deleted from the
+  header AND every row consistently (size-coherent, labels wrong) — is
+  rejected with file + sections + fix, including overlay-line tables
+  (afterglow, tolerance) and inconsistent column renames.
 - **Content safety lint (VAL-TOOL-003, VAL-TOOL-004)** — `bin/safety_lint.py`
   (stdlib-only) scans every Markdown file under `skills/` AND the built
   `site/index.html` for forbidden patterns: dose figures with dosing verbs,

@@ -257,6 +257,113 @@ def test_seeded_dimension_row_fails_reporting_row(tmp_path: Path) -> None:
     assert "dimension" in result.stdout.lower()
 
 
+# --- expected-scale registry (VAL-TOOL-001 run-3 gap: consistent whole-column
+# deletions are size-coherent and slip past the width checks; the header labels
+# are the only witness) -------------------------------------------------------
+
+
+def _delete_labeled_column(tree: Path, rel: str, label: str) -> None:
+    """Delete the dimension-table column whose header label matches
+    `label` — from the header row, separator, AND every data row — so the
+    resulting table is internally consistent (header count == row count)."""
+    path = tree / rel
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    out, in_table, idx, dropped = [], False, None, 0
+    for line in lines:
+        if line.strip().startswith("|"):
+            cells = [c.strip() for c in line.rstrip("\n").strip().strip("|").split("|")]
+            if not in_table:
+                if len(cells) > 2 and label in (c.lower() for c in cells):
+                    in_table = True
+                    idx = next(i for i, c in enumerate(cells) if c.lower() == label)
+                    dropped += 1
+                    line = "| " + " | ".join(cells[:idx] + cells[idx + 1 :]) + " |\n"  # noqa: PLW2901
+            elif len(cells) > 1:
+                assert idx is not None
+                dropped += 1
+                line = "| " + " | ".join(cells[:idx] + cells[idx + 1 :]) + " |\n"  # noqa: PLW2901
+        else:
+            in_table = False
+            idx = None
+        out.append(line)
+    assert dropped >= 8, f"fixture drift: column {label!r} lost from only {dropped} table lines in {rel}"
+    path.write_text("".join(out), encoding="utf-8")
+
+
+def _rename_column(tree: Path, rel: str, label: str, new_label: str) -> None:
+    _replace_line(tree, rel, label, new_label)
+
+
+def test_scale_registry_catches_consistent_medium_column_deletion(tmp_path: Path) -> None:
+    """The VAL-TOOL-001 run-3 repro: delete the Medium column from header,
+    separator AND all 7 data rows of a 2c-b fixture copy. The table is
+    coherent by size — only the registered labels catch it."""
+    tree = copied_skills(tmp_path)
+    _delete_labeled_column(tree, "2c-b/SKILL.md", "medium")
+    result = run_validator(tree)
+    assert result.returncode != 0, f"validator passed with Medium deleted:\n{result.stdout}"
+    assert "2c-b/SKILL.md" in result.stdout
+    assert "dimension" in result.stdout.lower()
+    assert "fix:" in result.stdout
+
+
+def test_scale_registry_catches_overlay_column_deletion(tmp_path: Path) -> None:
+    """Overlay-line tables are registered too: deleting the afterglow
+    Hours 24-48 column consistently must exit nonzero."""
+    tree = copied_skills(tmp_path)
+    _delete_labeled_column(tree, "afterglow/SKILL.md", "hours 24-48")
+    result = run_validator(tree)
+    assert result.returncode != 0, f"validator passed with a horizon column deleted:\n{result.stdout}"
+    assert "afterglow/SKILL.md" in result.stdout
+    assert "dimension" in result.stdout.lower()
+
+
+def test_scale_registry_catches_inconsistent_column_rename(tmp_path: Path) -> None:
+    """Renaming a registered scale label is an unexpected column AND a
+    missing one at once."""
+    tree = copied_skills(tmp_path)
+    _rename_column(tree, "tolerance/lsd/SKILL.md", "Day-two shift", "Week-two shift")
+    result = run_validator(tree)
+    assert result.returncode != 0, f"validator passed with a renamed scale column:\n{result.stdout}"
+    assert "tolerance/lsd/SKILL.md" in result.stdout
+    assert "unexpected" in result.stdout.lower()
+
+
+def test_scale_registry_covers_every_table_carrying_skill_file() -> None:
+    """Every live skill file whose dimension section is a table must have a
+    registry entry, so no future table deletes columns unregistered."""
+    from importlib import util as _util
+
+    spec = _util.spec_from_file_location("check_skills_mod", CHECK)
+    assert spec and spec.loader
+    mod = _util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    registry: set[str] = set(mod.EXPECTED_TABLE_SCALES)
+    for path in SKILLS.rglob("SKILL.md"):
+        text = path.read_text(encoding="utf-8")
+        dim_sections = [ln for ln in text.splitlines() if "Phenomenological Dimensions" in ln and ln.startswith("#")]
+        if not dim_sections:
+            continue
+        rel = path.relative_to(SKILLS.parent)
+        assert f"{rel}" in registry, f"{rel} has a dimension table but no EXPECTED_TABLE_SCALES entry"
+    assert registry >= {"skills/afterglow/SKILL.md", "skills/tolerance/ketamine/SKILL.md"}
+
+
+def test_scale_registry_live_labels_match_actual_files() -> None:
+    """No false positives: each registry entry's labels (lowercased) appear
+    verbatim in the live file's dimension-table header."""
+    from importlib import util as _util
+
+    spec = _util.spec_from_file_location("check_skills_mod", CHECK)
+    assert spec and spec.loader
+    mod = _util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    for rel, labels in mod.EXPECTED_TABLE_SCALES.items():
+        text = (SKILLS / Path(rel).relative_to("skills")).read_text(encoding="utf-8")
+        for label in labels:
+            assert label in text.lower(), f"{rel}: registry label {label!r} not in live file"
+
+
 # --- authoring-guide mode ------------------------------------------------------
 
 

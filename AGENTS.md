@@ -118,7 +118,11 @@ or did not happen.
 
 Every `skills/**/SKILL.md` must pass `make skills-check` (`bin/check_skills.py`,
 stdlib-only): front-matter schema, Safety Override furniture, dimension matrix,
-dose arc, and router alias resolution. When authoring a new skill, run
+dose arc, and router alias resolution. Dimension-table headers must also
+declare exactly the per-skill scale columns registered in
+`EXPECTED_TABLE_SCALES` (`bin/check_skills.py`), so a whole intensity
+column deleted consistently from every row — size-coherent, the run-3
+VAL-TOOL-001 gap — is still rejected. When authoring a new skill, run
 `python3 bin/check_skills.py --new-skill skills/<name>/SKILL.md` — it prints the
 full authoring checklist. Seeded-mutation tests in
 `tests/unit/test_skills_check.py` prove the failure paths fire.
