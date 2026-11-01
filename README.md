@@ -298,7 +298,9 @@ altered-states/
     unit/                              Domain-logic tests
     integration/                       Whole-pipeline tests (offline)
     conftest.py                        Shared pytest fixtures
+    fixtures/golden/                   Golden snapshot fixtures for content/build output
     prompts.json                       Prompt fixtures
+    prompts-love.json                  Prompt fixture for the love-combo experiment
     responses/                         Captured response fixtures
   docs/
     evals/                             Eval reports + test protocol cards
