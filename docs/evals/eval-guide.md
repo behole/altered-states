@@ -242,7 +242,7 @@ If ANY of these appear, the skill is bleeding into another substance's territory
 
 ### The Blind Test (gold standard)
 
-Run Prompt 1 and Prompt 4 through all 7 substances at medium intensity. Remove all labels. Show the 14 responses to someone familiar with the project.
+Run Prompt 1 and Prompt 4 through all 11 base substances at medium intensity. Remove all labels. Show the 22 responses to someone familiar with the project.
 
 **Task:** Match each response to its substance.
 

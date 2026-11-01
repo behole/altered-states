@@ -393,7 +393,7 @@ Each substance is built from clinical research using validated instruments:
 - **Psilocybin:** Griffiths et al. (2006, 2008, 2016), Barrett et al. (2022), Metastasio & Prevete (2025), Stoliker et al. (2022, 2024), Lebedev et al. (2015), Cosimano (2014)
 - **LSD:** Holze & Liechti (2021, 2022), Carhart-Harris et al. (2016), Kaelen et al. (2015/2017), Dolder & Liechti (2016), Nour et al. (2016), Kettner et al. (2021), Passie et al. (2008)
 - **MDMA:** Mithoefer et al. (2018), Mitchell et al. (2021), Hysek & Liechti (2012), Nichols (1986), Liechti et al. (2000/2001), Schmid et al. (2014), Holze et al. (2020), Curran & Parrott (2000–2013)
-- **2C-B:** Caudevilla-Gálligo et al. (2012), Páleníček et al. (2013), Glennon et al. (1988), Yanakieva et al. (2019), de Boer et al. (1999), Shulgin & Shulgin (1991, qualitative only)
+- **2C-B:** Caudevilla-Gálligo et al. (2012), Páleníček et al. (2013), Glennon et al. (1988), Yanakieva et al. (2019), de Boer et al. (1999), Giroud et al. (1998, analytical only), Shulgin & Shulgin (1991, qualitative only)
 - **DMT:** Strassman (1994, 2001), Timmermann et al. (2018, 2019, 2023), Davis et al. (2020), Michael et al. (2021), Frecska et al. (2016)
 - **Ayahuasca:** Riba et al. (2001, 2003), Shanon (2002), Frecska et al. (2016), Strassman (2001)
 
