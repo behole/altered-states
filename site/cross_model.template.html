@@ -1,0 +1,133 @@
+<!--
+  Cross-model diff — injected into the SPA home by build.py behind the
+  site.cross_model_diff flag (compiled out entirely when the flag is off,
+  payload included). The script tag below carries, per prompt, every model's
+  response set: real-run JSONL rows (tests/responses/, model field) and the
+  historical same-prompt captures (experiments/same-prompt/output/, model in
+  the run header). Each column is tagged with its model id; rows are keyed by
+  substance. All client code reads the build-time payload; no fetches; no
+  external assets. Never hand-edit built site/index.html; edit this template
+  or build.py.
+-->
+<div id="view-cross_model" class="view-container">
+  <div class="hero" style="padding-bottom: 24px;">
+    <h1>Cross-model<br>diff.</h1>
+    <p>
+      The same prompt, answered under each substance skill across model
+      generations. Columns are models (tagged with their model id), rows are
+      substances &mdash; read straight across to compare how one substance's
+      character survives the model change. DeepSeek responses come from real
+      capped eval runs; the historical columns come from the same-prompt
+      corpora captured under earlier models.
+    </p>
+  </div>
+  <section style="padding-top: 0;">
+    <div class="cm-tabs" id="cm-tabs" aria-label="Prompts">
+      <!-- prompt tabs; filled by the cross-model renderer -->
+    </div>
+    <div class="cm-grid" id="cm-grid">
+      <!-- one row per substance; one cell per model -->
+    </div>
+    <p class="cm-note">
+      Generated at build time from <code>tests/responses/*.jsonl</code> and
+      <code>experiments/same-prompt/output/*.md</code>. Responses are excerpt
+      containers capped at 1800 characters; not a golden test surface.
+    </p>
+  </section>
+</div>
+<style>
+  .cm-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  .cm-tab { border: 1px solid var(--border, rgba(0,0,0,0.08)); border-radius: 10px;
+    padding: 8px 14px; background: none; color: var(--text, inherit); cursor: pointer; font-size: 14px; }
+  .cm-tab:hover { border-color: var(--accent, #6b5ce7); }
+  .cm-tab.cm-tab-active { border-color: var(--accent, #6b5ce7); outline: 1px solid var(--accent, #6b5ce7); }
+  .cm-grid { overflow-x: auto; }
+  .cm-entry { max-width: 380px; width: 340px; vertical-align: top; display: table-cell;
+    padding: 0 0 18px; }
+  .cm-cell { vertical-align: top; padding-right: 18px; max-width: 380px; display: table-cell; }
+  .cm-model-tag { display: inline-block; font-size: 11px; color: var(--bg, #fff);
+    background: var(--accent, #6b5ce7); border-radius: 6px; padding: 2px 8px;
+    margin-bottom: 6px; font-family: monospace; }
+  .cm-model-tag.cm-alt { background: #2e8b57; }
+  .cm-substance { font-size: 15px; font-weight: 600; margin-right: 8px; }
+  .cm-missing { color: var(--text-muted, #8a8a8a); font-style: italic; }
+
+  .cm-text { font-size: 14px; line-height: 1.55; white-space: pre-wrap; }
+  .cm-note { margin-top: 12px; font-size: 13px; color: var(--text-muted, #8a8a8a); }
+  .cm-row { width: 100%; }
+  .cm-missing { color: var(--text-muted, #8a8a8a); font-style: italic; }
+</style>
+<script type="application/json" id="cm-data">__CROSS_MODEL_DATA__</script>
+<script>
+(function () {
+  var cross = { pairs: [] };
+  var dataNode = document.getElementById('cm-data');
+  if (dataNode) {
+    try { cross = JSON.parse(dataNode.textContent); } catch (err) { cross = { pairs: [] }; }
+  }
+  var activePair = 0;
+
+  function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function renderTabs() {
+    var tabs = document.getElementById('cm-tabs');
+    if (!tabs) return;
+    tabs.innerHTML = cross.pairs.map(function (pair, index) {
+      var short = pair.prompt.length > 44 ? pair.prompt.slice(0, 44) + '\u2026' : pair.prompt;
+      return '<button class="cm-tab' + (index === activePair ? ' cm-tab-active' : '') +
+        '" data-pair-index="' + index + '">' + escHtml(short) + '</button>';
+    }).join('');
+    Array.prototype.forEach.call(tabs.querySelectorAll('.cm-tab'), function (btn) {
+      btn.addEventListener('click', function () {
+        selectPair(parseInt(btn.dataset.pairIndex, 10));
+      });
+    });
+  }
+
+  function renderGrid() {
+    var grid = document.getElementById('cm-grid');
+    if (!grid) return;
+    var pair = cross.pairs[activePair];
+    if (!pair) { grid.innerHTML = '<p class="cm-missing">No cross-model pairs available.</p>'; return; }
+
+    // Collect the union of substances across all models, in first-seen order.
+    var substances = [];
+    var seen = {};
+    pair.responses.forEach(function (resp) {
+      resp.substances.forEach(function (cell) {
+        if (!seen[cell.substance]) { seen[cell.substance] = true; substances.push(cell.substance); }
+      });
+    });
+
+    var html = '<div class="cm-row">';
+    pair.responses.forEach(function (resp, ci) {
+      html += '<div class="cm-entry">';
+      html += '<div><span class="cm-model-tag' + (ci % 2 ? ' cm-alt' : '') + '">' + escHtml(resp.model) +
+        '</span></div>';
+      html += substances.map(function (sub) {
+        var cell = resp.substances.find(function (c) { return c.substance === sub; });
+        return '<div style="margin-top:10px"><div class="cm-substance">' + escHtml(sub) + '</div>' +
+          '<div class="cm-text">' + (cell ? escHtml(cell.text) : '<span class="cm-missing">No response captured for this model.</span>') +
+          '</div></div>';
+      }).join('');
+      html += '</div>';
+    });
+    html += '</div>';
+    grid.innerHTML = html;
+  }
+
+  function selectPair(index) {
+    if (!cross.pairs[index]) return;
+    activePair = index;
+    renderTabs();
+    renderGrid();
+  }
+
+  renderTabs();
+  renderGrid();
+})();
+</script>

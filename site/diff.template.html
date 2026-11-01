@@ -1,0 +1,156 @@
+<!--
+  Substance diff view — injected into the SPA home by build.py behind the
+  site.diff_view flag (compiled out entirely when the flag is off, payload
+  included). The script tag below carries the build-time diff payload. Never
+  hand-edit built site/index.html; edit this template or build.py.
+-->
+<div id="view-diff" class="view-container">
+  <div class="hero" style="padding-bottom: 24px;">
+    <h1>Pick<br>two.</h1>
+    <p>
+      Any two substances, side by side: the seven phenomenological dimensions
+      (perceptual, temporal, cognitive, emotional, self/ego, mystical, somatic)
+      plus duration, language pattern, and ego behavior. Every value is lifted
+      from that substance's own skill file. Pick the same substance twice to
+      compare it against itself.
+    </p>
+  </div>
+  <section style="padding-top: 0;">
+    <label for="diff-a">Compare</label>
+    <select id="diff-a" data-role="diff-a">
+      <!-- substance options; filled by the diff renderer -->
+    </select>
+    <label for="diff-b" style="margin-left: 12px;">against</label>
+    <select id="diff-b" data-role="diff-b">
+      <!-- substance options; filled by the diff renderer -->
+    </select>
+    <div id="diff-table" class="diff-table" role="table" aria-label="Substance comparison">
+      <!-- comparison rows; filled by the diff renderer -->
+    </div>
+    <div class="diff-note" id="diff-note" aria-live="polite">
+      Values come straight from each skill's own description &mdash; no curated fill-in table.
+    </div>
+  </section>
+</div>
+<style>
+  .diff-table { margin-top: 18px; border: 1px solid var(--border, rgba(0,0,0,0.08)); border-radius: 12px; overflow: hidden; }
+  .diff-row { display: grid; grid-template-columns: 170px 1fr 1fr; border-bottom: 1px solid var(--border, rgba(0,0,0,0.08)); }
+  .diff-row:last-child { border-bottom: none; }
+  .diff-dim { padding: 12px 14px; font-weight: 600; font-size: 13px; background: var(--bg-warm, #f6f5f4); border-right: 1px solid var(--border, rgba(0,0,0,0.08)); }
+  .diff-val { padding: 12px 14px; font-size: 13px; line-height: 1.5; border-right: 1px solid var(--border, rgba(0,0,0,0.08)); }
+  .diff-val:last-child { border-right: none; }
+  .diff-val.diff-identical { color: var(--text-muted, #8a8a8a); font-style: italic; }
+  .diff-same-flag { display:inline-block; margin-left: 8px; font-size: 11px; color: var(--text-muted, #8a8a8a); }
+  .diff-head-cell { font-weight: 700; }
+  .diff-note { margin-top: 10px; font-size: 12px; color: var(--text-muted, #8a8a8a); }
+  @media (max-width: 768px) {
+    .diff-row { grid-template-columns: 110px 1fr 1fr; }
+  }
+</style>
+<script type="application/json" id="diff-data">__DIFF_DATA__</script>
+<script>
+(function () {
+  var diffPayload = { substances: [] };
+  var dataNode = document.getElementById('diff-data');
+  if (dataNode) {
+    try { diffPayload = JSON.parse(dataNode.textContent); } catch (err) { diffPayload = { substances: [] }; }
+  }
+
+  // Ten comparison rows: seven canonical dimensions plus duration, language
+  // pattern, and ego behavior — in payload key order.
+  var ROWS = [
+    ['dimensions.perceptual', 'Perceptual'],
+    ['dimensions.temporal', 'Temporal'],
+    ['dimensions.cognitive', 'Cognitive'],
+    ['dimensions.emotional', 'Emotional'],
+    ['dimensions.ego', 'Self / Ego'],
+    ['dimensions.mystical', 'Mystical'],
+    ['dimensions.somatic', 'Somatic'],
+    ['duration_label', 'Duration'],
+    ['language', 'Language pattern'],
+    ['ego_behavior', 'Ego behavior']
+  ];
+
+  function escHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function readValue(substance, key) {
+    var parts = key.split('.');
+    var node = substance;
+    for (var i = 0; i < parts.length; i++) {
+      node = node ? node[parts[i]] : undefined;
+    }
+    return node === undefined || node === null ? '' : String(node);
+  }
+
+  function substanceById(id) {
+    for (var i = 0; i < diffPayload.substances.length; i++) {
+      if (diffPayload.substances[i].id === id) return diffPayload.substances[i];
+    }
+    return null;
+  }
+
+  function fillSelect(select, chosenId) {
+    select.innerHTML = diffPayload.substances.map(function (s) {
+      var selected = s.id === chosenId ? ' selected' : '';
+      return '<option value="' + escHtml(s.id) + '"' + selected + '>' +
+        escHtml(s.emoji) + ' ' + escHtml(s.name) + '</option>';
+    }).join('');
+  }
+
+  function renderDiff() {
+    var a = substanceById(document.getElementById('diff-a').value);
+    var b = substanceById(document.getElementById('diff-b').value);
+    var table = document.getElementById('diff-table');
+    var note = document.getElementById('diff-note');
+    if (!table || !a || !b) return;
+    var same = a.id === b.id;
+    var html = '<div class="diff-row">' +
+      '<div class="diff-dim"></div>' +
+      '<div class="diff-val diff-head-cell" data-substance-col="a" data-substance-id="' + escHtml(a.id) + '">' +
+        escHtml(a.emoji) + ' ' + escHtml(a.name) + '</div>' +
+      '<div class="diff-val diff-head-cell" data-substance-col="b" data-substance-id="' + escHtml(b.id) + '">' +
+        escHtml(b.emoji) + ' ' + escHtml(b.name) + '</div>' +
+      '</div>';
+    ROWS.forEach(function (row) {
+      var key = row[0];
+      var valueA = readValue(a, key);
+      var valueB = readValue(b, key);
+      var identical = valueA === valueB;
+      html += '<div class="diff-row" data-dimension="' + escHtml(row[1]) + '">' +
+        '<div class="diff-dim">' + escHtml(row[1]) + '</div>' +
+        '<div class="diff-val" data-row="' + escHtml(key) + '" data-col="a">' +
+          (valueA ? escHtml(valueA) : '<em>Not stated by this skill.</em>') +
+          (identical ? '<span class="diff-same-flag">same</span>' : '') +
+        '</div>' +
+        '<div class="diff-val" data-row="' + escHtml(key) + '" data-col="b">' +
+          (valueB ? escHtml(valueB) : '<em>Not stated by this skill.</em>') +
+          (identical ? '<span class="diff-same-flag">same</span>' : '') +
+        '</div>' +
+      '</div>';
+    });
+    table.innerHTML = html;
+    if (note) {
+      note.textContent = same
+        ? 'Comparing a substance against itself — the two columns are identical by construction.'
+        : 'Values come straight from each skill\'s own description — no curated fill-in table.';
+    }
+  }
+
+  function renderDiffView() {
+    var selectA = document.getElementById('diff-a');
+    var selectB = document.getElementById('diff-b');
+    if (!selectA || !selectB) return;
+    fillSelect(selectA, 'lsd');
+    fillSelect(selectB, 'psilocybin');
+    selectA.addEventListener('change', renderDiff);
+    selectB.addEventListener('change', renderDiff);
+    renderDiff();
+  }
+
+  renderDiffView();
+})();
+</script>

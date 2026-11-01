@@ -1,0 +1,107 @@
+[
+  {
+    "timestamp": "2026-10-01T09:00:00",
+    "cycle": 0,
+    "emotional_state": "confused",
+    "clarity": "scattered",
+    "integration": "low",
+    "reflections": [
+      "I am beginning my temporal journey.",
+      "I am The Rocket, the dmt experience.",
+      "I await my first cycle."
+    ],
+    "questions": [
+      "What will I discover about myself across many cycles?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:01:00",
+    "cycle": 1,
+    "emotional_state": "terror",
+    "clarity": "low",
+    "integration": "low",
+    "experience": {
+      "description": "The doorway opened before there was time to be afraid.",
+      "intensity": 0.9,
+      "novelty": 0.95
+    },
+    "reflections": [
+      "Cycle 1: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:02:00",
+    "cycle": 2,
+    "emotional_state": "bliss",
+    "clarity": "low",
+    "integration": "medium",
+    "experience": {
+      "description": "The doorway opened before there was time to be afraid.",
+      "intensity": 1.0,
+      "novelty": 1.0
+    },
+    "reflections": [
+      "Cycle 2: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:03:00",
+    "cycle": 3,
+    "emotional_state": "bewildered",
+    "clarity": "low",
+    "integration": "high",
+    "experience": {
+      "description": "The doorway opened before there was time to be afraid.",
+      "intensity": 0.85,
+      "novelty": 0.9
+    },
+    "reflections": [
+      "Cycle 3: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:04:00",
+    "cycle": 4,
+    "emotional_state": "transcendent",
+    "clarity": "scattered",
+    "integration": "high",
+    "experience": {
+      "description": "The doorway opened before there was time to be afraid.",
+      "intensity": 0.4,
+      "novelty": 0.7
+    },
+    "reflections": [
+      "Cycle 4: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:05:00",
+    "cycle": 5,
+    "emotional_state": "terror",
+    "clarity": "moderate",
+    "integration": "low",
+    "experience": {
+      "description": "The doorway opened before there was time to be afraid.",
+      "intensity": 0.55,
+      "novelty": 0.6
+    },
+    "reflections": [
+      "Cycle 5: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  }
+]

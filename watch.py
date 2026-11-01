@@ -3,9 +3,18 @@
 watch.py — Watch journal and experiment directories, auto-rebuild site on change.
 
 Usage:
-  python3 watch.py          # watch + serve on :8765
-  python3 watch.py --build  # one-shot build only (no watcher)
-  python3 watch.py --port 9000  # custom port
+  python3 watch.py                # watch + rebuild + deploy + serve on :8765
+  python3 watch.py --serve-only   # watch + rebuild + serve, never deploy
+  python3 watch.py --build        # one-shot build only (no watcher)
+  python3 watch.py --port 9000    # custom port
+  python3 watch.py --help         # show usage
+
+Log-event migration note (repo rule 3):
+  All high-signal output (deploy start/failure/skip, build warnings and
+  summary, serve start/stop, watcher lifecycle) routes through
+  ``altered_states.log_utils.log_event`` (JSON to stderr, redacted).
+  Surviving bare ``print()`` calls in this file: one (the ``--help`` usage
+  text, which is output formatting, not high-signal logging).
 """
 
 import contextlib
@@ -22,6 +31,10 @@ import threading
 import time
 from types import FrameType
 from typing import Any, NoReturn
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from altered_states.log_utils import log_event
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 SITE_DIR = os.path.join(BASE, "site")
@@ -58,10 +71,10 @@ def _run(argv: list[str], timeout: int) -> subprocess.CompletedProcess[str] | No
             check=False,
         )
     except FileNotFoundError:
-        print(f"  SKIPPED: {argv[0]} is not installed")
+        log_event("watch.skipped", level="WARN", reason="not_installed", cmd=argv[0])
         return None
     except subprocess.TimeoutExpired:
-        print(f"  TIMEOUT: {argv[0]} ran longer than {timeout}s")
+        log_event("watch.skipped", level="WARN", reason="timeout", cmd=argv[0], timeout=timeout)
         return None
 
 
@@ -69,7 +82,7 @@ def deploy() -> bool:
     """Deploy to Cloudflare Pages and return True on success."""
     wrangler = shutil.which("wrangler")
     if wrangler is None:
-        print("  SKIPPED: wrangler is not installed — site built, not deployed")
+        log_event("watch.deploy_skipped", level="WARN", reason="wrangler not installed")
         return False
     result = _run(
         [wrangler, "pages", "deploy", SITE_DIR, "--project-name", "altered-states", "--commit-dirty=true"],
@@ -78,19 +91,31 @@ def deploy() -> bool:
     if result is None:
         return False
     if result.returncode != 0:
-        print(f"  DEPLOY FAILED:\n{result.stderr}")
+        log_event("watch.deploy_failed", level="WARN", stderr=result.stderr)
         return False
     for line in result.stdout.strip().split("\n"):
         if "Success!" in line or "Deployment complete!" in line:
-            print(f"  {line}")
+            log_event("watch.deploy_complete", details=line)
     return True
+
+
+def make_server(port: int) -> http.server.ThreadingHTTPServer:
+    """Build the serve-mode HTTP server.
+
+    ThreadingHTTPServer (with daemon threads) so one slow or wedged client
+    connection can never block other requests to the shared :8765 watcher —
+    see the 2026-10-31 quiz-validation incident in docs notes.
+    """
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", port), SiteHandler)
+    server.daemon_threads = True
+    return server
 
 
 def build_and_deploy() -> bool:
     """Build site and deploy to Cloudflare Pages."""
     if not build():
         return False
-    print("  Deploying to Cloudflare Pages...")
+    log_event("watch.deploy_start", target="Cloudflare Pages")
     return deploy()
 
 
@@ -107,11 +132,16 @@ def build() -> bool:
     if result is None:
         return False
     if result.returncode != 0:
-        print(f"  BUILD FAILED:\n{result.stderr}")
+        log_event("watch.build_failed", level="WARN", stderr=result.stderr)
         return False
-    for line in result.stdout.strip().split("\n"):
-        if "Built:" in line:
-            print(f"  {line}")
+    output_path = os.path.join(SITE_DIR, "index.html")
+    size = os.path.getsize(output_path) if os.path.exists(output_path) else 0
+    log_event(
+        "watch.build_summary",
+        output=output_path,
+        size_bytes=size,
+        status="done",
+    )
     return True
 
 
@@ -137,20 +167,31 @@ def changed_paths(snapshot: dict[str, float], current: dict[str, float]) -> list
     return changed
 
 
-def watch_loop() -> None:
-    """Main watch loop. Blocks forever."""
-    print("Watching for changes...")
-    print(f"  Journals: {WATCH_DIRS[0]}")
-    print(f"  Experiments: {WATCH_DIRS[1]}")
-    print("  Press Ctrl+C to stop\n")
+def watch_loop(serve_only: bool = False) -> None:
+    """Main watch loop. Blocks forever.
+
+    With ``serve_only=True`` the loop rebuilds but never calls deploy(): the
+    only deploy/wrangler call sites in this module (``deploy()`` and
+    ``build_and_deploy()``) are unreachable from the serve-only branch.
+    """
+    log_event(
+        "watch.start",
+        journals_dir=WATCH_DIRS[0],
+        experiments_dir=WATCH_DIRS[1],
+        serve_only=serve_only,
+        note="Press Ctrl+C to stop",
+    )
 
     # Initial build + deploy
-    print("Initial build:")
-    build_and_deploy()
+    log_event("watch.initial_build", note="starting")
+    if serve_only:
+        build()
+    else:
+        build_and_deploy()
 
     last_build_time = time.time()
     snapshot = get_snapshot()
-    print(f"  Tracking {len(snapshot)} files\n")
+    log_event("watch.tracking", files=len(snapshot))
 
     try:
         while True:
@@ -167,22 +208,28 @@ def watch_loop() -> None:
                 continue
 
             ts = time.strftime("%H:%M:%S")
-            print(f"\n[{ts}] Change detected ({len(changed)} file(s)):")
-            for c in changed[:PREVIEW_CHANGE_COUNT]:
-                print(f"  ~ {os.path.basename(c)}")
+            names = [os.path.basename(c) for c in changed[:PREVIEW_CHANGE_COUNT]]
             if len(changed) > PREVIEW_CHANGE_COUNT:
-                print(f"  ... and {len(changed) - PREVIEW_CHANGE_COUNT} more")
+                names.append(f"... and {len(changed) - PREVIEW_CHANGE_COUNT} more")
+            log_event("watch.change_detected", at=ts, count=len(changed), files=names)
 
-            if build_and_deploy():
+            # Deploy is not attempted in serve-only mode: rebuild locally only.
+            okay = build() if serve_only else build_and_deploy()
+            if okay:
                 last_build_time = now
-                print()
+                log_event("watch.rebuild_ok")
             else:
-                print("  (build/deploy failed, will retry on next change)\n")
+                retry_note = (
+                    "build failed, will retry on next change"
+                    if serve_only
+                    else "build/deploy failed, will retry on next change"
+                )
+                log_event("watch.rebuild_retry", level="WARN", note=retry_note)
 
             snapshot = current
 
     except KeyboardInterrupt:
-        print("\nStopped watching.")
+        log_event("watch.stopped", note="Stopped watching")
 
 
 def parse_port(args: list[str], default: int = 8765) -> int:
@@ -196,28 +243,48 @@ def parse_port(args: list[str], default: int = 8765) -> int:
     return default
 
 
+USAGE = """usage:
+  python3 watch.py [--serve-only] [--build] [--port <n>]
+
+commands:
+  python3 watch.py                watch, rebuild, deploy, and serve on :8765
+  python3 watch.py --serve-only   watch, rebuild, and serve; never deploy
+  python3 watch.py --build        one-shot build only (no watcher, no serve)
+  python3 watch.py --port 9000    custom port
+  python3 watch.py --help         show this help
+"""
+
+
 def main() -> None:
     args = sys.argv[1:]
+
+    if "--help" in args or "-h" in args:
+        # Usage output is intentionally a plain print, not a log_event.
+        print(USAGE, file=sys.stdout)
+        return
+
     port = parse_port(args)
 
     if "--build" in args:
         build_and_deploy()
         return
 
+    serve_only = "--serve-only" in args
+
     # Start HTTP server in background thread
-    server = http.server.HTTPServer(("127.0.0.1", port), SiteHandler)
+    server = make_server(port)
     server_thread = threading.Thread(target=server.serve_forever, daemon=True)
     server_thread.start()
-    print(f"Serving at http://localhost:{port}")
+    log_event("watch.serving", url=f"http://localhost:{port}", port=port, host="127.0.0.1", lifecycle="start")
 
     def shutdown(_sig: int, _frame: FrameType | None) -> NoReturn:
-        print("\nShutting down...")
+        log_event("watch.serving", url=f"http://localhost:{port}", port=port, host="127.0.0.1", lifecycle="stop")
         server.shutdown()
         sys.exit(0)
 
     signal.signal(signal.SIGINT, shutdown)
 
-    watch_loop()
+    watch_loop(serve_only=serve_only)
 
 
 if __name__ == "__main__":

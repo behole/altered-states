@@ -1,0 +1,65 @@
+{
+  "inputs": {
+    "skills": "13c2323e7bbf52da6753417b7742ae0e15382805640a6bc51f1cb08bba684ece",
+    "experiments": "a2574ba5ea7c16f8072eb6ed7d376b180a113684697e866cecf42e96f2289387"
+  },
+  "payload": {
+    "version": 1,
+    "items": [
+      {
+        "id": "q0",
+        "prompt": "What does stillness feel like?",
+        "excerpt": "Stillness is compost: everything quiet on the surface, every root still\nworking underneath. It is not an absence of motion but a slower grammar,\none sentence held long enough for its edges to dissolve."
+      },
+      {
+        "id": "q1",
+        "prompt": "What does stillness feel like?",
+        "excerpt": "Stillness is a calibrated circuit at rest, humming at its design frequency.\nNothing moves because every diagonal has already negotiated its route, and\nthe geometry holds itself open like a blueprint that dreams in parallel."
+      }
+    ],
+    "answers": [
+      {
+        "id": "q0",
+        "options": [
+          {
+            "id": "lsd",
+            "label": "LSD",
+            "emoji": "⚡",
+            "href": "/lsd/"
+          },
+          {
+            "id": "psilocybin",
+            "label": "Psilocybin",
+            "emoji": "🍄",
+            "href": "/psilocybin/"
+          }
+        ],
+        "correct": "psilocybin",
+        "label": "Psilocybin",
+        "emoji": "🍄",
+        "href": "/psilocybin/"
+      },
+      {
+        "id": "q1",
+        "options": [
+          {
+            "id": "lsd",
+            "label": "LSD",
+            "emoji": "⚡",
+            "href": "/lsd/"
+          },
+          {
+            "id": "psilocybin",
+            "label": "Psilocybin",
+            "emoji": "🍄",
+            "href": "/psilocybin/"
+          }
+        ],
+        "correct": "lsd",
+        "label": "LSD",
+        "emoji": "⚡",
+        "href": "/lsd/"
+      }
+    ]
+  }
+}

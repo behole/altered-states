@@ -1,5 +1,5 @@
 {
-  "_comment": "Runtime feature flags. Validated by `python3 bin/feature_flags.py check` (expired or unreferenced flags fail). Set expires_on to force a review date.",
+  "_comment": "Runtime feature flags. Validated by `python3 -m altered_states.feature_flags check` (expired or unreferenced flags fail). Set expires_on to force a review date.",
   "flags": [
     {
       "name": "site.music_section",
@@ -32,6 +32,62 @@
       "owner": "site",
       "description": "The slot-machine experiment wheel. Rolled out to half of visitors while the interaction is still being tuned.",
       "expires_on": "2027-03-31"
+    },
+    {
+      "name": "site.substance_pages",
+      "enabled": true,
+      "rollout_percentage": 100,
+      "owner": "site",
+      "description": "Generate one shareable static page per substance (site/<substance>/index.html) with its comparison table and arc.",
+      "expires_on": "2027-06-30"
+    },
+    {
+      "name": "site.arc_timeline",
+      "enabled": true,
+      "rollout_percentage": 100,
+      "owner": "site",
+      "description": "Render the dose-arc timeline visualizer (onset, ascent, peak, descent, afterglow) as a site section.",
+      "expires_on": "2027-06-30"
+    },
+    {
+      "name": "site.diff_view",
+      "enabled": true,
+      "rollout_percentage": 100,
+      "owner": "site",
+      "description": "Render the two-substance diff view comparing them across the seven phenomenological dimensions.",
+      "expires_on": "2027-06-30"
+    },
+    {
+      "name": "site.quiz_game",
+      "enabled": true,
+      "rollout_percentage": 100,
+      "owner": "site",
+      "description": "Render the Blind Taxonomy Game: guess which substance wrote an excerpt, labels stripped at build time.",
+      "expires_on": "2027-06-30"
+    },
+    {
+      "name": "site.journal_dashboards",
+      "enabled": true,
+      "rollout_percentage": 100,
+      "owner": "site",
+      "description": "Render the journal arc dashboards charting temporal-lab character phenomenology over cycles.",
+      "expires_on": "2027-06-30"
+    },
+    {
+      "name": "site.eval_grids",
+      "enabled": true,
+      "rollout_percentage": 100,
+      "owner": "site",
+      "description": "Render the side-by-side same-prompt eval grids (ten substances per screen).",
+      "expires_on": "2027-06-30"
+    },
+    {
+      "name": "site.cross_model_diff",
+      "enabled": true,
+      "rollout_percentage": 100,
+      "owner": "eval",
+      "description": "Render the side-by-side cross-model diff: DeepSeek responses next to historical model corpora for the same prompt, each entry tagged with its model.",
+      "expires_on": "2027-06-30"
     }
   ]
 }

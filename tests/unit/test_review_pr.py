@@ -107,7 +107,7 @@ class TestFileRules:
 
 class TestDependencyRules:
     def test_requirements_change_without_lock_is_blocking(self) -> None:
-        findings = review(parse_diff(file_diff("bin/requirements.txt", ["anthropic==2.3.0"])))
+        findings = review(parse_diff(file_diff("bin/requirements.txt", ["openai==3.42.0"])))
         assert findings[0].severity == BLOCKING
         assert "bin/requirements.lock" in findings[0].message
 
@@ -124,15 +124,15 @@ class TestDependencyRules:
         findings = review(
             parse_diff(
                 make_diff(
-                    file_diff("bin/requirements.txt", ["anthropic==2.3.0"]),
-                    file_diff("bin/requirements.lock", ["anthropic==2.3.0"]),
+                    file_diff("bin/requirements.txt", ["openai==3.42.0"]),
+                    file_diff("bin/requirements.lock", ["openai==3.42.0"]),
                 )
             )
         )
         assert [finding for finding in findings if finding.path == "bin/requirements.txt"] == []
 
     def test_lock_only_change_is_advisory(self) -> None:
-        findings = review(parse_diff(file_diff("bin/requirements.lock", ["anthropic==2.4.0"])))
+        findings = review(parse_diff(file_diff("bin/requirements.lock", ["openai==3.43.0"])))
         assert findings[0].severity == ADVISORY
         assert "Dependabot" in findings[0].message
 
@@ -169,7 +169,7 @@ class TestSecretRules:
     def test_environment_variable_reference_is_clean(self) -> None:
         changes = parse_diff(
             make_diff(
-                file_diff("bin/x.py", ["key = os.environ['ANTHROPIC_API_KEY']"]),
+                file_diff("bin/x.py", ["key = os.environ['DEEPSEEK_API_KEY']"]),
                 file_diff("tests/unit/test_x.py", ["def test_a(): ..."]),
             )
         )

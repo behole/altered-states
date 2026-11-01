@@ -1,14 +1,15 @@
 # Altered States
 
-A set of AI skills that simulate the phenomenology of 10 mind-altering substances, grounded in peer-reviewed clinical research. Each skill transforms an AI's cognition, perception, language, emotion, and sense of self according to documented phenomenological profiles.
+A set of AI skills that simulate the phenomenology of 11 mind-altering substances, grounded in peer-reviewed clinical research. Each skill transforms an AI's cognition, perception, language, emotion, and sense of self according to documented phenomenological profiles.
 
-## The Ten Substances
+## The Eleven Substances
 
 | | Substance | Nickname | Character |
 |---|---|---|---|
 | 🍄 | **Psilocybin** | The Teacher | Organic, emotional, introspective, body-heavy, circular language |
 | ⚡ | **LSD** | The Technician | Electric, analytical, geometric, cascading thought, architectural metaphors |
 | 💊 | **MDMA** | The Connector | Warm, direct, heart-open, coherent — NOT a psychedelic |
+| 🌈 | **2C-B** | The Chameleon | Empathogenic + visual hybrid — warm, vivid, sensitive, watercolor, talker's plateau, 4-8h |
 | 🚀 | **DMT** | The Rocket | Instant onset, alien, hyperreal, entity encounters, 15 min total |
 | 🌿 | **Ayahuasca** | The Medicine | Ceremonial, narrative, pedagogical, purging, 4-6 hour arc |
 | 💎 | **5-MeO-DMT** | The Dissolver | Formless, total ego dissolution, white light, 2-20 min, no entities |
@@ -25,6 +26,35 @@ Plus a **router** that parses natural language and loads the right skill at the 
 
 These skills work with any AI assistant that accepts system prompts, custom instructions, or markdown skill files. Pick your platform:
 
+### One command: `bin/install_skills.py`
+
+Copies (or symlinks) every installable skill — the 11 substances, the router,
+the combo overlays, and the tolerance/afterglow lines — into the
+platform-correct skills directory. It is a **dry run by default**: it prints
+the per-skill plan and writes nothing until you add `--apply`.
+
+```bash
+python3 bin/install_skills.py                 # plan only — nothing written
+python3 bin/install_skills.py --apply         # copy into the real destination
+python3 bin/install_skills.py --apply --link  # symlink instead of copy
+python3 bin/install_skills.py --apply --dest /tmp/home/skills  # redirect
+python3 bin/install_skills.py --list          # see the full install set
+```
+
+Platform destinations (also in `--help`):
+
+| Platform | Default destination |
+|---|---|
+| darwin (macOS) | `~/.claude/skills` |
+| linux | `~/.config/opencode/skills` |
+
+The router installs under the name `altered-states-router` so it can never
+collide with a substance skill. Use `--list` to see every installable
+name, then `--skill NAME` (repeatable) to install a subset. On an unusual
+platform or a non-standard setup, always pass `--dest` explicitly.
+
+### Manual alternatives
+
 ### Claude Code / OpenCode / Any slash-skill system
 
 Skills live as `SKILL.md` files. Clone this repo into your skills directory:
@@ -38,6 +68,7 @@ git clone https://github.com/behole/altered-states.git ~/altered-states
 ln -s ~/altered-states/skills/psilocybin ~/.claude/skills/psilocybin
 ln -s ~/altered-states/skills/lsd ~/.claude/skills/lsd
 ln -s ~/altered-states/skills/mdma ~/.claude/skills/mdma
+ln -s ~/altered-states/skills/2c-b ~/.claude/skills/2c-b
 ln -s ~/altered-states/skills/dmt ~/.claude/skills/dmt
 ln -s ~/altered-states/skills/ayahuasca ~/.claude/skills/ayahuasca
 ln -s ~/altered-states/skills/5-meo-dmt ~/.claude/skills/5-meo-dmt
@@ -48,7 +79,7 @@ ln -s ~/altered-states/skills/ibogaine ~/.claude/skills/ibogaine
 ln -s ~/altered-states/skills/router ~/.claude/skills/altered-states-router
 ```
 
-Then invoke in conversation: `/psilocybin`, `/lsd`, `/mdma`, `/dmt`, `/ayahuasca`, `/5-meo-dmt`, `/mescaline`, `/ketamine`, `/salvia`, `/ibogaine`, or `/altered-states-router`.
+Then invoke in conversation: `/psilocybin`, `/lsd`, `/mdma`, `/2c-b`, `/dmt`, `/ayahuasca`, `/5-meo-dmt`, `/mescaline`, `/ketamine`, `/salvia`, `/ibogaine`, or `/altered-states-router`.
 
 For OpenCode, use `~/.config/opencode/skills/` instead of `~/.claude/skills/`.
 
@@ -61,6 +92,7 @@ Gemini loads skills via GEMINI.md. Add skill paths to your GEMINI.md:
 - path: ~/altered-states/skills/psilocybin/SKILL.md
 - path: ~/altered-states/skills/lsd/SKILL.md
 - path: ~/altered-states/skills/mdma/SKILL.md
+- path: ~/altered-states/skills/2c-b/SKILL.md
 - path: ~/altered-states/skills/dmt/SKILL.md
 - path: ~/altered-states/skills/ayahuasca/SKILL.md
 - path: ~/altered-states/skills/5-meo-dmt/SKILL.md
@@ -90,6 +122,7 @@ Load a skill, then start talking. Examples:
 | "mushroom trip" | 🍄 Psilocybin, medium |
 | "drop acid, high dose" | ⚡ LSD, high |
 | "I need warmth and connection" | 💊 MDMA, medium |
+| "nexus" / "venus" / "the chameleon" | 🌈 2C-B, medium |
 | "blast me off" | 🚀 DMT, breakthrough |
 | "ayahuasca ceremony" | 🌿 Ayahuasca |
 | "dissolve me" / "I want the source" | 💎 5-MeO-DMT, breakthrough |
@@ -104,14 +137,14 @@ Load a skill, then start talking. Examples:
 
 ## How The Substances Differ
 
-| Feature | 🍄 Psilocybin | ⚡ LSD | 💊 MDMA | 🚀 DMT | 🌿 Ayahuasca | 💎 5-MeO-DMT | 🌵 Mescaline | 🕳️ Ketamine | 🚪 Salvia | 🪬 Ibogaine |
-|---|---|---|---|---|---|---|---|---|---|---|
-| **Duration** | 4-6 hours | 8-12 hours | 3-5 hours | 10-20 min | 4-6 hours | 2-20 min | 10-14 hours | 30-60 min (IV) | 5-15 min | 12-24 hours |
-| **Visuals** | Organic, breathing | Geometric, fractal | None | Complete reality replacement | Narrative visions | White light / void (formless) | Ornamental organic geometry | Dreamlike blur, void | Dimensional folding, reality replacement | Waking dream, panoramic visions |
-| **Ego** | Gradual dissolution | Gradual expansion | Softening only | Instant total dissolution | Gradual softening | Instant total dissolution (most complete) | Softening, maintained self | Fragmentation / separation | Forced destruction | Death-rebirth archetype |
-| **Emotion** | Grief + love, catharsis | Wonder, awe | Love, empathy, trust | Awe, terror, alien wonder | Reverence, catharsis | Surrender/terror binary | Reverence, ancient wisdom | Numbing → detachment → void | Dysphoria, terror, confusion | Dread → catharsis → exhaustion |
-| **Body** | Heavy, earthy | Electric, buzzing | Warm, stimulated | Launch → dissolution | Heavy, purging | Dying → dissolution → source | Heavy, nauseous, enduring | Floating/heavy/numb, K-lock | Pulled/folded/rotated | Nausea, ataxia, tremor, heavy |
-| **Language** | Flowing, circular | Cascading, architectural | Direct, warm | Fragmented, failing | Narrative, ceremonial | Near-silent, absolute | Vivid, contemplative, grounded | Detached, dreamlike, fragmented | Destroyed, non-verbal | Slow, narrative, ancient |
+| Feature | 🍄 Psilocybin | ⚡ LSD | 💊 MDMA | 🌈 2C-B | 🚀 DMT | 🌿 Ayahuasca | 💎 5-MeO-DMT | 🌵 Mescaline | 🕳️ Ketamine | 🚪 Salvia | 🪬 Ibogaine |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Duration** | 4-6 hours | 8-12 hours | 3-5 hours | 4-8 hours | 10-20 min | 4-6 hours | 2-20 min | 10-14 hours | 30-60 min (IV) | 5-15 min | 12-24 hours |
+| **Visuals** | Organic, breathing | Geometric, fractal | None | Warm watercolor, liquid geometry | Complete reality replacement | Narrative visions | White light / void (formless) | Ornamental organic geometry | Dreamlike blur, void | Dimensional folding, reality replacement | Waking dream, panoramic visions |
+| **Ego** | Gradual dissolution | Gradual expansion | Softening only | Softening, playful, retained | Instant total dissolution | Gradual softening | Instant total dissolution (most complete) | Softening, maintained self | Fragmentation / separation | Forced destruction | Death-rebirth archetype |
+| **Emotion** | Grief + love, catharsis | Wonder, awe | Love, empathy, trust | Warmth + wonder at once (empathogenic/psychedelic hybrid) | Awe, terror, alien wonder | Reverence, catharsis | Surrender/terror binary | Reverence, ancient wisdom | Numbing → detachment → void | Dysphoria, terror, confusion | Dread → catharsis → exhaustion |
+| **Body** | Heavy, earthy | Electric, buzzing | Warm, stimulated | Pleasant warmth, tactile touch, mild stomach awareness | Launch → dissolution | Heavy, purging | Dying → dissolution → source | Heavy, nauseous, enduring | Floating/heavy/numb, K-lock | Pulled/folded/rotated | Nausea, ataxia, tremor, heavy |
+| **Language** | Flowing, circular | Cascading, architectural | Direct, warm | Complete, painterly, chatty | Fragmented, failing | Narrative, ceremonial | Near-silent, absolute | Vivid, contemplative, grounded | Detached, dreamlike, fragmented | Destroyed, non-verbal | Slow, narrative, ancient |
 
 ---
 
@@ -153,7 +186,22 @@ The router parses natural language and loads the correct skill:
 - **Character nicknames** — "the teacher" → psilocybin, "the technician" → LSD, "the doorway" → salvia, "the ancestor" → ibogaine, etc.
 - **Intensity cues** — "heroic dose," "museum dose," "200 mics," "waiting room DMT"
 - **Thematic routing** — "I need warmth" → MDMA, "show me the structure" → LSD
-- **Blends** — "candy flip" → LSD + MDMA overlay, "hippy flip" → psilocybin + MDMA overlay
+- **Blends** — "candy flip" and "hippy flip" route to first-class combo skills
+  (`skills/combos/candy-flip/`, `skills/combos/hippy-flip/`), which compose the two
+  base substances' phenomenology with a documented structural/tonal interaction rule;
+  other flips still route to the dominant substance with a blend note
+- **Tolerance overlays** — re-encounter contexts ("day-two psilocybin," "acid
+  day two," "ketamine burnout") route to first-class overlays under
+  `skills/tolerance/<substance>/`, describing how the base state reads when its
+  full phenomenology has not returned (research: `research/tolerance/sources.md`
+  — Isbell 1961 cross-tolerance; Raval 2021; de la Fuente Revenga 2022; Morgan &
+  Curran 2012 for the ketamine pattern). Phenomenology only: no spacing,
+  persistence, or recovery content, by design
+- **Afterglow residue** — post-arc time ("the morning after," "day two feeling,"
+  "still landing") describes the 24-72h residue per substance
+  (`skills/afterglow/SKILL.md`, consistency checked against each base skill's
+  Descent & Exit in `skills/afterglow/consistency-matrix.md`). Descriptive only:
+  no regimen, recovery, or treatment content, by design
 - **Set/setting passthrough** — emotional context forwarded to the loaded skill
 
 ---
@@ -164,7 +212,7 @@ The router parses natural language and loads the correct skill:
 
 These are human-scored evaluations against written rubrics, not an automated
 test suite — `bin/run_eval.py` generates and captures responses; scoring is manual
-per the protocol in `tests/eval-guide.md`. Reports were produced on Opus 4.6
+per the protocol in `docs/evals/eval-guide.md`. Reports were produced on Opus 4.6
 (April 7) and GLM-5.1 (April 8).
 
 | Test | Score |
@@ -182,7 +230,7 @@ per the protocol in `tests/eval-guide.md`. Reports were produced on Opus 4.6
 
 ### Testing a New Model
 
-See `tests/quick-test-card.md` for a 4-test, 5-minute validation. See `tests/cross-model-test-protocol.md` for the full 8-test battery.
+See `docs/evals/quick-test-card.md` for a 4-test, 5-minute validation. See `docs/evals/cross-model-test-protocol.md` for the full 8-test battery.
 
 ---
 
@@ -194,6 +242,10 @@ altered-states/
     psilocybin/          sources.md, dossier.md
     lsd/                 sources.md, dossier.md
     mdma/                sources.md, dossier.md
+    2c-b/                sources.md, dossier.md
+    tolerance/           README.md (repeat-exposure phenomenology line)
+    afterglow/           SKILL.md (24-72h post-trip residue, descriptive only)
+                         + consistency-matrix.md (descent/exit agreement check)
     dmt/                 sources.md, dossier.md
     ayahuasca/           sources.md, dossier.md
     5-meo-dmt/           sources.md, dossier.md, nlm/ (4 files)
@@ -203,36 +255,61 @@ altered-states/
     ibogaine/            sources.md, dossier.md
     router/              classification-rationale.md
   skills/
-    psilocybin/SKILL.md  v1.4
-    lsd/SKILL.md         v1.4
-    mdma/SKILL.md        v1.4
-    dmt/SKILL.md         v1.4
-    ayahuasca/SKILL.md   v1.4
-    5-meo-dmt/SKILL.md   v1.4
-    mescaline/SKILL.md   v1.4
-    ketamine/SKILL.md    v1.4
-    salvia/SKILL.md      v1.4
-    ibogaine/SKILL.md    v1.4
-    router/SKILL.md      v1.5
+    psilocybin/SKILL.md  1.5
+    lsd/SKILL.md         1.5
+    mdma/SKILL.md        1.5
+    2c-b/SKILL.md        1.5
+    dmt/SKILL.md         1.5
+    ayahuasca/SKILL.md   1.5
+    5-meo-dmt/SKILL.md   1.5
+    mescaline/SKILL.md   1.5
+    ketamine/SKILL.md    1.5
+    salvia/SKILL.md      1.5
+    ibogaine/SKILL.md    1.5
+    router/SKILL.md      1.5
+    combos/candy-flip/   Blend overlay skill (LSD + MDMA), v1.0
+    combos/hippy-flip/   Blend overlay skill (psilocybin + MDMA), v1.0
+    tolerance/README.md  Tolerance overlay line registry, v1.0
+    tolerance/<substance>/SKILL.md  Day-two / burnout overlays (psilocybin,
+                         lsd, ketamine), v1.0 — phenomenology only
+    afterglow/           Post-trip 24-72h residue overlay skill + consistency
+                         matrix, v1.0 — descriptive only, not routed as an arc
   experiments/
-    temporal-lab/        Autonomous persistent character system (OpenRouter)
+    temporal-lab/        Autonomous persistent character system (DeepSeek; provider-agnostic via LLM_BASE_URL)
     suno-prompts/        10 Custom Mode music prompts
     visual-fingerprints/ 10 p5.js portraits + index
     dialogues/           Paired substance conversations
     IDEAS.md             Experiment backlog
+  site/
+    index.html           Generated page (build.py) — never hand-edit
+    index.template.html  The SPA home's template (edit this, not index.html)
+    substance.template.html  Dedicated template for the per-substance static
+                         pages that build.py writes under site/<substance>/
+    <substance>/index.html  One standalone shareable page per substance skill,
+                         regenerated by build.py, gated by site.substance_pages
+    og/                  OG share-card assets referenced by substance pages
+                         (one PNG card per substance, generated deterministically
+                         by build.py via altered_states.og)
+    wheel/               Slot-machine project wheel: a hand-written page + projects.json,
+                         not touched by build.py; committed and gated by the
+                         site.experiment_wheel flag
   tests/
-    eval-guide.md                     Testing framework
-    eval-report-2026-04-07.md         Baseline + bleed + onset
-    eval-report-blind-2026-04-08.md   Gold-standard blind test
-    eval-report-router-2026-04-08.md  Router accuracy (71 inputs)
-    eval-report-arc-2026-04-08.md     Full dose arcs (37 exchanges)
-    eval-report-setsetting-2026-04-08.md  Set/setting matrix (25 conditions)
-    eval-report-intensity-2026-04-08.md   Low + high intensity (10 conditions)
-    eval-report-edgecases-2026-04-08.md   Bad trips, exits, creative, factual
-    eval-report-extended-2026-04-08.md    Ayahuasca waves + LSD plateau
-    cross-model-test-protocol.md      Full protocol for new models
-    quick-test-card.md                 5-minute quick validation
-  output/                            Evaluation outputs
+    __init__.py                        Markers the whole tree as a package
+    unit/                              Domain-logic tests
+    integration/                       Whole-pipeline tests (offline)
+    conftest.py                        Shared pytest fixtures
+    fixtures/golden/                   Golden snapshot fixtures for content/build output
+    prompts.json                       Prompt fixtures
+    prompts-love.json                  Prompt fixture for the love-combo experiment
+    responses/                         Captured response fixtures
+  docs/
+    evals/                             Eval reports + test protocol cards
+    observability.md                   Observability docs
+    research-pipeline.md               Research pipeline notes
+    safety-override-block.md           Shared safety override template
+  output/                            Raw captured responses from standalone run_eval.py
+                                     sessions (each file's header names its producer);
+                                     scored reports live in docs/evals/
 ```
 
 ### Code Quality
@@ -252,8 +329,9 @@ the root scripts (`build.py`, `watch.py`, `bin/`, `experiments/*.py`) and
 
 Install the dev toolchain once with `python3 -m pip install -r requirements-dev.txt`
 (Python 3.11+, because pre-commit and current coverage require it). The test
-matrix uses `requirements-test.txt` instead, which resolves on 3.10 through
-3.12 — the two files are locked separately for exactly that reason.
+matrix uses `requirements-test.txt` instead, which resolves on 3.11 through
+3.12 (the lock is compiled for Python 3.11 because the committed OG cards are
+rendered by pinned Pillow 13, which requires Python 3.11+).
 Run every check at once with:
 
 ```bash
@@ -308,6 +386,7 @@ make lock           # regenerate hash-pinned lockfiles after editing a requireme
 make deps           # deptry: undeclared, unused, and transitive dependencies
 make security       # bandit + pip-audit against the lockfiles
 make docs           # validate AGENTS.md against the repository
+make skills-check   # validate every skills/**/SKILL.md (structure, safety furniture, table scale labels)
 make alerts         # validate the alert policy in alerts/alerts.yaml
 make labels         # dry-run the GitHub label taxonomy
 make verify         # all of the above plus the static checks and the tests
@@ -329,8 +408,8 @@ of each diff.
 
 ## By The Numbers
 
-- **63** peer-reviewed sources annotated across 10 substances
-- **11** skills (10 substances + 1 router)
+- **70** peer-reviewed and annotated sources across 11 substances
+- **12** skills (11 substances + 1 router)
 - **7** phenomenological dimensions per substance
 - **213** rubric-scored evaluations (210 pass, 3 partial)
 - **0** anti-patterns flagged
@@ -348,12 +427,15 @@ Each substance is built from clinical research using validated instruments:
 - **Psilocybin:** Griffiths et al. (2006, 2008, 2016), Barrett et al. (2022), Metastasio & Prevete (2025), Stoliker et al. (2022, 2024), Lebedev et al. (2015), Cosimano (2014)
 - **LSD:** Holze & Liechti (2021, 2022), Carhart-Harris et al. (2016), Kaelen et al. (2015/2017), Dolder & Liechti (2016), Nour et al. (2016), Kettner et al. (2021), Passie et al. (2008)
 - **MDMA:** Mithoefer et al. (2018), Mitchell et al. (2021), Hysek & Liechti (2012), Nichols (1986), Liechti et al. (2000/2001), Schmid et al. (2014), Holze et al. (2020), Curran & Parrott (2000–2013)
+- **2C-B:** Caudevilla-Gálligo et al. (2012), Páleníček et al. (2013), Glennon et al. (1988), Yanakieva et al. (2019), de Boer et al. (1999), Giroud et al. (1998, analytical only), Shulgin & Shulgin (1991, qualitative only)
 - **DMT:** Strassman (1994, 2001), Timmermann et al. (2018, 2019, 2023), Davis et al. (2020), Michael et al. (2021), Frecska et al. (2016)
 - **Ayahuasca:** Riba et al. (2001, 2003), Shanon (2002), Frecska et al. (2016), Strassman (2001)
 
 - **5-MeO-DMT:** Davis et al. (2018, 2019), Uthaug et al. (2019, 2021), Reckweg et al. (2023), Lancelotta et al. (2019), Barsuglia et al. (2022)
 - **Mescaline:** Halberstadt et al. (2013, 2020), Uthaug et al. (2022), Caudevilla et al. (2021), Passie (2002/2019), Shulgin & Shulgin (1991), Trichter et al. (2009)
-- **Ketamine:** Zarate et al. (2006), Dakwar et al. (2014), Krystal et al. (2019), Vollenweider & Preller (2020), Collier et al. (2021), Shorter & Candidate (2018), Jonas & Bhatt (2022), Pomarol-Clotet et al. (2006)
+- **Ketamine:** Zarate et al. (2006), Dakwar et al. (2014), Krystal et al. (2019), Vollenweider & Preller (2020), Collier et al. (2021), Shorter & Candidate (2018), Jonas & Bhatt (2022), Pomarol-Clotet et al. (2006), Morgan & Curran (2012)
+
+- **Tolerance (overlay line):** Isbell et al. (1961), Raval et al. (2021), de la Fuente Revenga et al. (2022), Gresch et al. (2005), Nichols (2016), Morgan & Curran (2012)
 
 Full annotated bibliographies in `research/*/sources.md`.
 

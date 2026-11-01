@@ -14,12 +14,24 @@ Provider is configured via env vars (see .env.example):
   LLM_JSON_MODE — "native" (response_format json_object) or "prompt"
                   (rely on the "Return ONLY JSON" instruction)
 
-Legacy vars still work as fallbacks: OPENROUTER_API_KEY,
-DEEPSEEK_API_KEY, TEMPORAL_LAB_MODEL. When LLM_BASE_URL is unset the
-endpoint is auto-detected: OpenRouter if an OpenRouter key is present or
-the model looks like an OpenRouter slug ("provider/model" or ":free"),
-else DeepSeek. Free endpoints (OpenRouter ":free" models, Groq free
-tier, Gemini free tier) are $0 — just point the env at them.
+Legacy vars still work: DEEPSEEK_API_KEY, OPENROUTER_API_KEY,
+TEMPORAL_LAB_MODEL. Key resolution is DeepSeek-first on every surface:
+
+  1. Explicit LLM_BASE_URL / LLM_API_KEY — deliberate overrides, always win.
+  2. DEEPSEEK_API_KEY — the project default. When it is set, an ambient
+     OPENROUTER_API_KEY never silently reroutes this module to OpenRouter.
+  3. OPENROUTER_API_KEY alone (no DeepSeek key) — resolves to OpenRouter so
+     the documented free endpoints keep working.
+  4. A model slug that looks OpenRouter-shaped ("provider/model" or ":free")
+     also resolves to OpenRouter — that is explicit configuration, not
+     ambient-key guessing. Note the ranking: with DEEPSEEK_API_KEY set, an
+     OpenRouter-shaped slug still resolves to api.deepseek.com (the slug
+     shape alone does not reroute); set LLM_BASE_URL explicitly for a
+     deliberate OpenRouter run.
+
+Keys load from the repo-root `.env` first (the project convention), falling
+back to `experiments/temporal-lab/.env`; both use override=True, so the
+loaded file beats ambient shell vars deterministically.
 """
 
 import json
@@ -256,7 +268,16 @@ def _stub_response(substance: str, char_info: CharacterProfile) -> Cycle:
 
 
 def _default_base_url(model: str) -> str:
-    """Pick a sensible default endpoint when LLM_BASE_URL is unset."""
+    """Pick a sensible default endpoint when LLM_BASE_URL is unset.
+
+    DeepSeek-first: DEEPSEEK_API_KEY always beats an ambient
+    OPENROUTER_API_KEY, so a stray OpenRouter key in the environment can
+    never silently reroute the lab away from the sanctioned provider. The
+    OpenRouter default is reserved for deliberate setups (only an OpenRouter
+    key present, or an OpenRouter-shaped model slug).
+    """
+    if os.environ.get("DEEPSEEK_API_KEY"):
+        return DEFAULT_BASE_URL
     if os.environ.get("OPENROUTER_API_KEY"):
         return "https://openrouter.ai/api/v1"
     if "/" in model or model.endswith(":free"):
@@ -281,12 +302,15 @@ def _make_client(base_url: str) -> Any:
     except ImportError as e:
         raise RuntimeError("openai SDK not installed. Run: pip install -r requirements.txt") from e
 
+    # Priority mirrors the module docstring: explicit override first, then the
+    # sanctioned default (DeepSeek), then the legacy OpenRouter fallback. An
+    # ambient OPENROUTER_API_KEY therefore never outranks DEEPSEEK_API_KEY.
     api_key = (
-        os.environ.get("LLM_API_KEY") or os.environ.get("OPENROUTER_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")
+        os.environ.get("LLM_API_KEY") or os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENROUTER_API_KEY")
     )
     if not api_key:
         raise RuntimeError(
-            "No API key set. Set LLM_API_KEY (or OPENROUTER_API_KEY / DEEPSEEK_API_KEY) — see .env.example."
+            "No API key set. Set DEEPSEEK_API_KEY (or LLM_API_KEY / OPENROUTER_API_KEY) — see .env.example."
         )
 
     return OpenAI(base_url=base_url, api_key=api_key)
@@ -367,23 +391,63 @@ def generate_cycle(
 
 
 # ---------------------------------------------------------------------------
-# Bootstrap dotenv if available
+# Bootstrap .env loading (stdlib parser; no python-dotenv required)
 # ---------------------------------------------------------------------------
 
 
-def _load_dotenv() -> None:
-    """Load .env from experiments/temporal-lab/ if python-dotenv is installed.
+# Key-loading priority (documented in the module docstring): repo-root `.env`
+# first, then the lab-local `.env`. Both use override=True so whichever file
+# wins beats any ambient shell variable deterministically.
+ROOT_ENV_PATH = Path(__file__).resolve().parents[3] / ".env"
+LOCAL_ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 
-    Uses override=True so the .env file takes precedence over any system-level
-    env vars — the repo-local .env is the canonical config for this lab.
+
+def _parse_env_file(path: Path) -> dict[str, str]:
+    """Parse a minimal dotenv file with the stdlib (no python-dotenv).
+
+    Honored syntax, matching the previous python-dotenv contract: blank lines
+    ignored, `#` comment lines ignored, `KEY=VALUE` pairs with optional
+    matching single- or double-quoted values. Unquoted values are taken
+    verbatim to the end of the line. Not a full python-dotenv implementation:
+    no inline comment stripping, no multi-line values, no `export ` prefix.
     """
-    try:
-        from dotenv import load_dotenv  # noqa: PLC0415
-    except ImportError:
+    values: dict[str, str] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        key, sep, value = stripped.partition("=")
+        if not sep:
+            continue
+        key = key.strip()
+        value = value.strip()
+        is_quoted = len(value) > 1 and value[0] == value[-1] and value[0] in ("'", '"')
+        if is_quoted:
+            value = value[1:-1]
+        if key:
+            values[key] = value
+    return values
+
+
+def _load_dotenv() -> None:
+    """Load .env from the repo root, falling back to experiments/temporal-lab/.
+
+    The root `.env` is the shared key source for all three model-call
+    surfaces; the lab-local file is the exception, used only when the root
+    file is absent. Both behave like python-dotenv with override=True: file
+    values are written into os.environ, overriding anything already set
+    there, so the resolved `.env` (not an ambient shell var like
+    OPENROUTER_API_KEY) decides the config. Implemented with the stdlib so
+    the file loads even when python-dotenv is not installed (e.g. CI).
+    """
+    if ROOT_ENV_PATH.exists():
+        env_values = _parse_env_file(ROOT_ENV_PATH)
+    elif LOCAL_ENV_PATH.exists():
+        env_values = _parse_env_file(LOCAL_ENV_PATH)
+    else:
         return
-    env_path = Path(__file__).resolve().parent.parent / ".env"
-    if env_path.exists():
-        load_dotenv(env_path, override=True)
+    for key, value in env_values.items():
+        os.environ[key] = value
 
 
 _load_dotenv()

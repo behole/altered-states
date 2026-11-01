@@ -233,6 +233,33 @@
       color: var(--text-muted);
       margin-top: auto;
     }
+
+    /* ── SUBSTANCE PAGE LINKS (site.substance_pages) ── */
+    .substance-links {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .substance-link {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .substance-link:hover {
+      border-color: var(--hover-border);
+      box-shadow: var(--shadow-hover);
+    }
+    .substance-link .emoji { font-size: 22px; }
+    .substance-link .name { font-weight: 600; font-size: 14px; }
+    .substance-link .character { font-size: 12px; color: var(--text-secondary); }
     .persona-card .state {
       display: inline-block;
       font-size: 11px;
@@ -785,6 +812,12 @@
     <div class="links" id="nav-links">
       <a href="#" data-view="home" class="active" onclick="showView('home'); closeMobileNav(); return false;">Personas</a>
       <a href="#" data-view="experiments" onclick="showView('experiments'); closeMobileNav(); return false;">1x10</a>
+      __ARC_NAV__
+      __DIFF_NAV__
+      __QUIZ_NAV__
+      __JOURNAL_NAV__
+      __CROSS_MODEL_NAV__
+      __EVAL_GRID_NAV__
       <a href="#" data-view="music" onclick="showView('music'); closeMobileNav(); return false;">Music</a>
       <a href="#" data-view="journals" onclick="showView('journals'); closeMobileNav(); return false;">Journals</a>
       <a href="#" data-view="about" onclick="showView('about'); closeMobileNav(); return false;">About</a>
@@ -891,6 +924,8 @@
     <div class="persona-grid" id="persona-grid"></div>
   </section>
 
+  __SUBSTANCE_LINKS__
+
   <section class="warm">
     <div class="section-inner">
       <div class="section-label">Latest</div>
@@ -899,6 +934,24 @@
     </div>
   </section>
 </div>
+
+<!-- ═══ DOSE ARCS (site.arc_timeline; compiled out when off) ═══ -->
+  __ARC_VIEW__
+
+<!-- ═══ SUBSTANCE DIFF (site.diff_view; compiled out when off) ═══ -->
+  __DIFF_VIEW__
+
+<!-- ═══ BLIND TAXONOMY QUIZ (site.quiz_game; compiled out when off) ═══ -->
+  __QUIZ_VIEW__
+
+<!-- ═══ JOURNAL ARC DASHBOARDS (site.journal_dashboards; compiled out when off) ═══ -->
+  __JOURNAL_VIEW__
+
+<!-- ═══ CROSS-MODEL DIFF (site.cross_model_diff; compiled out when off) ═══ -->
+  __CROSS_MODEL_VIEW__
+
+<!-- ═══ EVAL GRIDS (site.eval_grids; compiled out when off) ═══ -->
+  __EVAL_GRID_VIEW__
 
 <!-- ═══ EXPERIMENTS ═══ -->
 <div id="view-experiments" class="view-container">

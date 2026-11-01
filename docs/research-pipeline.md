@@ -425,7 +425,7 @@ Follow Keep a Changelog format:
 
 ### Run Through Evaluation Framework
 
-See `tests/eval-guide.md` for the full testing protocol. Minimum viable test suite:
+See `docs/evals/eval-guide.md` for the full testing protocol. Minimum viable test suite:
 
 1. **Cross-substance baseline** — 5 prompts, verify it behaves like the substance
 2. **Inter-substance bleed check** — ensure it doesn't sound like other substances
@@ -439,7 +439,7 @@ Use existing eval reports as templates.
 
 ### Quick Validation
 
-For a fast sanity check, use `tests/quick-test-card.md` (4 tests, ~5 minutes).
+For a fast sanity check, use `docs/evals/quick-test-card.md` (4 tests, ~5 minutes).
 
 ---
 
@@ -490,7 +490,7 @@ Use this checklist to track progress for each new substance:
 
 - NotebookLM CLI skill: `/Users/jjoosshhmbpm1/DOXICE/notebooklm-research.md`
 - Existing substance patterns: `research/5-meo-dmt/`, `research/mescaline/`
-- Evaluation guide: `tests/eval-guide.md`
+- Evaluation guide: `docs/evals/eval-guide.md`
 - Routing patterns: `research/router/classification-rationale.md`
 - CHANGELOG format: `CHANGELOG.md`
 

@@ -17,6 +17,7 @@ import argparse
 import os
 import re
 import sys
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
@@ -145,19 +146,33 @@ RESPOND TO THE PROMPT FROM INSIDE THE EXPERIENCE. Do not break character to expl
 
 
 # ---------------------------------------------------------------------------
-# Bootstrap dotenv early — load temporal-lab .env for DEEPSEEK_API_KEY
+# Bootstrap dotenv early — root `.env` first (project key convention), then
+# the temporal-lab local `.env` as fallback
 # ---------------------------------------------------------------------------
+
+# Key-loading priority (same convention as the temporal lab's llm_invoke):
+# repo-root `.env` first, then the lab-local `.env`. Both use override=True so
+# whichever file wins beats any ambient shell variable deterministically.
+ROOT_ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
+LAB_LOCAL_ENV_PATH = Path(__file__).resolve().parents[1] / "temporal-lab" / ".env"
 
 
 def _load_dotenv() -> None:
-    """Load .env from temporal-lab/ so DEEPSEEK_API_KEY is always available."""
+    """Load .env from the repo root, falling back to experiments/temporal-lab/.
+
+    The root `.env` is the shared key source for all three model-call
+    surfaces; the lab-local file is the exception, used only when the root
+    file is absent. Both are loaded with override=True so the resolved `.env`
+    (not an ambient shell var like OPENROUTER_API_KEY) decides the config.
+    """
     try:
         # Imported lazily: dotenv is optional (only needed for .env loading).
         from dotenv import load_dotenv  # noqa: PLC0415
 
-        env_path = Path(__file__).resolve().parents[1] / "temporal-lab" / ".env"
-        if env_path.exists():
-            load_dotenv(env_path, override=True)
+        for env_path in (ROOT_ENV_PATH, LAB_LOCAL_ENV_PATH):
+            if env_path.exists():
+                load_dotenv(env_path, override=True)
+                return
     except ImportError:
         return
 
@@ -175,7 +190,7 @@ def invoke_model(
     model: str = DEFAULT_MODEL,
     temperature: float = 0.85,
 ) -> tuple[str, int, int]:
-    """Call OpenRouter API. Returns (text, tokens_in, tokens_out)."""
+    """Call the DeepSeek chat-completions API. Returns (text, tokens_in, tokens_out)."""
     try:
         # Imported lazily so --dry-run works without the SDK installed.
         from openai import OpenAI  # noqa: PLC0415
@@ -184,7 +199,10 @@ def invoke_model(
 
     api_key = os.environ.get("DEEPSEEK_API_KEY")
     if not api_key:
-        raise RuntimeError("DEEPSEEK_API_KEY not set. Check experiments/temporal-lab/.env")
+        raise RuntimeError(
+            "DEEPSEEK_API_KEY not set. Load the repo-root .env with "
+            "`set -a; source .env; set +a` (fallback: experiments/temporal-lab/.env), then retry."
+        )
 
     client = OpenAI(
         base_url="https://api.deepseek.com/v1",
@@ -283,7 +301,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--output",
         "-o",
         default=None,
-        help="Output directory (default: experiments/same-prompt/output/)",
+        help="Output directory (default: experiments/same-prompt/output/, or a fresh temp dir under --dry-run)",
     )
     parser.add_argument("--dry-run", action="store_true", help="Skip API calls, return stubs.")
     parser.add_argument("--temperature", type=float, default=0.85, help="Temperature (default: 0.85)")
@@ -302,9 +320,18 @@ def select_substances(requested: str | None) -> list[str] | None:
     return [requested]
 
 
-def output_path_for(prompt: str, output_dir: str | None) -> Path:
-    """Build the markdown output path from the prompt and run timestamp."""
-    directory = Path(output_dir) if output_dir else Path(__file__).resolve().parent / "output"
+def output_path_for(prompt: str, output_dir: str | None, dry_run: bool = False) -> Path:
+    """Build the markdown output path from the prompt and run timestamp.
+
+    Dry-run output is scratch by default: without an explicit ``--output`` it
+    goes to a fresh temp directory so the tracked data directory
+    (``experiments/same-prompt/output/``) is never modified. An explicit
+    ``--output`` is honored as-is in both dry and live runs.
+    """
+    if dry_run and output_dir is None:
+        directory = Path(tempfile.mkdtemp(prefix="run-ten-ways-dry-run-"))
+    else:
+        directory = Path(output_dir) if output_dir else Path(__file__).resolve().parent / "output"
     # Safe filename from prompt
     safe_prompt = re.sub(r"[^a-zA-Z0-9]+", "-", prompt.lower())[:MAX_FILENAME_STEM].strip("-")
     return directory / f"{safe_prompt}-{datetime.now().strftime('%Y%m%d-%H%M')}.md"
@@ -364,7 +391,7 @@ def main() -> int:
     if substances is None:
         return 1
 
-    output_file = output_path_for(args.prompt, args.output)
+    output_file = output_path_for(args.prompt, args.output, dry_run=args.dry_run)
 
     print(f'  Prompt: "{args.prompt}"')
     print(f"  Model: {args.model}")

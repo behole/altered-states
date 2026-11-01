@@ -6,7 +6,275 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [Unreleased]
+## [1.0.0] — 2026-11-01
+### Changed
+- **Provider migration: DeepSeek is the sanctioned default on all three
+  model-call surfaces** — `bin/run_eval.py` now talks to
+  `api.deepseek.com/v1` through the OpenAI SDK gated solely on
+  `DEEPSEEK_API_KEY`; `experiments/temporal-lab/scripts/llm_invoke.py` and
+  `experiments/same-prompt/run-ten-ways.py` resolve keys root-`.env`-first
+  with DeepSeek outranking an ambient `OPENROUTER_API_KEY` (ambient
+  OpenRouter keys never silently reroute a surface to OpenRouter). The eval
+  runner's budget-raise retry is clamped to the model's documented output
+  cap (no retry can request more output tokens than the provider accepts),
+  the pre-run manifest records that worst-case retry ceiling, error rows
+  carry the same key set as success rows, `llm_calls` is counted once per
+  request across retries, and a crash after billed API calls persists an
+  annotated partial ledger entry so cumulative spend is never under-counted.
+- **watch.py serves on a threaded HTTP server** — both serve modes
+  (`--serve-only` and default) now use `ThreadingHTTPServer` with daemon
+  threads (via the new `watch.make_server()`), so one slow or half-open
+  client connection on the shared :8765 watcher can no longer block all
+  other requests (the 2026-10-31 quiz-validation wedge, curl 000 for
+  minutes). Handler (`SiteHandler`) and shutdown behaviour are unchanged;
+  `tests/unit/test_watch.py` gained offline tests proving a wedged
+  connection does not block later requests and the server still shuts
+  down cleanly.
+### Fixed
+- **CI's missing `python-dotenv` no longer breaks the release tests** —
+  `experiments/temporal-lab/scripts/llm_invoke.py` loaded the root `.env`
+  key file through `python-dotenv` inside a `try/except ImportError` that
+  silently no-oped when the package was absent (CI's test env), leaving
+  `DEEPSEEK_API_KEY` unset and failing
+  `tests/unit/test_llm_invoke_config.py::TestRootEnvIsTheSharedKeySource`.
+  The loader is now a stdlib parser (root `.env` first, lab-local fallback,
+  override semantics, quoted values and comment/blank lines honored) with
+  no dotenv import; `python-dotenv` was dropped from the temporal-lab
+  requirements (deptry-clean) and from the local `make test` env so local
+  and CI run with the same dependency set. Offline tests now prove the
+  loader works with the package deliberately unimportable.
+### Added
+- **Skill-tree validator (VAL-TOOL-001, VAL-TOOL-002)** — `bin/check_skills.py`
+  (stdlib-only) validates every `SKILL.md` under `skills/` — top-level
+  substances, the router, and the nested overlay lines (`skills/combos/*`,
+  `skills/tolerance/*`, `skills/afterglow/`) — against the structural
+  contract: front-matter schema, Safety Override furniture, 7-dimension ×
+  intensity matrix, dose arc, and router alias resolution. Wired into
+  `make skills-check` (part of `make verify`); failures exit nonzero naming
+  file + section; `--new-skill <path>` prints the same rules as an authoring
+  checklist. Seeded-mutation tests in `tests/unit/test_skills_check.py` prove
+  the failure paths fire. `_check_dimension_table` now also guards the table
+  shape itself: the header row must carry its intensity columns (at least one
+  column beyond `#`/Dimension) and every data row must have the header's cell
+  count — deleting a dimension-table COLUMN (fully or header-cells-only) exits
+  nonzero citing file + dimensions section instead of passing. A per-skill
+  scale registry (`EXPECTED_TABLE_SCALES`) additionally pins the exact
+  header column labels of every table-carrying skill case-insensitively, so
+  the run-3 VAL-TOOL-001 class — a whole intensity column deleted from the
+  header AND every row consistently (size-coherent, labels wrong) — is
+  rejected with file + sections + fix, including overlay-line tables
+  (afterglow, tolerance) and inconsistent column renames.
+- **Content safety lint (VAL-TOOL-003, VAL-TOOL-004)** — `bin/safety_lint.py`
+  (stdlib-only) scans every Markdown file under `skills/` AND the built
+  `site/index.html` for forbidden patterns: dose figures with dosing verbs,
+  dosing-schedule/posology phrasing, therapy/guidance claims, and
+  sourcing-language slips. Wired into `make safety-lint` (part of
+  `make security` and `make verify`); findings name file:line. The scoped
+  allowlist contract is documented in the module docstring and proven
+  defeat-proof in `tests/unit/test_safety_lint.py`: an inline
+  `<!-- safety-lint: allow: rule -- reason: ... -->` can never rescue a
+  full-line dose-figure match.
+- **Golden snapshot tests (VAL-TOOL-005)** — snapshot tests for build.py's
+  derived JSON payloads (camelCase personas, journal-series dashboards, and
+  masked quiz game) against committed fixture directories under
+  `tests/fixtures/golden/`. Snapshots are keyed on a content hash of the
+  fixture inputs, so changed inputs without re-snapshotting fail loudly, and
+  a seeded key rename of the personas contract fails with a named diff.
+  Re-snapshot intended changes with
+  `UPDATE_GOLDEN_SNAPSHOTS=1 pytest tests/unit/test_golden_snapshots.py`
+  (the env var overwrites existing snapshots unconditionally, so the
+  regeneration instruction always works).
+- **Skill installer (VAL-TOOL-006)** — `bin/install_skills.py` installs the
+  full skill set (substances, router, combos, tolerance overlays, afterglow)
+  to the platform-correct skills directory in one command (darwin ->
+  `~/.claude/skills`, linux -> `~/.config/opencode/skills`; `--dest`
+  override documented, installer refuses `--dest` inside the source
+  `skills/` tree). Dry run by default; `--apply` copies, `--link` symlinks;
+  `--skill` selects one; `--list` prints the default set and the platform
+  table. Offline unit-tested in `tests/unit/test_install_skills.py`.
+- **Build-time OG share cards (VAL-TOOL-007)** — `make build` now renders one
+  share card per substance skill into `site/og/<substance>.png` (11 cards
+  today, incl. 2C-B), deterministic and byte-identical across delete+rebuild.
+  The committed `site/og/placeholder.svg` placeholder is retired: a build
+  clears its card assets (one card filename per substance slug, plus the
+  placeholder) from `site/og/` before regenerating, so stale cards cannot
+  survive; foreign files in `site/og/` are never touched. Cards carry the
+  substance name, its one-line character, and the leading sentence of its
+  description.
+  **Format choice (documented, not silent):** PNG rendered with
+  Pillow (`pillow==13.0.0`, pinned in `bin/requirements.txt` +
+  `bin/requirements.lock`) — the pip-audit-clean line; because major
+  crawlers (Facebook, Twitter/X, iMessage) ignore inline SVG as
+  `og:image`; in an environment without
+  Pillow the generator falls back to a deterministic SVG and logs
+  `build.og_cards format=svg` so the deviation is observable. Card bytes
+  are stable within a given Pillow version (delete+rebuild
+  byte-identical); the pinned version defines the committed card bytes,
+  so the Python that builds the site must have the locked Pillow —
+  `make build` now enforces that itself (`BUILD_PY` pins
+  `--with pillow==13.0.0`, the same line the `PYTEST` test env uses),
+  and a CI byte-comparison test asserts the committed
+  `site/og/*.png` bytes equal the pinned-Pillow render.
+  Pillow 13 requires Python >= 3.11, so `bin/requirements.lock` now
+  resolves for 3.11 (the oldest interpreter that installs it — CI test
+  matrix moved 3.10 -> 3.11; ruff/mypy still lint Python 3.10 syntax).
+  Per-substance pages now embed **absolute** OG URLs built from the
+  canonical deploy base documented in `build.py`
+  (`CANONICAL_BASE_URL = "https://altered-states.pages.dev"`): both
+  `og:url` (`.../<substance>/`) and `og:image` (`.../og/<substance>.png`)
+  are spec-compliant absolute URLs, replacing the previously relative
+  values. Verified by the new `tests/unit/test_og_cards.py`.
+- **Per-substance eval-grid sections (Cross-model & Grids views)** —
+  `site/index.html` now ships two data-driven sections: the cross-model
+  diff (`site.cross_model_diff`, owner eval) showing DeepSeek responses
+  side-by-side with the historical same-prompt corpora
+  (anthropic/claude-sonnet-4.6, zai/glm-5-turbo), and the eval grids
+  (`site.eval_grids`, owner site) publishing every prompt/run with
+  model-tagged, run-toggleable cells. Both payloads derive deterministically
+  from the committed artifacts under `tests/responses/` and
+  `experiments/same-prompt/output/` (see `tests/responses/README.md` for
+  the glob scope both sections consume).
+- **Per-substance static pages** — `make build` now also writes one
+  standalone, deterministic page per substance skill under
+  `site/<substance>/index.html` (10 at this milestone: every `skills/*` dir
+  minus the router), rendered from the new dedicated template
+  `site/substance.template.html`. Each page carries the substance name in
+  its `<title>`, OG meta tags (og:title, og:description, og:image — a
+  committed placeholder card at `site/og/placeholder.svg` until build-time
+  OG card generation lands), an explicit back-link to the home page, and a
+  JSON payload for future per-page sections. Pages regenerate deterministically
+  (byte-identical delete+rebuild; stale generated page dirs are removed).
+  Every page is a pure function of `skills/<substance>/SKILL.md` front matter
+  plus the fixed persona identity table. Gated by `site.substance_pages`:
+  when off, home renders zero links to them and page generation is skipped.
+- **Home substance-page links (flag-gated)** — with `site.substance_pages`
+  on, the SPA home renders a "Substance Pages" link section (one card per
+  substance) whose hrefs are the built `/<substance>/` pages; the whole
+  section is compile-out when the flag is off. Verified by
+  `tests/unit/test_substance_pages.py`.
+- **2C-B: the 11th substance skill (`skills/2c-b/SKILL.md`) + research
+  (`research/2c-b/`)** — The Chameleon: the empathogenic + psychedelic visual
+  blend, distinctive among the suite for the mixture profile, four intensity
+  levels, dimension matrix, arc, set/setting matrix, descent, and Safety
+  Override furniture in the house style. The research half carries an
+  annotated `sources.md` and a `dossier.md` grounded in real, verifiable
+  citations (Halberstadt & Geyer on 2C-B pharmacology, de Boer 1999,
+  Giroud et al. 1998 Swiss analytical record — including the correction note
+  for the dosing figure circulated from it, Caudevilla 2012, and Shulgin &
+  Shulgin's PiHKAL qualitative descriptions with the PiHKAL-era limitations
+  stated). Router aliases limited to the verified slang set
+  (2c-b/2cb/2c b/nexus/bees/venus/the chameleon); the unverified "bump"
+  alias was checked and deliberately dropped.
+- **First-class combos overlay skills (`skills/combos/`)** —
+  `skills/combos/candy-flip/SKILL.md` (MDMA + 2C-B) and
+  `skills/combos/hippy-flip/SKILL.md` (MDMA + psilocybin) as dedicated
+  overlay files under their own path referencing the base skills, never
+  edits of them: layered-onset sequencing, blend dominance rules, the
+  distinctive mixture profile vs either substance alone, per-level
+  dimension tables, and Safety Override furniture.
+- **Tolerance / repeat-exposure overlay line (`skills/tolerance/`)** —
+  a documented policy in `skills/tolerance/README.md` plus named
+  phenomenology-only repeat-exposure profiles for lsd, psilocybin, and
+  ketamine under `skills/tolerance/<substance>/` — what repeated exposure
+  does to the surface, deliberately excluding any schedule, regimen, or
+  recovery-arithmetic language.
+- **Afterglow skill (`skills/afterglow/SKILL.md` +
+  `skills/afterglow/consistency-matrix.md`)** — a 24-72h post-trip residue
+  overlay covering what the surface feels like the day after for every
+  substance, with a consistency matrix tying each afterglow paragraph back
+  to the base skill's arc so nothing contradicts the substance's own
+  descent section.
+### Changed
+- **README + AGENTS.md document the milestone-3 content surface** — README
+  gains the 11th substance row (2C-B) in the substance table, the extended
+  router slang list, the skills tree including the combos/tolerance/
+  afterglow overlay lines, the install section now naming
+  `bin/install_skills.py`, and the OG share-cards docs; AGENTS.md documents
+  `make skills-check` and the content safety lint alongside the existing
+  rule set (11 substance table rows, 18 validated skill files).
+### Changed
+- **Six new SITE section flags declared** —
+  `site.substance_pages`, `site.arc_timeline`, `site.diff_view`,
+  `site.quiz_game`, `site.journal_dashboards`, and `site.eval_grids` are
+  now declared in `feature_flags.json` (owner `site`, roll-out 100,
+  expiry `2027-06-30`) and routed through build's `__FLAGS__` payload.
+  The gated sections themselves land in later milestone-2 features;
+  these declarations make the render-when-on / compile-out-when-off
+  gate exist from the moment each section is added. Verified by
+  `tests/unit/test_section_flag_lifecycle.py`.
+- **Same-prompt dry-run writes to a temp dir by default** —
+  `experiments/same-prompt/run-ten-ways.py --dry-run` with no `--output`
+  now resolves the compiled markdown to a fresh temp directory (path
+  printed as `Output:`), so the tracked read-only data directory
+  `experiments/same-prompt/output/` is never touched by a dry run. An
+  explicit `--output` is honored as-is in dry and live runs.
+### Removed
+- **Stale planning docs** — `docs/v1.2-implementation-plan.md`,
+  `docs/v1.2-improvement-spec.md`, `docs/track-a-ayahuasca.md` (superseded
+  Track-A research plan; the ayahuasca dossier lives in
+  `research/ayahuasca/`), and the `docs/superpowers/` slot-machine-wheel plan
+  + design spec (the experiment wheel is live; its docs are
+  `site/wheel/` and the `site.experiment_wheel` feature flag). Zero
+  references to the removed files remain in README, docs, code, or CI.
+### Added
+- **`watch.py --serve-only`** — serve-and-watch mode that never deploys: the
+  flag gates the watch loop into build-only mode, with no code path to
+  `deploy()` or its `wrangler` subprocess, plus a `--help` usage listing
+  (`python3 watch.py --help`). Default (no-flag) behavior is unchanged.
+- **Same-prompt offline dry-run integration test** —
+  `tests/integration/test_same_prompt_dry_run.py` invokes
+  `experiments/same-prompt/run-ten-ways.py --dry-run` as a subprocess and
+  asserts exit 0, `Dry-run: True`, 10/10 substances succeeding, and the
+  `[DRY-RUN STUB]` marker in the compiled markdown (written to a temp
+  directory, so `experiments/same-prompt/output/` stays untouched). The
+  `experiments/same-prompt` omission from the `[tool.coverage.run]` source
+  list is now annotated in-place in `pyproject.toml` with the reason
+  (subprocess coverage is invisible to the 75% floor).
+
+### Changed
+- **Structured logging migration** — `build.py` and `watch.py` route all
+  high-signal output through `altered_states.log_utils.log_event()` (JSON,
+  redacted, on stderr) per the no-secrets-in-logs rule: build stage progress
+  and the build summary (`build.stage`, `build.summary`), WARN-level findings
+  (`build.parse_failed`, `watch.build_failed`, `watch.skipped`), the deploy
+  lifecycle (`watch.deploy_start`, `watch.deploy_failed`,
+  `watch.deploy_skipped`, `watch.deploy_complete`), and serve lifecycle
+  (`watch.serving` start/stop, `watch.build_summary`). Zero bare `print()`
+  calls remain in either file; each file's migration note at the top states
+  the surviving count.
+- **Docs reorganization** — the 9 eval-report files that lived under `tests/` plus the
+  protocol cards (`eval-guide.md`, `quick-test-card.md`,
+  `cross-model-test-protocol.md`, `safety-override-protocol.md`) moved to
+  `docs/evals/`, the site's data home for human-scored evaluations; every live
+  reference (README, `docs/research-pipeline.md`, `tests/prompts.json`,
+  `bin/run_eval.py`, `tests/responses/README.md`) points at the new paths and
+  no `.md` files remain at the top of `tests/`. The 1-line,
+  date-stamp-only `site/DEPLOY.md` artifact is deleted (real deploy behavior
+  is documented in `runbooks/deploy-failure.md`); the dead NotebookLM shell
+  duplicate in `bin/` is deleted (`bin/nlm.py` and its tests untouched); the README
+  layout tree now documents `site/wheel/` (hand-written page + `projects.json`,
+  not touched by build.py, gated by `site.experiment_wheel`) and gives
+  `output/` a home; the three orphan files in `output/` carry a provenance
+  header naming `bin/run_eval.py` as their producer.
+- `.env.example` is complete: it now declares every env var the code reads
+  (derived from a repo-wide `os.environ`/`getenv` grep, minus the documented
+  non-provider exclusions), adds the previously missing
+  `MUREKA_API_KEY` (music experiments), `ANTHROPIC_API_KEY`,
+  `SENTRY_TRACES_SAMPLE_RATE`, `GIT_SHA`, `ALTERED_STATES_TEMPORAL_PATH`,
+  `LLM_JSON_MODE`, and `TEMPORAL_LAB_MODEL`, and documents the repo-root
+  `.env` as the project-wide loading convention with DeepSeek as the primary
+  provider and OpenRouter/OpenAI labelled legacy fallback. Placeholder
+  values only.
+### Fixed
+- `feature_flags.json` `_comment` now names the real invocation
+  (`python3 -m altered_states.feature_flags check`) instead of the removed
+  `bin/feature_flags.py`.
+- `AGENTS.md` rule 5 no longer names a phantom root `requirements.txt`; it
+  points at the real dev/test pairs and per-dir files under `bin/` and
+  `experiments/`.
+- `docs/TODO.md` item #5 (slash skill vs embed) closed: README documents the
+  slash skill as the primary model with `GEMINI.md` embeds for Gemini CLI.
+
 
 ### Added
 - **`altered_states/` shared package** — structured JSON logging with `trace_id` correlation and secret redaction, a Prometheus textfile metrics registry, optional Sentry error tracking, and file-backed feature flags with deterministic rollout bucketing
@@ -23,6 +291,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`requirements-test.txt` / `requirements-test.lock`** — the test-only toolchain, locked separately from `requirements-dev` because `pre-commit` and current `coverage` need 3.11+, so the 3.10 job in the test matrix has a resolvable set
 
 ### Changed
+- **`site/index.html` tracking** — the built page stays tracked in git deliberately (Cloudflare Pages deploys need a committed artifact); the `.gitignore` comment now documents that decision instead of claiming it is ignored, `build.py` notes the committed artifact is intentional, and a fresh ~255KB build replaced the stale 4MB committed copy. The `.gitignore` entry no longer has any practical effect (git does not ignore tracked files), so the comment is documentation, not behavior
 - **`altered_states/registry.py`** — the counter/gauge/histogram registry moved out of `metrics.py` so logging can increment a counter without importing the module that writes textfiles and emits log lines. The dependency now runs one way only (`registry` ← `log_utils` ← `metrics`); CodeQL flagged the mutual import as a cycle. `metrics` re-exports `Registry` and `REGISTRY`, so existing imports are unchanged
 - **`build.py`** — split into `count_cycles`, `enabled_section_flags`, `render_page`, `collect_site_data`, and `record_content_metrics`; emits structured logs, build metrics, and content gauges the alert policy reads
 - **`watch.py`** — subprocess use centralised in one helper that resolves executables, reports a missing `wrangler` clearly, and handles timeouts without swallowing them
@@ -32,6 +301,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`bin/nlm.py`** — refuses to open a URL that is not http/https
 
 ### Fixed
+- **README drift** — the skills version table now matches each `skills/*/SKILL.md` front matter (`version: "1.5"`, 11 rows including the router, no stale `v1.4` claims), the `tests/` section of the Project Structure tree lists the real test tree instead of eval-report markdown files that are relocating to `docs/evals/`, and active docs now reference the eval reports and protocol cards at their `docs/evals/` home
 - **Secret redaction** no longer redacts `tokens_in` / `tokens_out` telemetry, only fields whose name implies a credential
 - **Metrics snapshots** name series consistently between the JSON log payload and the Prometheus textfile, so a value is traceable across both
 
@@ -98,7 +368,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Evaluation framework** (`tests/eval-guide.md`) — cross-substance baselines, inter-substance bleed tests, dimension checkpoints, anti-pattern flags, blind test protocol
 - **Router research doc** (`research/router/classification-rationale.md`) — phenomenological basis for routing heuristics
 - **8 evaluation reports** covering baselines, bleed, blind test, router, dose arcs, set/setting, intensity, edge cases, and extended conversations
-- **Quick test card** (`tests/quick-test-card.md`) and **cross-model test protocol** (`tests/cross-model-test-protocol.md`)
+- **Quick test card** (`docs/evals/quick-test-card.md`) and **cross-model test protocol** (`docs/evals/cross-model-test-protocol.md`)
 
 ### Changed
 - **LSD skill** — added sustained plateau mechanics, "trapped" safety valve, LSD vs psilocybin behavioral guide

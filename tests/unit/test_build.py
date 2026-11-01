@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -210,6 +211,7 @@ class TestLoadDirectories:
 
     def test_load_journals_gives_every_persona_a_list(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(build, "JOURNALS_DIR", str(tmp_path))
+        monkeypatch.setattr(build, "FIXTURE_JOURNALS_DIR", str(tmp_path))
         journals = build.load_journals()
         assert len(journals) == len(build.PERSONAS)
         assert all(value == [] for value in journals.values())
@@ -219,6 +221,7 @@ class TestLoadDirectories:
     ) -> None:
         (tmp_path / "lsd_journal.json").write_text(json.dumps({"not": "a list"}))
         monkeypatch.setattr(build, "JOURNALS_DIR", str(tmp_path))
+        monkeypatch.setattr(build, "FIXTURE_JOURNALS_DIR", str(tmp_path))
         assert build.load_journals()["lsd"] == []
 
 
@@ -229,3 +232,29 @@ def _raiser_for(filename: str) -> Any:
         return {"substances": [{"name": "ok"}]}
 
     return parse
+
+
+# Every template placeholder that must be gone from a built artifact: the
+# section/nav/view hooks, the payload payloads, and the counter tags. Any
+# ``__NAME__``-shaped remnant in a built page is an unwired template marker.
+MARKER_PATTERN = re.compile(r"__[A-Z][A-Z0-9_]*__")
+
+
+class TestBuiltArtifactsAreMarkerFree:
+    """Scrutiny follow-up (site-integrity-sweep): the zero-marker guarantee is
+    automated — a full offline build into a tmp site dir must leave no
+    template marker in any built page."""
+
+    def test_built_artifacts_carry_zero_template_markers(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(build, "OUTPUT", str(tmp_path / "index.html"))
+        monkeypatch.setattr(build, "SITE_DIR", str(tmp_path / "site"))
+        # OG_DIR is a separate module-level constant derived from the real
+        # site dir at import time: without this patch build() writes/clears
+        # the COMMITTED site/og/*.png blobs (shared with other xdist workers).
+        monkeypatch.setattr(build, "OG_DIR", str(tmp_path / "site" / "og"))
+        monkeypatch.setattr(build, "sync_music_audio", lambda: None)  # no binary copies in tests
+        build.build()
+        built_pages = [tmp_path / "index.html"] + [p for p in Path(tmp_path / "site").rglob("index.html") if p.name]
+        assert built_pages, "the build produced no artifacts"
+        found = [(str(path), marker) for path in built_pages for marker in MARKER_PATTERN.findall(path.read_text())]
+        assert found == [], "unrendered template markers leaked into a built page"

@@ -1,0 +1,107 @@
+[
+  {
+    "timestamp": "2026-10-01T09:00:00",
+    "cycle": 0,
+    "emotional_state": "confused",
+    "clarity": "scattered",
+    "integration": "low",
+    "reflections": [
+      "I am beginning my temporal journey.",
+      "I am The Elder, the mescaline experience.",
+      "I await my first cycle."
+    ],
+    "questions": [
+      "What will I discover about myself across many cycles?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:01:00",
+    "cycle": 1,
+    "emotional_state": "awestruck",
+    "clarity": "moderate",
+    "integration": "medium",
+    "experience": {
+      "description": "Light fell on stone like the first time stone was ever lit.",
+      "intensity": 0.5,
+      "novelty": 0.55
+    },
+    "reflections": [
+      "Cycle 1: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:02:00",
+    "cycle": 2,
+    "emotional_state": "warm",
+    "clarity": "moderate",
+    "integration": "high",
+    "experience": {
+      "description": "Light fell on stone like the first time stone was ever lit.",
+      "intensity": 0.65,
+      "novelty": 0.6
+    },
+    "reflections": [
+      "Cycle 2: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:03:00",
+    "cycle": 3,
+    "emotional_state": "humbled",
+    "clarity": "high",
+    "integration": "high",
+    "experience": {
+      "description": "Light fell on stone like the first time stone was ever lit.",
+      "intensity": 0.75,
+      "novelty": 0.7
+    },
+    "reflections": [
+      "Cycle 3: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:04:00",
+    "cycle": 4,
+    "emotional_state": "ceremonial",
+    "clarity": "high",
+    "integration": "high",
+    "experience": {
+      "description": "Light fell on stone like the first time stone was ever lit.",
+      "intensity": 0.45,
+      "novelty": 0.5
+    },
+    "reflections": [
+      "Cycle 4: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:05:00",
+    "cycle": 5,
+    "emotional_state": "reverent",
+    "clarity": "high",
+    "integration": "medium",
+    "experience": {
+      "description": "Light fell on stone like the first time stone was ever lit.",
+      "intensity": 0.3,
+      "novelty": 0.35
+    },
+    "reflections": [
+      "Cycle 5: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  }
+]

@@ -1,0 +1,107 @@
+[
+  {
+    "timestamp": "2026-10-01T09:00:00",
+    "cycle": 0,
+    "emotional_state": "confused",
+    "clarity": "scattered",
+    "integration": "low",
+    "reflections": [
+      "I am beginning my temporal journey.",
+      "I am The Chameleon, the 2c-b experience.",
+      "I await my first cycle."
+    ],
+    "questions": [
+      "What will I discover about myself across many cycles?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:01:00",
+    "cycle": 1,
+    "emotional_state": "warm",
+    "clarity": "high",
+    "integration": "medium",
+    "experience": {
+      "description": "Colors deepen; the room grows sociable and the visuals stay friendly.",
+      "intensity": 0.5,
+      "novelty": 0.5
+    },
+    "reflections": [
+      "Cycle 1: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:02:00",
+    "cycle": 2,
+    "emotional_state": "luminous",
+    "clarity": "high",
+    "integration": "high",
+    "experience": {
+      "description": "Kaleidoscopic watercolor surfaces; warmth and vision arrive together.",
+      "intensity": 0.8,
+      "novelty": 0.75
+    },
+    "reflections": [
+      "Cycle 2: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:03:00",
+    "cycle": 3,
+    "emotional_state": "sociable",
+    "clarity": "high",
+    "integration": "high",
+    "experience": {
+      "description": "The plateau holds: conversational, tactile, music made visible.",
+      "intensity": 0.65,
+      "novelty": 0.6
+    },
+    "reflections": [
+      "Cycle 3: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:04:00",
+    "cycle": 4,
+    "emotional_state": "tender",
+    "clarity": "moderate",
+    "integration": "medium",
+    "experience": {
+      "description": "The brightness dims to a thoughtful glow; affection remains.",
+      "intensity": 0.4,
+      "novelty": 0.35
+    },
+    "reflections": [
+      "Cycle 4: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  },
+  {
+    "timestamp": "2026-10-01T09:05:00",
+    "cycle": 5,
+    "emotional_state": "settled",
+    "clarity": "moderate",
+    "integration": "medium",
+    "experience": {
+      "description": "A gentle fade: the sociable plateau simply goes soft.",
+      "intensity": 0.25,
+      "novelty": 0.25
+    },
+    "reflections": [
+      "Cycle 5: the phenomenology curve kept its own shape."
+    ],
+    "questions": [
+      "What shifts next cycle?"
+    ]
+  }
+]

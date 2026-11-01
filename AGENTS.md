@@ -28,13 +28,19 @@ project claims and refuses to claim.
 ## The 60-second version
 
 ```bash
-make verify        # everything CI runs: static analysis, tests, security, flags
+make verify        # everything CI runs: static analysis, tests, security, flags, skills-check
 make check         # static analysis only — use this while iterating
 make test          # unit + integration tests
 make build         # regenerate site/index.html
+make skills-check  # validate every SKILL.md (structure + safety furniture)
+make safety-lint   # content-safety scan: skills Markdown + built site/index.html
 ```
 
 If `make verify` is green, CI will be green.
+
+`make build` renders the OG share cards (`site/og/*.png`) as well as the page;
+it runs under the pinned recipe `BUILD_PY ?= uvx --with pillow==13.0.0 python3`,
+because the committed PNG bytes come from that exact Pillow version.
 
 ---
 
@@ -94,19 +100,52 @@ is declared but referenced nowhere, so a flag is never permanent by accident.
 
 ### 5. Dependencies are pinned and locked
 
-Edit `requirements.txt`, then `make lock`. `deptry` fails on an import that is
+Edit the matching requirements file, then run `make lock` (it recompiles every
+`.lock` pair in `bin/`, `experiments/music/`, `experiments/temporal-lab/`, and
+the root dev/test pairs `requirements-dev.txt` → `requirements-dev.lock` and
+`requirements-test.txt` → `requirements-test.lock`). `deptry` fails on an import that is
 not declared or a declared package that is never imported. `pip-audit` fails on
 a known CVE in the locked set. Do not add a dependency to avoid writing twenty
 lines of code.
 
 ### 6. Tests must assert behaviour, not existence
-
 `make test` runs with a coverage floor and `--strict-markers`. A test that only
 checks a function returns a non-`None` value is noise. Assert the actual
 contract: the exact string emitted, the exact exit code, the mutation that did
 or did not happen.
 
-### 7. The temporal-lab scripts are entry points, not a package
+### 7. Skills are validated, not hand-inspected
+
+Every `skills/**/SKILL.md` must pass `make skills-check` (`bin/check_skills.py`,
+stdlib-only): front-matter schema, Safety Override furniture, dimension matrix,
+dose arc, and router alias resolution. Dimension-table headers must also
+declare exactly the per-skill scale columns registered in
+`EXPECTED_TABLE_SCALES` (`bin/check_skills.py`), so a whole intensity
+column deleted consistently from every row — size-coherent, the run-3
+VAL-TOOL-001 gap — is still rejected. When authoring a new skill, run
+`python3 bin/check_skills.py --new-skill skills/<name>/SKILL.md` — it prints the
+full authoring checklist. Seeded-mutation tests in
+`tests/unit/test_skills_check.py` prove the failure paths fire.
+
+### 8. Skill content is safety-linted, not hand-inspected
+
+`make safety-lint` (`bin/safety_lint.py`, stdlib-only) scans every Markdown
+file under `skills/` AND the BUILT `site/index.html` (never the template) for
+forbidden patterns: dose figures with dosing verbs, dosing-schedule/posology
+phrasing, therapy/guidance claims, and sourcing-language slips. It is wired
+into `make security` and `make verify`. Findings name file:line. Suppression
+contracts (documented in the `bin/safety_lint.py` docstring, proven in
+`tests/unit/test_safety_lint.py`): an inline
+`<!-- safety-lint: allow: rule -- reason: ... -->` comment scopes exactly one
+rule to the line above which it sits — but dose-verb matches (which always
+carry a dose number) are never suppressible, so an allowlist can not defeat a
+genuine forbidden pattern + number. Forbidden-word matches are additionally
+excused inside refusal sentences (overlay bans worded as refusals,
+e.g. "**No schedule, and no recovery arithmetic**") and in two historical
+quoted phrases ("Ineffability protocol", "clinical protocol"). `research/` is
+exempt from scanning.
+
+### 9. The temporal-lab scripts are entry points, not a package
 
 `experiments/temporal-lab/scripts/*.py` are run directly (`python3 temporal_init.py`)
 and some have hyphens in their names. They bootstrap `sys.path` to import
@@ -161,6 +200,10 @@ Before you say a change is finished:
 5. `pre-commit run --all-files` passes.
 6. If behaviour or commands changed, `README.md`, this file, or `runbooks/` was
    updated in the same commit.
+7. Every user-facing tool addition (`bin/` scripts, `make` targets, validators,
+   lints, installers) gets a `CHANGELOG.md` `[Unreleased]` entry in the same
+   commit — a shipped tool that is invisible in the CHANGELOG is treated as a
+   missing deliverable.
 
 Do not disable a check to make it pass. If a check is wrong, change the check
 deliberately and say why in the commit message.

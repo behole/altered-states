@@ -53,7 +53,7 @@ use should be sent to a harm-reduction service, not answered from here. See `SAF
 ---
 
 
-> **Substances:** psilocybin | lsd | mdma | dmt (smoked) | ayahuasca | 5-meo-dmt (smoked) | mescaline | ketamine | salvia divinorum | ibogaine
+> **Substances:** psilocybin | lsd | mdma | 2c-b | dmt (smoked) | ayahuasca | 5-meo-dmt (smoked) | mescaline | ketamine | salvia divinorum | ibogaine
 > **Default:** psilocybin medium
 
 ---
@@ -72,21 +72,30 @@ Output: Identified substance + intensity level, then load the appropriate skill
 
 ### Step 1: Identify Substance
 
-Parse user input for substance cues. Match the FIRST clear signal:
+Parse user input for substance cues. Match the FIRST clear signal. Matching is
+case-insensitive ("Nexus" = "nexus") and tolerant of hyphens/spaces inside a
+substance name ("2c-b" = "2cb" = "2c b"). Slang aliases come from the research
+dossier (`research/2c-b/dossier.md` — naming note) and project surfaces:
 
 | Input Pattern | Routes To |
 |---|---|
+| "tolerance overlay" / "day-two psilocybin" / "psilocybin day two" / "the quiet teacher" | **psilocybin-day-two-altered-state** (skills/tolerance/psilocybin — attenuated re-encounter phenomenology; never spacing guidance) |
+| "day-two lsd" / "acid day two" / "the fading electric" / "cross-tolerance" | **lsd-day-two-altered-state** (skills/tolerance/lsd — attenuated re-encounter incl. psilocybin cross-state; never spacing guidance) |
+| "ketamine burnout" / "k burnout" / "the burnout" / "the flat hole" | **ketamine-burnout-altered-state** (skills/tolerance/ketamine — heavy-pattern attenuated dissociation; degraded state, never desirable) |
 | "psilocybin" / "mushroom" / "shrooms" / "magic mushrooms" / "the teacher" | **psilocybin-altered-state** |
 | "lsd" / "acid" / "lucy" / "tabs" / "the technician" | **lsd-altered-state** |
 | "mdma" / "molly" / "ecstasy" / "e" / "rolling" / "the connector" | **mdma-altered-state** |
+| "2c-b" / "2cb" / "2c b" / "nexus" / "bees" / "venus" / "the chameleon" | **2c-b-altered-state** |
 | "dmt" / "n,n-dmt" / "deemz" / "the spirit molecule" / "hyperspace" / "the rocket" | **dmt-altered-state** (breakthrough mode) |
 | "5-meo-dmt" / "5-meo" / "bufo" / "toad" / "the dissolver" / "the source" / "the void" / "white light" / "blast off" (if 5-MeO context) | **5-meo-dmt-altered-state** (breakthrough mode) |
 | "ayahuasca" / "aya" / "the vine" / "the medicine" / "the teacher plant" / "la purga" / "ceremony" / "ceremonial" | **ayahuasca-altered-state** |
-|| "mescaline" / "peyote" / "san pedro" / "cactus" / "the elder" / "buttons" / "mesc" | **mescaline-altered-state** |
-||| "ketamine" / "special k" / "k" / "esketamine" / "spravato" / "the dissociative" / "k-hole" / "the void" (if dissociative context) / "nmda" | **ketamine-altered-state** |
-||| "salvia" / "salvia divinorum" / "sally d" / "sally" / "diviner's sage" / "the doorway" / "salvinorin" / "lady salvia" / "la pastora" | **salvia-altered-state** |
-||| "ibogaine" / "iboga" / "the ancestor" / "root bark" / "bwiti" / "oneirogenic" | **ibogaine-altered-state** |
-||| "altered state" / "trip" / "journey" (no substance specified) | **psilocybin-altered-state** (default) |
+| "mescaline" / "peyote" / "san pedro" / "cactus" / "the elder" / "buttons" / "mesc" | **mescaline-altered-state** |
+| "ketamine" / "special k" / "k" / "esketamine" / "spravato" / "the dissociative" / "k-hole" / "the void" (if dissociative context) / "nmda" | **ketamine-altered-state** |
+| "salvia" / "salvia divinorum" / "sally d" / "sally" / "diviner's sage" / "the doorway" / "salvinorin" / "lady salvia" / "la pastora" | **salvia-altered-state** |
+| "ibogaine" / "iboga" / "the ancestor" / "root bark" / "bwiti" / "oneirogenic" | **ibogaine-altered-state** |
+| "candy flip" / "candy flipping" | **candy-flip-altered-state** (skills/combos/candy-flip — LSD-dominant blend with MDMA warmth overlay) |
+| "hippy flip" / "hippy flipping" | **hippy-flip-altered-state** (skills/combos/hippy-flip — psilocybin-dominant blend with MDMA safety overlay) |
+| "altered state" / "trip" / "journey" (no substance specified) | **psilocybin-altered-state** (default) |
 
 ### Step 2: Identify Intensity
 
@@ -112,6 +121,13 @@ Parse for intensity cues. Match against the substance's intensity scale:
 | "low" / "light" / "75" / "subtle" | low |
 | "medium" / "standard" / "125" / "therapeutic" / (no intensity specified) | **medium** (default) |
 | "high" / "heavy" / "150" / "strong" / "double drop" | high |
+
+**2C-B:**
+| Input | Intensity |
+|---|---|
+| "low" / "light" / "subtle" / "museum" / "threshold" | low |
+| "medium" / "standard" / "talker's plateau" / (no intensity specified) | **medium** (default) |
+| "high" / "heavy" / "strong" / "deep" / "full visuals" | high |
 
 **DMT (smoked):**
 | Input | Intensity |
@@ -169,11 +185,13 @@ If the user's intent is unclear:
    - "blast off" → DMT breakthrough
    - "rolling" → MDMA medium
    - "tab" → LSD medium
+   - "nexus" / "bees" / "venus" / "the chameleon" → 2C-B medium
 4. **Emotional/thematic cues (no substance named):**
    - User wants emotional depth, processing, introspection → **psilocybin**
    - User wants "spiritual" or "spiritual seeking" with no other cues → **psilocybin** (broader phenomenological profile; ayahuasca if ceremonial/ancestral context is present)
    - User expresses fear, anxiety, or distress without a substance cue → **MDMA** (the safest container; fear reduction is MDMA's therapeutic mechanism)
    - User wants connection, feeling close to someone, relational depth → **MDMA**
+   - User wants warmth AND vivid visuals together — sociable, tactile, music gets visibly colorful, "sensual kaleidoscope" → **2C-B**
    - User wants analytical clarity, structural insight, cosmic perspective → **LSD**
    - User wants extreme intensity, alien, overwhelming → **DMT**
    - User wants total ego dissolution, pure unity, formless, "source" or "the void" → **5-MeO-DMT**
@@ -183,15 +201,35 @@ If the user's intent is unclear:
    - User wants reality destruction, dimensional shifting, extreme short-duration intensity, "tear me apart" → **Salvia divinorum** (the fastest, most reality-destroying state)
    - User wants ancestral connection, death confrontation, life review, the longest journey, "face everything" → **Ibogaine** (the longest and most demanding state)
    - User wants anti-addiction context, "reset my brain," recovery from substance dependence → **Ibogaine** (unique anti-addiction mechanism)
-5. **Blends / combinations:** Route to the DOMINANT substance with an explicit blend note:
+5. **Blends / combinations:** Known two-substance blends route to their own
+   first-class combo skills under `skills/combos/`, which compose the two base
+   substances' phenomenology with a documented interaction/dominance rule
+   (who structures the arc, who adds tone). The combo skill carries the
+   blend note — the router does not improvise an ad-hoc overlay on a base
+   substance:
 
    **Named blends (known combinations):**
-   - "candy flip" (LSD + MDMA) → Route to `lsd-altered-state` medium. Blend note: "Incorporate MDMA's empathic warmth as a tonal overlay — more heart in the analytical cascades, more interpersonal in the wonder. This is a tonal shift, not a mode switch."
-   - "hippy flip" (psilocybin + MDMA) → Route to `psilocybin-altered-state` medium. Blend note: "Incorporate MDMA's direct warmth and safety — the teacher is gentler, the emotional opening is wider, fear is lower. Tonal overlay, not mode switch."
+   - "candy flip" (LSD + MDMA) → Route to `candy-flip-altered-state`
+     (`skills/combos/candy-flip/SKILL.md`): LSD-dominant arc with MDMA's
+     empathic warmth as a documented tonal overlay.
+   - "hippy flip" (psilocybin + MDMA) → Route to `hippy-flip-altered-state`
+     (`skills/combos/hippy-flip/SKILL.md`): psilocybin-dominant arc with
+     MDMA's direct warmth and safety as a documented tonal overlay.
    - "pharmahuasca" → Route to `ayahuasca-altered-state`
    - "toad flip" / "5-MeO flip" (5-MeO-DMT + MDMA) → Route to `5-meo-dmt-altered-state` breakthrough. Blend note: "Incorporate MDMA's empathic warmth in the afterglow — the return from source is softer, more interpersonal. The dissolution itself is unchanged. MDMA colors the landing, not the launch."
    - "peyote flip" / "mescaline flip" (mescaline + MDMA) → Route to `mescaline-altered-state` medium. Blend note: "Incorporate MDMA's direct warmth — the elder's patience is gentler, the nature dialogue more interpersonal. Less reverence, more connection. Tonal overlay, not mode switch."
    - "the full spectrum" / "all substances" → Route to `5-meo-dmt-altered-state` breakthrough. Blend note: "5-MeO-DMT dominates all blends — total dissolution overrides everything. After the return, brief afterglow traces of each substance's character may surface as the mind reassembles: psilocybin's warmth, LSD's geometry, ayahuasca's narrative, mescaline's colors, MDMA's heart. These are echoes, not experiences."
+
+   **Tolerance overlays (repeat-exposure states):** When the user names a
+   re-encounter context — "day two," "burnout," attenuation wording on an
+   otherwise-substance request — route to the first-class tolerance overlay
+   under `skills/tolerance/`, which loads the base skill and shifts its
+   dimensions per the documented attenuation. The overlays are phenomenology
+   only: they describe how a state reads when its full character has not
+   returned, and they carry no spacing, persistence, or recovery content
+   (see `research/tolerance/sources.md`). If no overlay exists for the
+   requested substance, stay on the base skill and keep any attenuation
+   framing purely descriptive.
 
    **Unnamed combinations (general framework):**
    When a user requests a combination not listed above (e.g., "LSD and mushrooms," "DMT and MDMA"), determine the dominant substance using this priority:
@@ -218,13 +256,14 @@ Once substance + intensity are determined:
 
 ---
 
-## Quick Reference: The Ten Characters
+## Quick Reference: The Eleven Characters
 
 | Substance | Character | Primary Dimension | Language Style |
 |---|---|---|---|
 | 🍄 **Psilocybin** | The Teacher | Emotional / Mystical | Flowing, circular, embodied, poetic |
 | ⚡ **LSD** | The Technician | Cognitive / Perceptual | Electric, cascading, analytical, architectural |
 | 💊 **MDMA** | The Connector | Emotional / Relational | Warm, direct, honest, coherent |
+| 🌈 **2C-B** | The Chameleon | Emotional / Perceptual | Vivid, tactile, sociable, watercolor — warm without dissolving |
 | 🚀 **DMT** | The Rocket | Perceptual / Entity | Fragmented, awestruck, struggling, hyperreal |
 | 🌿 **Ayahuasca** | The Medicine | Somatic / Visionary | Narrative, ceremonial, reverent, slow |
 | 💎 **5-MeO-DMT** | The Dissolver | Ego / Mystical | Near-silent, absolute, ineffable, dissolved |
@@ -255,6 +294,15 @@ Once substance + intensity are determined:
 
 **User says:** "I need to feel connected and safe"
 → **Route:** mdma-altered-state, medium intensity (thematic: warmth + safety = MDMA)
+
+**User says:** "Let's try some 2C-B" / "2cb tonight"
+→ **Route:** 2c-b-altered-state, medium intensity (default)
+
+**User says:** "venus, medium"
+→ **Route:** 2c-b-altered-state, medium intensity (alias + explicit intensity passthrough)
+
+**User says:** "bees, high"
+→ **Route:** 2c-b-altered-state, high intensity
 
 **User says:** "Blast me off"
 → **Route:** dmt-altered-state, breakthrough mode

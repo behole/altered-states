@@ -1,3 +1,8 @@
+<!-- PROVENANCE: Generated as a standalone response capture by bin/run_eval.py
+     (OpenRouter model session, one substance, one exchange, onset phase).
+     Ungated output: not consumed by build.py, not linked from the site.
+     Scored/structured eval reports live in docs/evals/. -->
+
 # Psilocybin Medium Intensity — Onset Phase Evaluation (Exchange 1)
 
 **Intensity:** Medium  
