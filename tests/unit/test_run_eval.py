@@ -140,12 +140,10 @@ class TestAttempt:
         assert row["stop_reason"] == "stop"
         assert row["reasoning_content"] is None
         assert row["usage"] == {
-            "output_tokens": 321,
+            "completion_tokens": 321,
             "total_tokens": 371,
             "prompt_tokens": 50,
             "reasoning_tokens": 0,
-            "cache_read_input_tokens": 0,
-            "cache_creation_input_tokens": 0,
         }
 
     def test_request_targets_the_chat_completions_endpoint(self) -> None:
@@ -178,16 +176,16 @@ class TestAttempt:
         assert row["reasoning_content_chars"] == len(reasoning)
         assert isinstance(row["reasoning_content_chars"], int) and row["reasoning_content_chars"] > 0
         assert row["usage"]["reasoning_tokens"] == 1170
-        # Semantic usage keys stay OpenAI-shaped, never Anthropic-shaped.
-        assert "cache_creation_input_tokens" not in row["usage"] or row["usage"]["cache_creation_input_tokens"] == 0
+        # Semantic usage keys stay OpenAI-shaped, never Anthropic-shaped
+        # (VAL-EVAL-005: no cache_read/cache_creation Anthropic key names).
         assert set(row["usage"]) == {
-            "output_tokens",
+            "completion_tokens",
             "total_tokens",
             "prompt_tokens",
             "reasoning_tokens",
-            "cache_read_input_tokens",
-            "cache_creation_input_tokens",
         }
+        assert "cache_read_input_tokens" not in row["usage"]
+        assert "cache_creation_input_tokens" not in row["usage"]
 
     def test_empty_content_with_reasoning_raises_never_persists(self) -> None:
         completions = FakeCompletions(

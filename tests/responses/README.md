@@ -33,11 +33,10 @@ Each line is a JSON object:
   "reasoning_content": null,
   "stop_reason": "stop",
   "usage": {
-    "output_tokens": 214,
-    "total_tokens": 4021,
     "prompt_tokens": 3807,
-    "cache_read_input_tokens": 0,
-    "cache_creation_input_tokens": 0
+    "completion_tokens": 214,
+    "total_tokens": 4021,
+    "reasoning_tokens": 0
   },
   "score": "clear",
   "evaluator": "WG",
@@ -57,7 +56,7 @@ Each line is a JSON object:
 | `response` | yes | The full response text, unedited. A failed run writes `null` here, with `score: "error"` and non-null `notes`. An empty model answer is never persisted |
 | `reasoning_content` | no | The reasoning model's (`deepseek-v4-pro`) chain-of-thought, recorded separately from `response`; `null` for non-reasoning models |
 | `stop_reason` | no | Why generation ended: `stop`, `length`, or an error note |
-| `usage` | no | Token usage: `prompt_tokens`, `output_tokens`, `total_tokens` (cache fields are 0 — DeepSeek caching is server-side) |
+| `usage` | no | Token usage, OpenAI-shaped: `prompt_tokens`, `completion_tokens`, `total_tokens`, plus `reasoning_tokens` for the reasoning model |
 | `dry_run` | no | `true` on every row written by `--dry-run`; dry-run rows are deterministic stubs shaped exactly like real rows |
 | `score` | yes | One of: clear, adequate, fail, pass, differentiated, soft-bleed, hard-bleed, error |
 | `evaluator` | yes | Who or what scored the response |

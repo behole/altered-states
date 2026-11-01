@@ -1,0 +1,1 @@
+{"manifest_id": "6529e9b044a8", "run_kind": "real", "model": "deepseek-v4-pro", "actual_cost_usd": 0.03005, "prompt_tokens": 24633, "output_tokens": 5090, "output": "../../../../tmp/val-eval-007.jsonl", "recorded_utc": "2026-11-01T01:19:28+00:00"}

@@ -249,17 +249,15 @@ async def _attempt(
     row["reasoning_content_chars"] = len(reasoning_text)
     row["stop_reason"] = choice.finish_reason
     row["usage"] = {
-        "output_tokens": usage.completion_tokens if usage else 0,
+        "completion_tokens": usage.completion_tokens if usage else 0,
         "total_tokens": usage.total_tokens if usage else 0,
         "prompt_tokens": usage.prompt_tokens if usage else 0,
         "reasoning_tokens": reasoning_tokens,
-        "cache_read_input_tokens": 0,
-        "cache_creation_input_tokens": 0,
     }
 
     REGISTRY.increment("llm_calls", status="ok", substance=run.substance)
     REGISTRY.increment("llm_tokens", row["usage"]["prompt_tokens"], direction="in")
-    REGISTRY.increment("llm_tokens", row["usage"]["output_tokens"], direction="out")
+    REGISTRY.increment("llm_tokens", row["usage"]["completion_tokens"], direction="out")
     return row
 
 
@@ -368,12 +366,10 @@ def dry_run_rows(runs: list[EvalRun], model: str) -> list[dict[str, Any]]:
         row["reasoning_content_chars"] = 0
         row["stop_reason"] = "dry_run"
         row["usage"] = {
-            "output_tokens": 0,
+            "completion_tokens": 0,
             "total_tokens": 0,
             "prompt_tokens": 0,
             "reasoning_tokens": 0,
-            "cache_read_input_tokens": 0,
-            "cache_creation_input_tokens": 0,
         }
         rows.append(row)
     return rows
@@ -423,11 +419,11 @@ async def execute_runs(
                 errors += 1
             usage = row.get("usage") or {}
             total_tokens_in += usage.get("prompt_tokens") or 0
-            total_tokens_out += usage.get("output_tokens") or 0
+            total_tokens_out += usage.get("completion_tokens") or 0
             status = "✓" if ok else "✗"
             usage_info = ""
             if ok and usage:
-                usage_info = f"  in={usage.get('prompt_tokens')}  out={usage.get('output_tokens')}"
+                usage_info = f"  in={usage.get('prompt_tokens')}  out={usage.get('completion_tokens')}"
             print(f"  [{done}/{len(runs)}] {status} {row['substance']:<12} {row['prompt_id']:<24}{usage_info}")
 
     actual_cost = eval_budget.estimate_cost_from_tokens(model, total_tokens_in, total_tokens_out)
@@ -458,9 +454,20 @@ async def execute_runs(
     return 0 if errors == 0 else 1
 
 
+def _invocation_argv() -> str:
+    """The exact argv this invocation was started with, normalised.
+
+    ``--write-manifest`` is the enrollment step, not part of the run itself, so
+    it is stripped: the reviewed manifest stays valid for the real run when the
+    only difference between the two commands is the write flag.
+    """
+    argv = [a for a in sys.argv[1:] if a != "--write-manifest"]
+    return "bin/run_eval.py " + " ".join(argv)
+
+
 def _manifest_for_args(args: argparse.Namespace, runs_len: int, run_kind: str) -> dict[str, Any]:
     """Build the spend manifest matching this exact invocation."""
-    command_line = "bin/run_eval.py " + " ".join(sys.argv[1:])
+    command_line = _invocation_argv()
     max_requests = runs_len * RETRY_ATTEMPTS  # worst case: every run exhausts retry
     manifest = eval_budget.build_manifest(
         run_kind=run_kind,
@@ -485,7 +492,7 @@ def _gate_manifest(args: argparse.Namespace, runs_len: int, out_path: Path) -> t
     this exact invocation, and fit within the cumulative ledger budget.
     """
     manifest_path = eval_budget.manifest_path_for(out_path)
-    command_line = "bin/run_eval.py " + " ".join(sys.argv[1:])
+    command_line = _invocation_argv()
     if args.write_manifest:
         manifest = _manifest_for_args(args, runs_len, "real")
         try:
