@@ -26,6 +26,35 @@ Plus a **router** that parses natural language and loads the right skill at the 
 
 These skills work with any AI assistant that accepts system prompts, custom instructions, or markdown skill files. Pick your platform:
 
+### One command: `bin/install_skills.py`
+
+Copies (or symlinks) every installable skill — the 11 substances, the router,
+the combo overlays, and the tolerance/afterglow lines — into the
+platform-correct skills directory. It is a **dry run by default**: it prints
+the per-skill plan and writes nothing until you add `--apply`.
+
+```bash
+python3 bin/install_skills.py                 # plan only — nothing written
+python3 bin/install_skills.py --apply         # copy into the real destination
+python3 bin/install_skills.py --apply --link  # symlink instead of copy
+python3 bin/install_skills.py --apply --dest /tmp/home/skills  # redirect
+python3 bin/install_skills.py --list          # see the full install set
+```
+
+Platform destinations (also in `--help`):
+
+| Platform | Default destination |
+|---|---|
+| darwin (macOS) | `~/.claude/skills` |
+| linux | `~/.config/opencode/skills` |
+
+The router installs under the name `altered-states-router` so it can never
+collide with a substance skill. Use `--list` to see every installable
+name, then `--skill NAME` (repeatable) to install a subset. On an unusual
+platform or a non-standard setup, always pass `--dest` explicitly.
+
+### Manual alternatives
+
 ### Claude Code / OpenCode / Any slash-skill system
 
 Skills live as `SKILL.md` files. Clone this repo into your skills directory:
