@@ -31,13 +31,53 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   connection does not block later requests and the server still shuts
   down cleanly.
 ### Added
+- **Skill-tree validator (VAL-TOOL-001, VAL-TOOL-002)** — `bin/check_skills.py`
+  (stdlib-only) validates every `SKILL.md` under `skills/` — top-level
+  substances, the router, and the nested overlay lines (`skills/combos/*`,
+  `skills/tolerance/*`, `skills/afterglow/`) — against the structural
+  contract: front-matter schema, Safety Override furniture, 7-dimension ×
+  intensity matrix, dose arc, and router alias resolution. Wired into
+  `make skills-check` (part of `make verify`); failures exit nonzero naming
+  file + section; `--new-skill <path>` prints the same rules as an authoring
+  checklist. Seeded-mutation tests in `tests/unit/test_skills_check.py` prove
+  the failure paths fire.
+- **Content safety lint (VAL-TOOL-003, VAL-TOOL-004)** — `bin/safety_lint.py`
+  (stdlib-only) scans every Markdown file under `skills/` AND the built
+  `site/index.html` for forbidden patterns: dose figures with dosing verbs,
+  dosing-schedule/posology phrasing, therapy/guidance claims, and
+  sourcing-language slips. Wired into `make safety-lint` (part of
+  `make security` and `make verify`); findings name file:line. The scoped
+  allowlist contract is documented in the module docstring and proven
+  defeat-proof in `tests/unit/test_safety_lint.py`: an inline
+  `<!-- safety-lint: allow: rule -- reason: ... -->` can never rescue a
+  full-line dose-figure match.
+- **Golden snapshot tests (VAL-TOOL-005)** — snapshot tests for build.py's
+  derived JSON payloads (camelCase personas, journal-series dashboards, and
+  masked quiz game) against committed fixture directories under
+  `tests/fixtures/golden/`. Snapshots are keyed on a content hash of the
+  fixture inputs, so changed inputs without re-snapshotting fail loudly, and
+  a seeded key rename of the personas contract fails with a named diff.
+  Re-snapshot intended changes with
+  `UPDATE_GOLDEN_SNAPSHOTS=1 pytest tests/unit/test_golden_snapshots.py`
+  (the env var overwrites existing snapshots unconditionally, so the
+  regeneration instruction always works).
+- **Skill installer (VAL-TOOL-006)** — `bin/install_skills.py` installs the
+  full skill set (substances, router, combos, tolerance overlays, afterglow)
+  to the platform-correct skills directory in one command (darwin ->
+  `~/.claude/skills`, linux -> `~/.config/opencode/skills`; `--dest`
+  override documented, installer refuses `--dest` inside the source
+  `skills/` tree). Dry run by default; `--apply` copies, `--link` symlinks;
+  `--skill` selects one; `--list` prints the default set and the platform
+  table. Offline unit-tested in `tests/unit/test_install_skills.py`.
 - **Build-time OG share cards (VAL-TOOL-007)** — `make build` now renders one
   share card per substance skill into `site/og/<substance>.png` (11 cards
   today, incl. 2C-B), deterministic and byte-identical across delete+rebuild.
   The committed `site/og/placeholder.svg` placeholder is retired: a build
-  clears every top-level `<slug>.png`/`<slug>.svg` from `site/og/` before
-  regenerating, so stale cards cannot survive. Cards carry the substance
-  name, its one-line character, and the leading sentence of its description.
+  clears its card assets (one card filename per substance slug, plus the
+  placeholder) from `site/og/` before regenerating, so stale cards cannot
+  survive; foreign files in `site/og/` are never touched. Cards carry the
+  substance name, its one-line character, and the leading sentence of its
+  description.
   **Format choice (documented, not silent):** PNG rendered with
   Pillow (`pillow==13.0.0`, pinned in `bin/requirements.txt` +
   `bin/requirements.lock`) — the pip-audit-clean line; because major
@@ -47,7 +87,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `build.og_cards format=svg` so the deviation is observable. Card bytes
   are stable within a given Pillow version (delete+rebuild
   byte-identical); the pinned version defines the committed card bytes,
-  so the Python that builds the site must have the locked Pillow.
+  so the Python that builds the site must have the locked Pillow —
+  `make build` now enforces that itself (`BUILD_PY` pins
+  `--with pillow==13.0.0`, the same line the `PYTEST` test env uses),
+  and a CI byte-comparison test asserts the committed
+  `site/og/*.png` bytes equal the pinned-Pillow render.
   Pillow 13 requires Python >= 3.11, so `bin/requirements.lock` now
   resolves for 3.11 (the oldest interpreter that installs it — CI test
   matrix moved 3.10 -> 3.11; ruff/mypy still lint Python 3.10 syntax).

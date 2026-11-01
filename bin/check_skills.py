@@ -60,8 +60,22 @@ DIMENSION_PATTERNS = [
 
 # Dose-figure units that must NEVER appear in overlay skills (combos,
 # tolerance, afterglow): overlays are valid skills but not substances and
-# carry zero dose figures by construction.
-DOSE_UNIT = re.compile(r"\b\d+(?:\.\d+)?\s*(?:mg|µg|ug)\b")
+# carry zero dose figures by construction. Mass units at every plausible
+# scale and writing style, plus volumes, so "0.5 g", "10 ml" or "2 grams"
+# cannot slip past an mg/µg-only pattern.
+DOSE_UNIT = re.compile(
+    r"\b\d+(?:\.\d+)?\s*(?:mcg|µg|ug|mg|g(?:rams?)?|ml|milliliters?|milligrams?|micrograms?)\b",
+    re.IGNORECASE,
+)
+
+# Overlay LINES (directories whose children are skills: skills/<line>/<name>/).
+# One source of truth so a future line only changes this tuple; see SkillFile
+# classification and check_router's substance-slug scan.
+OVERLAY_LINES = ("combos", "tolerance")
+
+# Top-level overlay slugs: valid skills but not substances (zero dose
+# figures by construction).
+OVERLAY_SLUGS = ("afterglow",)
 
 REQUIRED_DIMENSION_ROWS = 7
 MIN_PROFILE_COVERAGE = 4
@@ -98,7 +112,7 @@ class SkillFile:
             self.slug = parent.name
         if self.slug == "router":
             self.kind = "router"
-        elif self.line in ("combos", "tolerance") or self.slug == "afterglow":
+        elif self.line in OVERLAY_LINES or self.slug in OVERLAY_SLUGS:
             self.kind = "overlay"
         else:
             self.kind = "substance"
@@ -250,8 +264,10 @@ def check_front_matter(file: SkillFile) -> list[str]:
 def check_safety_override(file: SkillFile) -> list[str]:
     section = file.section_text(r"^Safety Override")
     if not section:
-        if file.kind == "overlay" and file.slug == "README":
-            return []  # tolerated; README is a policy doc, not a skill
+        # No README branch here on purpose: discovery is rglob("SKILL.md")
+        # only, so a line's README.md (e.g. skills/tolerance/README.md, the
+        # documented line-policy doc) is never a SkillFile and never reaches
+        # the per-file checks.
         return [
             fail(
                 file.path,
@@ -470,7 +486,7 @@ def check_router(files: list[SkillFile], router: SkillFile) -> list[str]:
         )
     # Substance slugs of disk dirs (overlay lines carry their own base label)
     for child in router.path.parent.iterdir():
-        if child.is_dir() and child.name != "router" and child.name not in ("combos", "tolerance"):
+        if child.is_dir() and child.name != "router" and child.name not in OVERLAY_LINES:
             slug = child.name
             if slug.lower() not in router.text.lower():
                 problems.append(
@@ -513,7 +529,9 @@ skills/psilocybin/SKILL.md.
 Front matter (`---` fenced block, first 11 lines):
   1. `name:` must end in `-altered-state`.
   2. `description:` multi-line (`>` block) naming the phenomenological contract.
-  3. `tags:` list must contain the substance/topic word and `altered-states`.
+  3. `tags:` list must contain the substance/topic word and `altered-states`
+     (the substance word itself is a convention reviewers check, not one
+     check_skills.py machine-enforces — only `altered-states` is verified).
   4. `version:` quoted semver string, e.g. `version: "1.5"`.
   5. `author: behole`.
 

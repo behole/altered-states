@@ -236,8 +236,17 @@ def print_plan(plan: list[tuple[str, Path, Path]], dest: Path) -> None:
 
 
 def do_apply(plan: list[tuple[str, Path, Path]], dest: Path, symlink: bool) -> int:
-    if dest.resolve() == SKILLS_DIR.resolve():
-        print("error: refusing to install the skills tree into itself", file=sys.stderr)
+    dest_resolved = dest.resolve()
+    skills_resolved = SKILLS_DIR.resolve()
+    # Refuse the skills tree itself OR anything INSIDE it: installing `dest =
+    # skills/combos` would rmtree-replace same-named targets under the real
+    # source tree, not just an exact-match collision.
+    if dest_resolved == skills_resolved or dest_resolved.is_relative_to(skills_resolved):
+        print(
+            f"error: refusing to install into the source skills tree ({dest_resolved} "
+            "is inside skills/); pick a destination outside it",
+            file=sys.stderr,
+        )
         return 2
     lines, problems = do_install(plan, dest, symlink=symlink)
     for line in lines:

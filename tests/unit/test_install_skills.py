@@ -117,3 +117,19 @@ def test_unknown_skill_exits_nonzero_naming_it(tmp_path: Path) -> None:
     assert result.returncode == 1
     assert "bogus-substance" in result.stderr
     assert list(tmp_path.iterdir()) == []
+
+
+def test_apply_refuses_dest_equal_to_skills_tree() -> None:
+    result = run_cli("--apply", "--dest", str(SKILLS))
+    assert result.returncode == 2
+    assert "skills tree" in result.stderr
+
+
+def test_apply_refuses_dest_inside_skills_tree(tmp_path: Path) -> None:
+    # Not an exact match: a directory strictly inside skills/ would let the
+    # installer rmtree-replace same-named targets under the real source tree.
+    inside = SKILLS / "combos" / "nested-dest"
+    result = run_cli("--apply", "--dest", str(inside))
+    assert result.returncode == 2
+    assert "inside skills/" in result.stderr
+    assert not inside.exists()

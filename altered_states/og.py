@@ -233,7 +233,30 @@ def _render_card_svg(substance: dict[str, Any]) -> bytes:
 # ── Build integration ────────────────────────────────────────────────────────
 
 
-_CARDFILE_RE = re.compile(r"[a-z0-9][a-z0-9-]*\.(?:png|svg)")
+# The retired committed placeholder asset: part of the migration contract so
+# the pre-card placeholder cannot survive a rebuild (see the retiring commit
+# and the CHANGELOG note documenting the format choice).
+_PLACEHOLDER_NAMES = frozenset({"placeholder.png", "placeholder.svg"})
+
+
+def known_card_names(substances: list[dict[str, Any]]) -> frozenset[str]:
+    """Card filenames this build owns: one per slug plus the retired placeholder.
+
+    Cleanup is scoped to exactly these names — an unrelated PNG/SVG dropped
+    into ``site/og/`` (attribution art, a foreign export) is never touched.
+    """
+    extra = {card_filename(str(s["id"])) for s in substances}
+    return frozenset(extra | _PLACEHOLDER_NAMES)
+
+
+def _cleanup_cards(og_dir: Path, known: frozenset[str]) -> int:
+    og_dir.mkdir(parents=True, exist_ok=True)
+    removed = 0
+    for entry in sorted(og_dir.iterdir()):
+        if entry.is_file() and entry.name in known:
+            entry.unlink()
+            removed += 1
+    return removed
 
 
 def write_og_cards(
@@ -242,19 +265,16 @@ def write_og_cards(
 ) -> list[str]:
     """(Re)write every OG share card under ``og_dir`` — one per substance.
 
-    Deterministic delete+rebuild: the directory is cleared of card assets
-    (any top-level ``<slug>.png``/``<slug>.svg`` files, including the retired
-    committed ``placeholder.svg``) and freshly rendered in the active format,
-    so consecutive builds converge to the same tree state and stale cards
-    cannot survive a build. Returns the list of card paths written.
+    Deterministic delete+rebuild: the directory is cleared of card assets the
+    build owns (one ``<slug>.png``/``<slug>.svg`` per substance slug, plus the
+    retired committed ``placeholder.svg``) and freshly rendered in the active
+    format, so consecutive builds converge to the same tree state and stale
+    cards cannot survive a build. Foreign files in ``og_dir`` are untouched —
+    cleanup is scoped to :func:`known_card_names`. Returns the list of card
+    paths written.
     """
     og = Path(og_dir)
-    og.mkdir(parents=True, exist_ok=True)
-    removed = 0
-    for entry in sorted(og.iterdir()):
-        if entry.is_file() and _CARDFILE_RE.fullmatch(entry.name):
-            entry.unlink()
-            removed += 1
+    removed = _cleanup_cards(og, known_card_names(substances))
 
     by_slug = {str(s["id"]): s for s in substances}
     for slug, substance in sorted(by_slug.items()):
@@ -273,20 +293,20 @@ def write_og_cards(
     return [str(og / card_filename(slug)) for slug in sorted(by_slug)]
 
 
-def clear_og_cards(og_dir: str | Path) -> list[str]:
+def clear_og_cards(
+    substances: list[dict[str, Any]],
+    og_dir: str | Path,
+) -> list[str]:
     """Remove every generated card when cards are not being built (flag off).
 
     Keeps the delete+rebuild convergence promise symmetric: with
     ``site.substance_pages`` off, the og directory contains no card assets,
-    matching the pages (gone) that would otherwise reference them. Returns an
-    empty card-list so the build summary can treat both paths uniformly.
+    matching the pages (gone) that would otherwise reference them. Cleanup is
+    scoped to :func:`known_card_names`, so foreign files are untouched here
+    too. Returns an empty card-list so the build summary can treat both paths
+    uniformly.
     """
     og = Path(og_dir)
-    removed = 0
-    if og.is_dir():
-        for entry in sorted(og.iterdir()):
-            if entry.is_file() and _CARDFILE_RE.fullmatch(entry.name):
-                entry.unlink()
-                removed += 1
+    removed = _cleanup_cards(og, known_card_names(substances)) if og.is_dir() else 0
     log_event("build.og_cards", format="none", cards=0, stale_removed=removed, dir=str(og))
     return []

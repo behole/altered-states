@@ -117,7 +117,10 @@ def _assert_golden(name: str, payload: Any, inputs: dict[str, Path]) -> None:
     snapshot_path = SNAPSHOTS_DIR / f"{name}.json"
     inputs_now = {label: _dir_digest(directory)[0] for label, directory in inputs.items()}
 
-    if UPDATE_ENV in os.environ and not snapshot_path.exists():
+    # The env var is unconditional: with a snapshot already on disk, setting
+    # the env var overwrites it (that is exactly what the failure messages
+    # below tell you to do). Without it, nothing ever writes.
+    if UPDATE_ENV in os.environ:
         snapshot_path.parent.mkdir(parents=True, exist_ok=True)
         snapshot_path.write_text(json.dumps({"inputs": inputs_now, "payload": payload}, indent=2, ensure_ascii=False))
         return
@@ -224,6 +227,31 @@ class TestPersonasPayload:
         message = str(excinfo.value)
         assert "without re-snapshotting" in message
         assert "'journals'" in message
+
+    def test_update_env_overwrites_existing_snapshot(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """UPDATE_GOLDEN_SNAPSHOTS=1 rewrites an existing snapshot file.
+
+        The failure messages instruct regeneration with the env var; with the
+        old create-only behavior that instruction could never work on an
+        existing snapshot. Proven here on an isolated snapshots dir so the
+        committed golden files are not touched.
+        """
+        monkeypatch.setattr("tests.unit.test_golden_snapshots.SNAPSHOTS_DIR", tmp_path)
+        inputs = {"journals": JOURNALS_DIR}
+
+        stale = {"inputs": {"journals": "stale"}, "payload": {"stale": True}}
+        snapshot = tmp_path / "journal_series_payload.json"
+        snapshot.parent.mkdir(parents=True, exist_ok=True)
+        snapshot.write_text(json.dumps(stale))
+
+        monkeypatch.setenv(UPDATE_ENV, "1")
+        payload = _journal_series_payload()
+        _assert_golden("journal_series_payload", payload, inputs)  # no raise, rewrites
+
+        rewritten = json.loads(snapshot.read_text())
+        assert rewritten["payload"] == payload
+        assert rewritten["inputs"]["journals"] != "stale"
+        assert _dir_digest(JOURNALS_DIR)[0] == rewritten["inputs"]["journals"]
 
 
 class TestJournalSeriesPayload:

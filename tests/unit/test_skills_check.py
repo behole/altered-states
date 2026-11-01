@@ -79,7 +79,11 @@ def test_nested_overlay_layouts_are_discovered() -> None:
         assert matched, f"{name} not validated as a skill: {result.stdout}"
 
 
-def test_tolerance_readme_is_tolerated_not_flagged() -> None:
+def test_tolerance_readme_is_a_policy_doc_not_a_skill() -> None:
+    """Discovery is rglob('SKILL.md')-only, so skills/tolerance/README.md is
+    neither validated nor flagged — and it genuinely exists as a line-policy
+    doc (this is not a vacuous absence check)."""
+    assert (SKILLS / "tolerance" / "README.md").is_file()
     result = run_validator(SKILLS)
     assert result.returncode == 0
     assert "tolerance/README.md" not in result.stdout

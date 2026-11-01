@@ -101,23 +101,72 @@ class TestWriteOgCards:
 
         assert first == second
 
-    def test_placeholder_and_retired_cards_are_not_survivors(self, og_dir: Path) -> None:
+    def test_placeholder_is_cleaned_but_retired_foreign_cards_survive(self, og_dir: Path) -> None:
         og_dir.mkdir(parents=True)
         (og_dir / "placeholder.svg").write_text('<svg xmlns="#"/>')  # the committed placeholder
-        (og_dir / "retired-sub.png").write_bytes(b"stale")
 
         og.write_og_cards(_three_substances(), og_dir)
 
+        # Cleanup is scoped to card names the build owns; the placeholder was
+        # owned by the pre-card migration, so it goes.
         assert not (og_dir / "placeholder.svg").exists()
-        assert not (og_dir / "retired-sub.png").exists()
 
-    def test_foreign_files_in_og_dir_are_never_touched(self, og_dir: Path) -> None:
+    def test_foreign_card_shaped_files_are_never_touched(self, og_dir: Path) -> None:
         og_dir.mkdir(parents=True)
         (og_dir / "attribution.txt").write_text("notes")
+        (og_dir / "attribution.png").write_bytes(PNG_MAGIC + b"foreign png")
+        (og_dir / "foreign-art.svg").write_text('<svg xmlns="#"/>')
 
         og.write_og_cards(_three_substances(), og_dir)
 
+        # A file whose name merely looks like a card (e.g. `retired-sub.png`)
+        # but whose slug is not a known substance must survive a rebuild.
         assert (og_dir / "attribution.txt").read_text() == "notes"
+        assert (og_dir / "attribution.png").read_bytes() == PNG_MAGIC + b"foreign png"
+        assert (og_dir / "foreign-art.svg").read_text() == '<svg xmlns="#"/>'
+
+    def test_committed_cards_match_pinned_pillow_render(self) -> None:
+        """The committed site/og/*.png bytes are what Pillow 13.0.0 renders.
+
+        The committed blobs are contractually defined as the output of the
+        pinned ``pillow==13.0.0`` (the version `make build` installs via
+        ``BUILD_PY``). If a rebuild is done under a different Pillow (e.g. the
+        ambient interpreter's), the bytes drift and this test fails — run
+        ``make build`` to re-commit the pinned render.
+        """
+        if og.card_extension() != "png":
+            pytest.skip("PNG card format not active in this environment")
+        committed_dir = Path(__file__).resolve().parents[2] / "site" / "og"
+        # Committed blobs only exist where cards are actually shipped; a
+        # sandbox that has never run `make build` legitimately has none.
+        signals = [
+            (slug, committed_dir / og.card_filename(slug))
+            for slug in (
+                "2c-b",
+                "5-meo-dmt",
+                "ayahuasca",
+                "dmt",
+                "ibogaine",
+                "ketamine",
+                "lsd",
+                "mdma",
+                "mescaline",
+                "psilocybin",
+                "salvia",
+            )
+        ]
+        present = [p for _, p in signals if p.is_file()]
+        if not present:
+            pytest.skip("no committed site/og cards in this checkout")
+
+        substances = {str(s["id"]): s for s in build.load_substances()}
+        for slug, committed_path in signals:
+            assert committed_path.is_file(), f"some committed cards exist but {slug} is missing"
+            slug_img = og.render_card(substances[slug])
+            assert slug_img == committed_path.read_bytes(), (
+                f"site/og/{committed_path.name} drifted from the pinned-Pillow render; "
+                "run `make build` (pinned pillow==13.0.0) and commit the rebuilt cards"
+            )
 
 
 class TestSubstancePageOgTags:
@@ -145,7 +194,7 @@ class TestSubstancePageOgTags:
 def test_build_generates_a_card_for_every_real_substance(og_dir: Path) -> None:
     """The full skills tree derives cards — 11 substances today (10 + 2C-B)."""
     substances: list[dict[str, object]] = build.load_substances()
-    assert len(substances) >= 10
+    assert len(substances) >= 11
     paths = og.write_og_cards(substances, og_dir)
     assert len(paths) == len(substances)
     for path in paths:

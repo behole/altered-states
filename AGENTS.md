@@ -105,13 +105,12 @@ a known CVE in the locked set. Do not add a dependency to avoid writing twenty
 lines of code.
 
 ### 6. Tests must assert behaviour, not existence
-
 `make test` runs with a coverage floor and `--strict-markers`. A test that only
 checks a function returns a non-`None` value is noise. Assert the actual
 contract: the exact string emitted, the exact exit code, the mutation that did
 or did not happen.
 
-### 6. Skills are validated, not hand-inspected
+### 7. Skills are validated, not hand-inspected
 
 Every `skills/**/SKILL.md` must pass `make skills-check` (`bin/check_skills.py`,
 stdlib-only): front-matter schema, Safety Override furniture, dimension matrix,
@@ -120,7 +119,7 @@ dose arc, and router alias resolution. When authoring a new skill, run
 full authoring checklist. Seeded-mutation tests in
 `tests/unit/test_skills_check.py` prove the failure paths fire.
 
-### 6b. Skill content is safety-linted, not hand-inspected
+### 8. Skill content is safety-linted, not hand-inspected
 
 `make safety-lint` (`bin/safety_lint.py`, stdlib-only) scans every Markdown
 file under `skills/` AND the BUILT `site/index.html` (never the template) for
@@ -133,12 +132,12 @@ contracts (documented in the `bin/safety_lint.py` docstring, proven in
 rule to the line above which it sits — but dose-verb matches (which always
 carry a dose number) are never suppressible, so an allowlist can not defeat a
 genuine forbidden pattern + number. Forbidden-word matches are additionally
-excused inside refusal sentences (overlay overlay bans worded as refusals,
+excused inside refusal sentences (overlay bans worded as refusals,
 e.g. "**No schedule, and no recovery arithmetic**") and in two historical
 quoted phrases ("Ineffability protocol", "clinical protocol"). `research/` is
 exempt from scanning.
 
-### 7. The temporal-lab scripts are entry points, not a package
+### 9. The temporal-lab scripts are entry points, not a package
 
 `experiments/temporal-lab/scripts/*.py` are run directly (`python3 temporal_init.py`)
 and some have hyphens in their names. They bootstrap `sys.path` to import
@@ -193,6 +192,10 @@ Before you say a change is finished:
 5. `pre-commit run --all-files` passes.
 6. If behaviour or commands changed, `README.md`, this file, or `runbooks/` was
    updated in the same commit.
+7. Every user-facing tool addition (`bin/` scripts, `make` targets, validators,
+   lints, installers) gets a `CHANGELOG.md` `[Unreleased]` entry in the same
+   commit — a shipped tool that is invisible in the CHANGELOG is treated as a
+   missing deliverable.
 
 Do not disable a check to make it pass. If a check is wrong, change the check
 deliberately and say why in the commit message.

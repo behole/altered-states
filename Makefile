@@ -119,8 +119,16 @@ release:
 labels:
 	$(PY_YAML) bin/sync_labels.py --dry-run
 
+# The build renders the OG share cards (altered_states/og.py uses Pillow). The
+# committed site/og/*.png bytes are the output of the PINNED pillow==13.0.0 (the
+# pip-audit-clean line chosen in bin/requirements.txt), not the ambient
+# interpreter's Pillow, so the build env pins Pillow the same way the test env
+# (PYTEST above) does. A rebuild under any other Pillow version produces
+# different bytes and fails tests/unit/test_og_cards.py's committed-blob test.
+BUILD_PY ?= $(UVX) --with pillow==13.0.0 $(PYTHON)
+
 build:
-	$(PYTHON) build.py
+	$(BUILD_PY) build.py
 
 install-hooks:
 	$(UVX) pre-commit@4.7.0 install

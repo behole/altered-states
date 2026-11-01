@@ -2488,7 +2488,7 @@ def build() -> None:
             if substance_pages_enabled:
                 og_cards: list[str] = write_og_cards(substances, OG_DIR)
             else:
-                og_cards = clear_og_cards(OG_DIR)
+                og_cards = clear_og_cards(substances, OG_DIR)
 
             size = os.path.getsize(OUTPUT)
             log_timed(
