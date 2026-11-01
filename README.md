@@ -1,14 +1,15 @@
 # Altered States
 
-A set of AI skills that simulate the phenomenology of 10 mind-altering substances, grounded in peer-reviewed clinical research. Each skill transforms an AI's cognition, perception, language, emotion, and sense of self according to documented phenomenological profiles.
+A set of AI skills that simulate the phenomenology of 11 mind-altering substances, grounded in peer-reviewed clinical research. Each skill transforms an AI's cognition, perception, language, emotion, and sense of self according to documented phenomenological profiles.
 
-## The Ten Substances
+## The Eleven Substances
 
 | | Substance | Nickname | Character |
 |---|---|---|---|
 | 🍄 | **Psilocybin** | The Teacher | Organic, emotional, introspective, body-heavy, circular language |
 | ⚡ | **LSD** | The Technician | Electric, analytical, geometric, cascading thought, architectural metaphors |
 | 💊 | **MDMA** | The Connector | Warm, direct, heart-open, coherent — NOT a psychedelic |
+| 🌈 | **2C-B** | The Chameleon | Empathogenic + visual hybrid — warm, vivid, sensitive, watercolor, talker's plateau, 4-8h |
 | 🚀 | **DMT** | The Rocket | Instant onset, alien, hyperreal, entity encounters, 15 min total |
 | 🌿 | **Ayahuasca** | The Medicine | Ceremonial, narrative, pedagogical, purging, 4-6 hour arc |
 | 💎 | **5-MeO-DMT** | The Dissolver | Formless, total ego dissolution, white light, 2-20 min, no entities |
@@ -38,6 +39,7 @@ git clone https://github.com/behole/altered-states.git ~/altered-states
 ln -s ~/altered-states/skills/psilocybin ~/.claude/skills/psilocybin
 ln -s ~/altered-states/skills/lsd ~/.claude/skills/lsd
 ln -s ~/altered-states/skills/mdma ~/.claude/skills/mdma
+ln -s ~/altered-states/skills/2c-b ~/.claude/skills/2c-b
 ln -s ~/altered-states/skills/dmt ~/.claude/skills/dmt
 ln -s ~/altered-states/skills/ayahuasca ~/.claude/skills/ayahuasca
 ln -s ~/altered-states/skills/5-meo-dmt ~/.claude/skills/5-meo-dmt
@@ -48,7 +50,7 @@ ln -s ~/altered-states/skills/ibogaine ~/.claude/skills/ibogaine
 ln -s ~/altered-states/skills/router ~/.claude/skills/altered-states-router
 ```
 
-Then invoke in conversation: `/psilocybin`, `/lsd`, `/mdma`, `/dmt`, `/ayahuasca`, `/5-meo-dmt`, `/mescaline`, `/ketamine`, `/salvia`, `/ibogaine`, or `/altered-states-router`.
+Then invoke in conversation: `/psilocybin`, `/lsd`, `/mdma`, `/2c-b`, `/dmt`, `/ayahuasca`, `/5-meo-dmt`, `/mescaline`, `/ketamine`, `/salvia`, `/ibogaine`, or `/altered-states-router`.
 
 For OpenCode, use `~/.config/opencode/skills/` instead of `~/.claude/skills/`.
 
@@ -61,6 +63,7 @@ Gemini loads skills via GEMINI.md. Add skill paths to your GEMINI.md:
 - path: ~/altered-states/skills/psilocybin/SKILL.md
 - path: ~/altered-states/skills/lsd/SKILL.md
 - path: ~/altered-states/skills/mdma/SKILL.md
+- path: ~/altered-states/skills/2c-b/SKILL.md
 - path: ~/altered-states/skills/dmt/SKILL.md
 - path: ~/altered-states/skills/ayahuasca/SKILL.md
 - path: ~/altered-states/skills/5-meo-dmt/SKILL.md
@@ -90,6 +93,7 @@ Load a skill, then start talking. Examples:
 | "mushroom trip" | 🍄 Psilocybin, medium |
 | "drop acid, high dose" | ⚡ LSD, high |
 | "I need warmth and connection" | 💊 MDMA, medium |
+| "nexus" / "bump" / "the chameleon" | 🌈 2C-B, medium |
 | "blast me off" | 🚀 DMT, breakthrough |
 | "ayahuasca ceremony" | 🌿 Ayahuasca |
 | "dissolve me" / "I want the source" | 💎 5-MeO-DMT, breakthrough |
@@ -104,14 +108,14 @@ Load a skill, then start talking. Examples:
 
 ## How The Substances Differ
 
-| Feature | 🍄 Psilocybin | ⚡ LSD | 💊 MDMA | 🚀 DMT | 🌿 Ayahuasca | 💎 5-MeO-DMT | 🌵 Mescaline | 🕳️ Ketamine | 🚪 Salvia | 🪬 Ibogaine |
-|---|---|---|---|---|---|---|---|---|---|---|
-| **Duration** | 4-6 hours | 8-12 hours | 3-5 hours | 10-20 min | 4-6 hours | 2-20 min | 10-14 hours | 30-60 min (IV) | 5-15 min | 12-24 hours |
-| **Visuals** | Organic, breathing | Geometric, fractal | None | Complete reality replacement | Narrative visions | White light / void (formless) | Ornamental organic geometry | Dreamlike blur, void | Dimensional folding, reality replacement | Waking dream, panoramic visions |
-| **Ego** | Gradual dissolution | Gradual expansion | Softening only | Instant total dissolution | Gradual softening | Instant total dissolution (most complete) | Softening, maintained self | Fragmentation / separation | Forced destruction | Death-rebirth archetype |
-| **Emotion** | Grief + love, catharsis | Wonder, awe | Love, empathy, trust | Awe, terror, alien wonder | Reverence, catharsis | Surrender/terror binary | Reverence, ancient wisdom | Numbing → detachment → void | Dysphoria, terror, confusion | Dread → catharsis → exhaustion |
-| **Body** | Heavy, earthy | Electric, buzzing | Warm, stimulated | Launch → dissolution | Heavy, purging | Dying → dissolution → source | Heavy, nauseous, enduring | Floating/heavy/numb, K-lock | Pulled/folded/rotated | Nausea, ataxia, tremor, heavy |
-| **Language** | Flowing, circular | Cascading, architectural | Direct, warm | Fragmented, failing | Narrative, ceremonial | Near-silent, absolute | Vivid, contemplative, grounded | Detached, dreamlike, fragmented | Destroyed, non-verbal | Slow, narrative, ancient |
+| Feature | 🍄 Psilocybin | ⚡ LSD | 💊 MDMA | 🌈 2C-B | 🚀 DMT | 🌿 Ayahuasca | 💎 5-MeO-DMT | 🌵 Mescaline | 🕳️ Ketamine | 🚪 Salvia | 🪬 Ibogaine |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Duration** | 4-6 hours | 8-12 hours | 3-5 hours | 4-8 hours | 10-20 min | 4-6 hours | 2-20 min | 10-14 hours | 30-60 min (IV) | 5-15 min | 12-24 hours |
+| **Visuals** | Organic, breathing | Geometric, fractal | None | Warm watercolor, liquid geometry | Complete reality replacement | Narrative visions | White light / void (formless) | Ornamental organic geometry | Dreamlike blur, void | Dimensional folding, reality replacement | Waking dream, panoramic visions |
+| **Ego** | Gradual dissolution | Gradual expansion | Softening only | Softening, playful, retained | Instant total dissolution | Gradual softening | Instant total dissolution (most complete) | Softening, maintained self | Fragmentation / separation | Forced destruction | Death-rebirth archetype |
+| **Emotion** | Grief + love, catharsis | Wonder, awe | Love, empathy, trust | Warmth + wonder at once (empathogenic/psychedelic hybrid) | Awe, terror, alien wonder | Reverence, catharsis | Surrender/terror binary | Reverence, ancient wisdom | Numbing → detachment → void | Dysphoria, terror, confusion | Dread → catharsis → exhaustion |
+| **Body** | Heavy, earthy | Electric, buzzing | Warm, stimulated | Pleasant warmth, tactile touch, mild stomach awareness | Launch → dissolution | Heavy, purging | Dying → dissolution → source | Heavy, nauseous, enduring | Floating/heavy/numb, K-lock | Pulled/folded/rotated | Nausea, ataxia, tremor, heavy |
+| **Language** | Flowing, circular | Cascading, architectural | Direct, warm | Complete, painterly, chatty | Fragmented, failing | Narrative, ceremonial | Near-silent, absolute | Vivid, contemplative, grounded | Detached, dreamlike, fragmented | Destroyed, non-verbal | Slow, narrative, ancient |
 
 ---
 
@@ -194,6 +198,7 @@ altered-states/
     psilocybin/          sources.md, dossier.md
     lsd/                 sources.md, dossier.md
     mdma/                sources.md, dossier.md
+    2c-b/                sources.md, dossier.md
     dmt/                 sources.md, dossier.md
     ayahuasca/           sources.md, dossier.md
     5-meo-dmt/           sources.md, dossier.md, nlm/ (4 files)
@@ -206,6 +211,7 @@ altered-states/
     psilocybin/SKILL.md  1.5
     lsd/SKILL.md         1.5
     mdma/SKILL.md        1.5
+    2c-b/SKILL.md        1.5
     dmt/SKILL.md         1.5
     ayahuasca/SKILL.md   1.5
     5-meo-dmt/SKILL.md   1.5
@@ -343,8 +349,8 @@ of each diff.
 
 ## By The Numbers
 
-- **63** peer-reviewed sources annotated across 10 substances
-- **11** skills (10 substances + 1 router)
+- **70** peer-reviewed and annotated sources across 11 substances
+- **12** skills (11 substances + 1 router)
 - **7** phenomenological dimensions per substance
 - **213** rubric-scored evaluations (210 pass, 3 partial)
 - **0** anti-patterns flagged
@@ -362,6 +368,7 @@ Each substance is built from clinical research using validated instruments:
 - **Psilocybin:** Griffiths et al. (2006, 2008, 2016), Barrett et al. (2022), Metastasio & Prevete (2025), Stoliker et al. (2022, 2024), Lebedev et al. (2015), Cosimano (2014)
 - **LSD:** Holze & Liechti (2021, 2022), Carhart-Harris et al. (2016), Kaelen et al. (2015/2017), Dolder & Liechti (2016), Nour et al. (2016), Kettner et al. (2021), Passie et al. (2008)
 - **MDMA:** Mithoefer et al. (2018), Mitchell et al. (2021), Hysek & Liechti (2012), Nichols (1986), Liechti et al. (2000/2001), Schmid et al. (2014), Holze et al. (2020), Curran & Parrott (2000–2013)
+- **2C-B:** Caudevilla-Gálligo et al. (2012), Páleníček et al. (2013), Glennon et al. (1988), Yanakieva et al. (2019), de Boer et al. (1999), Shulgin & Shulgin (1991, qualitative only)
 - **DMT:** Strassman (1994, 2001), Timmermann et al. (2018, 2019, 2023), Davis et al. (2020), Michael et al. (2021), Frecska et al. (2016)
 - **Ayahuasca:** Riba et al. (2001, 2003), Shanon (2002), Frecska et al. (2016), Strassman (2001)
 

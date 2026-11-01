@@ -40,7 +40,7 @@ def _skill_text(slug: str) -> str:
 class TestDiffPayloadCoversTheMatrix:
     def test_payload_substance_set_equals_skills_minus_router(self) -> None:
         slugs = {s["id"] for s in build.load_substances()}
-        assert len(slugs) == 10
+        assert len(slugs) == 11
         assert "router" not in slugs
         assert {s["id"] for s in _payload_by_id().values()} == slugs
 
