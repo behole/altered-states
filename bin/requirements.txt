@@ -12,7 +12,7 @@ sentry-sdk==2.73.0
 
 # Reads the repository's YAML manifests (alerts/alerts.yaml,
 # .github/labels.yml) in bin/check_alerts.py and bin/sync_labels.py.
-pyyaml==6.0.2
+pyyaml==6.0.3
 
 # Builds the per-substance OG share cards (site/og/<substance>.png) in
 # altered_states/og.py — imported by build.py. 13.x is the pip-audit-clean
