@@ -6,6 +6,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [Unreleased]
+### Fixed
+- **A fixed PR is no longer stuck on a stale convention-review block** —
+  `pr-review.yml` posted a `CHANGES_REQUESTED` review when it found blocking
+  issues but nothing cleared it once they were fixed, and the `main` ruleset
+  blocks the merge while any changes-requested review stands
+  (`dismiss_stale_reviews_on_push` only covers approvals). A passing review run
+  now dismisses the earlier bot review it supersedes. Human reviews are never
+  dismissed, and the dismissal only runs after the check has re-reviewed the
+  new head, so a regression still re-requests changes.
+
 ## [1.0.0] — 2026-11-01
 ### Changed
 - **Provider migration: DeepSeek is the sanctioned default on all three

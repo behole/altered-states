@@ -90,6 +90,39 @@ jobs:
               body: `Blocking convention findings:\n\n${body}`,
             });
 
+      # A passing run must clear the CHANGES_REQUESTED review an earlier failing
+      # run left behind. Nothing else dismisses it: `dismiss_stale_reviews_on_push`
+      # only covers approvals, and the ruleset blocks the merge while any
+      # changes-requested review stands. This runs after the check has actually
+      # re-reviewed the new head, so a fix clears the block and a regression
+      # re-requests changes. Reviews from humans are never dismissed.
+      - name: Clear a stale blocking review
+        if: steps.review.outputs.exit_code == '0'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const query = `
+              mutation($id: ID!, $message: String!) {
+                dismissPullRequestReview(input: {pullRequestReviewId: $id, message: $message}) {
+                  pullRequestReview { id state }
+                }
+              }`;
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              per_page: 100,
+            });
+            for (const review of reviews) {
+              if (review.state !== 'CHANGES_REQUESTED') continue;
+              if (review.user.login !== 'github-actions[bot]') continue;
+              await github.graphql(query, {
+                id: review.node_id,
+                message:
+                  'Superseded by a later convention review that found no blocking issues.',
+              });
+            }
+
       - name: Summarize in the job log
         run: |
           cat review.md >> "$GITHUB_STEP_SUMMARY"
