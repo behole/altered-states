@@ -264,7 +264,7 @@ def build_ledger_entry(  # noqa: PLR0913 (entry assembly needs the path fallback
     chargeable, exactly like a completed run's entry.
     """
     output = output_relpath
-    if output_abspath and output_relpath.split("/")[0] == "..":
+    if output_abspath and output_relpath.split("/", maxsplit=1)[0] == "..":
         # relpath escapes the repo root: record the absolute path instead.
         output = output_abspath
     entry: dict[str, Any] = {

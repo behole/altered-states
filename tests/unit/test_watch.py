@@ -15,18 +15,16 @@ import watch
 
 
 @contextmanager
-def _exit_after_one_poll() -> Iterator[None]:
+def _exit_after_one_poll(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Make watch_loop raise KeyboardInterrupt on its first poll iteration."""
 
     def sleep_once(_seconds: float) -> None:
         raise KeyboardInterrupt
 
-    orig_sleep = time.sleep
-    time.sleep = sleep_once
-    try:
-        yield
-    finally:
-        time.sleep = orig_sleep
+    # Route through monkeypatch so the stub is type-compatible with
+    # time.sleep's signature and restored even when the body raises.
+    monkeypatch.setattr(time, "sleep", sleep_once)
+    yield
 
 
 def _patch_watcher(monkeypatch: pytest.MonkeyPatch) -> dict[str, list[int]]:
@@ -51,7 +49,7 @@ class TestServeOnlyLoop:
     def test_serve_only_never_touches_deploy(self, monkeypatch: pytest.MonkeyPatch) -> None:
         calls = _patch_watcher(monkeypatch)
 
-        with _exit_after_one_poll():
+        with _exit_after_one_poll(monkeypatch):
             watch.watch_loop(serve_only=True)
 
         assert calls["build"] == [1]
@@ -60,7 +58,7 @@ class TestServeOnlyLoop:
     def test_default_loop_deploys_as_before(self, monkeypatch: pytest.MonkeyPatch) -> None:
         calls = _patch_watcher(monkeypatch)
 
-        with _exit_after_one_poll():
+        with _exit_after_one_poll(monkeypatch):
             watch.watch_loop()
 
         assert calls["build"] == [1]
