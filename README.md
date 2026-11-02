@@ -320,9 +320,9 @@ the root scripts (`build.py`, `watch.py`, `bin/`, `experiments/*.py`) and
 
 | Check | Tool | Config | Command |
 |---|---|---|---|
-| Lint (style, bugs, naming, complexity) | ruff | `[tool.ruff]` | `uvx ruff@0.14.4 check .` |
-| Format | ruff-format | `[tool.ruff.format]` | `uvx ruff@0.14.4 format --check .` |
-| Types (strict) | mypy | `[tool.mypy]` | `uvx --with types-requests --from mypy@1.18.2 mypy` |
+| Lint (style, bugs, naming, complexity) | ruff | `[tool.ruff]` | `uvx ruff@0.17.2 check .` |
+| Format | ruff-format | `[tool.ruff.format]` | `uvx ruff@0.17.2 format --check .` |
+| Types (strict) | mypy | `[tool.mypy]` | `uvx --with types-requests --from mypy@2.4.0 mypy` |
 | Dead code | vulture | `[tool.vulture]` | `uvx vulture@2.16` |
 | Duplicate code | pylint | `[tool.pylint.similarities]` | `uvx pylint@4.1.3 --disable=all --enable=duplicate-code build.py watch.py bin experiments` |
 | Large-file guard + file hygiene | pre-commit | `.pre-commit-config.yaml` | `pre-commit run --all-files` |

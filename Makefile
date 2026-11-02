@@ -14,9 +14,9 @@
 UVX ?= uvx
 PYTHON ?= python3
 
-RUFF ?= $(UVX) ruff@0.14.4
+RUFF ?= $(UVX) ruff@0.17.2
 MYPY ?= $(UVX) --with types-requests==2.33.0.20261030 --with types-pyyaml==6.0.12.20261030 \
-	--from mypy@1.18.2 mypy
+	--from mypy@2.4.0 mypy
 VULTURE ?= $(UVX) vulture@2.16
 PYLINT ?= $(UVX) pylint@4.1.3
 DEPTRY ?= $(UVX) deptry@0.25.1
