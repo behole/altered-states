@@ -320,9 +320,9 @@ pydantic-core==2.50.2 \
     --hash=sha256:f81df206b937d0dca5efb38c25fc99037d82dbcd3740e34c3f81997d2322ac1c \
     --hash=sha256:fd9aa71a800c87c0f7ab53fa38009169a23a82c685989626ca74a4bd483e1b67
     # via pydantic
-sentry-sdk==2.44.0 \
-    --hash=sha256:5b1fe54dfafa332e900b07dd8f4dfe35753b64e78e7d9b1655a28fd3065e2493 \
-    --hash=sha256:9e36a0372b881e8f92fdbff4564764ce6cec4b7f25424d0a3a8d609c9e4651a7
+sentry-sdk==2.73.0 \
+    --hash=sha256:0bcfa6928ea5adbb89591858b514d27adac27c7a3cccc31b20ed10e0b09eda9e \
+    --hash=sha256:4a2ab97b16e4693c325ab361c7bbbb346dbc7d0bc0150922d795a25bac8d5280
     # via -r experiments/temporal-lab/requirements.txt
 sniffio==1.3.1 \
     --hash=sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2 \
