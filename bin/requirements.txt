@@ -5,10 +5,10 @@
 
 # Model provider SDK — used by bin/run_eval.py (DeepSeek, OpenAI-compatible)
 # and the music/temporal-lab call surfaces.
-openai==3.42.0
+openai==3.51.0
 
 # Optional error reporting — imported lazily, a no-op without SENTRY_DSN.
-sentry-sdk==2.73.0
+sentry-sdk==2.75.0
 
 # Reads the repository's YAML manifests (alerts/alerts.yaml,
 # .github/labels.yml) in bin/check_alerts.py and bin/sync_labels.py.
